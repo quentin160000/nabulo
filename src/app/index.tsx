@@ -23,20 +23,20 @@ export default function Accueil() {
   const day = engine.dayNumber(new Date());
   const [daily, setDaily] = useState<DailyState | null>(null);
   // relit l'état du jour à chaque retour sur l'accueil
-  useFocusEffect(useCallback(() => { load<DailyState | null>(`thermomot:mdj:fr:${day}`, null).then(setDaily); }, [day]));
+  useFocusEffect(useCallback(() => { load<DailyState | null>(`nabulo:mdj:fr:${day}`, null).then(setDaily); }, [day]));
 
   const solved = !!daily?.solved, started = !!daily && daily.guesses.length > 0;
   return (
     <Screen>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
         <HeaderButton kind="menu" label="Menu" />
-        <T size={26} weight={700} outline style={{ flex: 1 }}>Thermo·Mot</T>
+        <T size={26} weight={700} outline style={{ flex: 1 }}>Nabulo</T>
         <BraisePill value={braises} />
       </View>
       <ScrollView contentContainerStyle={{ gap: 14, paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
         <Bubble radius={26} style={{ padding: 18, paddingBottom: 22, marginTop: 8 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <Image source={solved ? images.tisonSaut : images.tison} style={{ width: 96, height: 96 }} contentFit="contain" accessibilityLabel="Tison" />
+            <Image source={solved ? images.nabuloSaut : images.nabulo} style={{ width: 96, height: 96 }} contentFit="contain" accessibilityLabel="Nabulo" />
             <View style={{ flex: 1, gap: 4 }}>
               <T size={14} weight={700} color="#6B6290">Mot du jour n°{day}</T>
               <T size={24} weight={700}>{solved ? 'Trouvé !' : started ? 'Partie en cours' : 'Le même pour tout le monde'}</T>

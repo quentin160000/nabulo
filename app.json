@@ -1,15 +1,15 @@
 {
   "expo": {
-    "name": "Thermo·Mot",
-    "slug": "thermo-mot",
+    "name": "Nabulo",
+    "slug": "nabulo",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "thermomot",
+    "scheme": "nabulo",
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.kenti.thermomot"
+      "bundleIdentifier": "com.kenti.nabulo"
     },
     "android": {
       "adaptiveIcon": {
@@ -19,7 +19,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.kenti.thermomot"
+      "package": "com.kenti.nabulo"
     },
     "web": {
       "output": "static",

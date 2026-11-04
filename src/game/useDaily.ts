@@ -9,7 +9,7 @@ export type DailyState = {
 };
 export type Feedback = { kind: 'unknown' | 'repeat' | 'error'; word: string } | null;
 
-const keyFor = (lang: Lang, day: number) => `thermomot:mdj:${lang}:${day}`;
+const keyFor = (lang: Lang, day: number) => `nabulo:mdj:${lang}:${day}`;
 const fresh = (lang: Lang, day: number): DailyState =>
   ({ day, lang, guesses: [], solved: false, secret: null, hintsUsed: 0, adHintsUsed: 0, reward: 0, rewardClaimed: false });
 

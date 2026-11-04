@@ -6,10 +6,10 @@ import { T } from './Text';
 
 export const images = {
   braise: require('../../assets/images/braise.webp'),
-  tison: require('../../assets/images/tison/neutre.webp'),
-  tisonSaut: require('../../assets/images/tison/saut.webp'),
-  tisonTriste: require('../../assets/images/tison/triste.webp'),
-  tisonTour: require('../../assets/images/tison/tour.webp'),
+  nabulo: require('../../assets/images/nabulo/neutre.webp'),
+  nabuloSaut: require('../../assets/images/nabulo/saut.webp'),
+  nabuloTriste: require('../../assets/images/nabulo/triste.webp'),
+  nabuloTour: require('../../assets/images/nabulo/tour.webp'),
 };
 
 /** Pastille de braises en haut à droite (à plat). */

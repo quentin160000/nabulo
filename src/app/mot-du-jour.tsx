@@ -52,7 +52,7 @@ function Regles({ day, onStart }: { day: number; onStart: () => void }) {
     <Screen>
       <Header day={day} />
       <View style={{ alignItems: 'center', marginTop: 8 }}>
-        <Image source={images.tison} style={{ width: 120, height: 120 }} contentFit="contain" accessibilityLabel="Tison" />
+        <Image source={images.nabulo} style={{ width: 120, height: 120 }} contentFit="contain" accessibilityLabel="Nabulo" />
         <T size={30} weight={700} outline>Mot du jour</T>
         <T size={15} weight={600} outline>le même pour tout le monde</T>
       </View>
@@ -87,7 +87,7 @@ function EnJeu({ daily }: { daily: Daily }) {
       <KeyboardAvoidingView style={{ flex: 1, gap: 10 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <Header day={state.day} />
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-          <Image source={images.tison} style={{ width: 84, height: 84 }} contentFit="contain" accessibilityLabel="Tison" />
+          <Image source={images.nabulo} style={{ width: 84, height: 84 }} contentFit="contain" accessibilityLabel="Nabulo" />
           <View style={{ flex: 1 }}><TempGauge best={best} last={lastGuess} /></View>
         </View>
         {feedback && (
@@ -211,7 +211,7 @@ function Victoire({ daily }: { daily: Daily }) {
         <BraisePill value={braises} />
       </View>
       <View style={{ alignItems: 'center', gap: 4, marginTop: 30 }}>
-        <Image source={images.tisonSaut} style={{ width: 170, height: 170 }} contentFit="contain" autoplay accessibilityLabel="Tison saute de joie" />
+        <Image source={images.nabuloSaut} style={{ width: 170, height: 170 }} contentFit="contain" autoplay accessibilityLabel="Nabulo saute de joie" />
         <T size={40} weight={700} outline>Trouvé !</T>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <View style={{ paddingHorizontal: 14, paddingVertical: 3, borderRadius: 14, backgroundColor: '#FFD45C' }}><T size={22} weight={700}>{state.secret}</T></View>

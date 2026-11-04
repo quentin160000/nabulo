@@ -4,7 +4,7 @@ import { load, save } from './storage';
 
 type Wallet = { braises: number; ready: boolean; spend(n: number): boolean; earn(n: number): void };
 const Ctx = createContext<Wallet | null>(null);
-const KEY = 'thermomot:braises';
+const KEY = 'nabulo:braises';
 
 export function WalletProvider({ children }: { children: ReactNode }) {
   const [braises, setBraises] = useState(START_BRAISES);

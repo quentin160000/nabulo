@@ -1,4 +1,4 @@
-# Thermo·Mot
+# Nabulo
 
 Jeu de mots chauds et froids (iOS + Android), en Expo / React Native + Supabase.
 V1 en cours : **Mot du jour** jouable de bout en bout.
@@ -51,4 +51,4 @@ npm run typecheck && npm run lint && npm test
 - Bulles : contour plus clair que le fond, fond coupé en biais, relief enfoncé en bas, pas de contour noir.
 - Boutons principaux : jaune en relief. Boutons au-dessus du clavier et « J'ai déjà un compte » : à plat.
 - Choix de mots, étiquettes, boutons d'en-tête, pastille de braises, lignes de classement : à plat.
-- Tison : neutre sur les écrans sans émotion, saute de joie à la victoire, triste sous la pluie à la défaite.
+- Nabulo : neutre sur les écrans sans émotion, saute de joie à la victoire, triste sous la pluie à la défaite.

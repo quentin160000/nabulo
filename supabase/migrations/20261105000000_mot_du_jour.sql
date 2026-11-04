@@ -1,4 +1,4 @@
--- Thermo·Mot · Mot du jour
+-- Nabulo · Mot du jour
 -- Le mot secret ne quitte jamais le serveur : l'appli n'a accès qu'aux fonctions ci-dessous.
 
 create extension if not exists vector;
