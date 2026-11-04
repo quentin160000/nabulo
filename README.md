@@ -1,56 +1,54 @@
-# Welcome to your Expo app 👋
+# Thermo·Mot
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Jeu de mots chauds et froids (iOS + Android), en Expo / React Native + Supabase.
+V1 en cours : **Mot du jour** jouable de bout en bout.
 
-## Get started
-
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Lancer l'appli
 
 ```bash
-npm run reset-project
+npm install
+npx expo start          # puis « i » (iOS), « a » (Android) ou « w » (navigateur)
 ```
 
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+Sans configuration, l'appli utilise le **moteur local** : similarités précalculées pour 30 mots du jour,
+vocabulaire réduit (~15 000 mots, vecteurs fastText élagués de spaCy). C'est fait pour développer, pas pour jouer pour de vrai.
 
-### Other setup steps
+## Brancher Supabase (moteur de production)
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+1. Créer un projet Supabase, puis appliquer `supabase/migrations/*.sql` (éditeur SQL ou `supabase db push`).
+2. Télécharger les vecteurs fastText français `cc.fr.300.vec` (https://fasttext.cc/docs/en/crawl-vectors.html).
+3. Charger le vocabulaire et le programme des mots du jour :
+   ```bash
+   pip install numpy "psycopg[binary]"
+   export DATABASE_URL="postgresql://postgres:<mot de passe>@db.<projet>.supabase.co:5432/postgres"
+   python scripts/seed_supabase.py --vec cc.fr.300.vec --lang fr --limit 60000 --days 400 --secrets scripts/secrets_fr.txt
+   ```
+4. Copier `.env.example` en `.env` et remplir l'URL et la clé « anon ». L'appli bascule seule sur Supabase.
 
-## Learn more
+Le mot secret ne quitte jamais le serveur : l'appli n'appelle que `guess_word`, `hint_word`, `closest_words`, `reveal_word`.
 
-To learn more about developing your project with Expo, look at the following resources:
+## Organisation
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```
+src/app/            écrans (Expo Router) : accueil, mot-du-jour
+src/ui/             composants de la maquette : Bubble (relief), Button (jaune / à plat), TempGauge, Confetti…
+src/theme/colors.ts couleurs et règle des bulles (contour plus clair, coupe en biais, relief enfoncé)
+src/game/           règles, températures, partie du jour (sauvegardée), braises
+src/game/engine/    moteur de température : local (dev) et Supabase (prod)
+supabase/           schéma SQL et fonctions
+scripts/            construction des données locales, chargement Supabase
+tests/              tests du moteur et des règles (vitest)
+```
 
-## Join the community
+## Vérifier
 
-Join our community of developers creating universal apps.
+```bash
+npm run typecheck && npm run lint && npm test
+```
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Règles de design reprises de la maquette
+
+- Bulles : contour plus clair que le fond, fond coupé en biais, relief enfoncé en bas, pas de contour noir.
+- Boutons principaux : jaune en relief. Boutons au-dessus du clavier et « J'ai déjà un compte » : à plat.
+- Choix de mots, étiquettes, boutons d'en-tête, pastille de braises, lignes de classement : à plat.
+- Tison : neutre sur les écrans sans émotion, saute de joie à la victoire, triste sous la pluie à la défaite.

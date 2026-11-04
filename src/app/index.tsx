@@ -1,98 +1,67 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Image } from 'expo-image';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { ScrollView, View } from 'react-native';
+import { engine } from '@/game/engine';
+import { load } from '@/game/storage';
+import type { DailyState } from '@/game/useDaily';
+import { useWallet } from '@/game/wallet';
+import { Bubble } from '@/ui/Bubble';
+import { Button } from '@/ui/Button';
+import { BraisePill, HeaderButton, Tag, images } from '@/ui/bits';
+import { Screen } from '@/ui/Screen';
+import { T } from '@/ui/Text';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
-  return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
+function untilMidnight(now = new Date()) {
+  const m = new Date(now); m.setHours(24, 0, 0, 0);
+  const min = Math.round((m.getTime() - now.getTime()) / 60000);
+  return `${Math.floor(min / 60)} h ${String(min % 60).padStart(2, '0')}`;
 }
 
-export default function HomeScreen() {
+export default function Accueil() {
+  const { braises } = useWallet();
+  const day = engine.dayNumber(new Date());
+  const [daily, setDaily] = useState<DailyState | null>(null);
+  // relit l'état du jour à chaque retour sur l'accueil
+  useFocusEffect(useCallback(() => { load<DailyState | null>(`thermomot:mdj:fr:${day}`, null).then(setDaily); }, [day]));
+
+  const solved = !!daily?.solved, started = !!daily && daily.guesses.length > 0;
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
-
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
-
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
-
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+    <Screen>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+        <HeaderButton kind="menu" label="Menu" />
+        <T size={26} weight={700} outline style={{ flex: 1 }}>Thermo·Mot</T>
+        <BraisePill value={braises} />
+      </View>
+      <ScrollView contentContainerStyle={{ gap: 14, paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
+        <Bubble radius={26} style={{ padding: 18, paddingBottom: 22, marginTop: 8 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <Image source={solved ? images.tisonSaut : images.tison} style={{ width: 96, height: 96 }} contentFit="contain" accessibilityLabel="Tison" />
+            <View style={{ flex: 1, gap: 4 }}>
+              <T size={14} weight={700} color="#6B6290">Mot du jour n°{day}</T>
+              <T size={24} weight={700}>{solved ? 'Trouvé !' : started ? 'Partie en cours' : 'Le même pour tout le monde'}</T>
+              {solved ? <Tag label={`« ${daily!.secret} » en ${daily!.guesses.length} essais`} />
+                : started ? <Tag label={`${daily!.guesses.length} essais`} /> : null}
+            </View>
+          </View>
+          <View style={{ marginTop: 16 }}>
+            {solved
+              ? <T size={15} weight={600} align="center" color="#6B6290">Prochain mot dans {untilMidnight()}</T>
+              : <Button label={started ? 'Reprendre' : 'Jouer'} onPress={() => router.push('/mot-du-jour')} />}
+          </View>
+        </Bubble>
+        {[['Jeux libres', 'Plus chaud / plus froid, L’intrus, Lier, Contre-la-montre'], ['Duel', 'Contre-la-montre, Duel à l’aveugle'], ['Coop et multi', 'Synchro, 4 mots, Bluff, Battle royale, Relais']].map(([t, d]) => (
+          <Bubble key={t} radius={22} style={{ padding: 16, opacity: 0.85 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <View style={{ flex: 1 }}>
+                <T size={19} weight={700}>{t}</T>
+                <T size={13} weight={600} color="#6B6290">{d}</T>
+              </View>
+              <Tag label="Bientôt" />
+            </View>
+          </Bubble>
+        ))}
+      </ScrollView>
+    </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
-  },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
-  },
-  title: {
-    textAlign: 'center',
-  },
-  code: {
-    textTransform: 'uppercase',
-  },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
-  },
-});
