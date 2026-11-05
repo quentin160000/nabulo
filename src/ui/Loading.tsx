@@ -1,11 +1,12 @@
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useState } from 'react';
-import { AccessibilityInfo, Animated, Easing, View } from 'react-native';
+import { Animated, Easing, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ink } from '@/theme/colors';
 import { images } from './bits';
 import { T } from './Text';
+import { animationsReduites } from '@/game/reglages';
 
 /** Écran de chargement (planche M-mascotte-tison-3d) : Nabulo qui tourne, titre, jauge froid → chaud. */
 export function Loading() {
@@ -14,7 +15,7 @@ export function Loading() {
   const [reduce, setReduce] = useState(false);
   useEffect(() => {
     let loop: Animated.CompositeAnimation | null = null;
-    AccessibilityInfo.isReduceMotionEnabled().then(r => {
+    animationsReduites().then(r => {
       setReduce(r);
       if (r) return;
       // 0 → 80 % du temps : la jauge se remplit ; 80 → 100 % : elle reste pleine (comme l'animation tlfill de la maquette)

@@ -113,7 +113,7 @@ function NiveauEcran({ n }: { n: number }) {
       const { avant } = await victoire(n, r.note, r.score);
       const prime = reussi(avant, n) ? 0 : recompense(n);
       if (prime) earn(prime);
-      setRes(nv.type === 'secret' ? { ...r, lignes: [...r.lignes, { label: 'Récompense', value: prime ? `+${prime} braises` : 'déjà gagnée' }] } : r);
+      setRes(nv.type === 'secret' ? { ...r, lignes: [...r.lignes, { label: 'Récompense', value: prime ? `+${prime} brez` : 'déjà gagnée' }] } : r);
       setPhase('gagne');
     } else {
       setVRestantes(await vies.perdre());
@@ -129,7 +129,7 @@ function NiveauEcran({ n }: { n: number }) {
   const option = relance(nv);
   const relancer = async () => {
     if (!option) return;
-    if (!spend(option.prix)) { toast.show(`Il te faut ${option.prix} braises`); return; }
+    if (!spend(option.prix)) { toast.show(`Il te faut ${option.prix} brez`); return; }
     await vies.rendre();
     setBonus(b => b + 1); setPhase('jeu');
   };
@@ -158,7 +158,7 @@ function NiveauEcran({ n }: { n: number }) {
       {phase === 'perdu' && res && (
         <Fin gagne={false} monde={monde} titre={res.titre} sousTitre={res.sousTitre} mot={res.mot} voisins={voisins}
           lignes={[...res.lignes, { label: 'Vies restantes', value: `${vRestantes} / ${VIES_MAX}` }]}
-          boutons={[['Réessayer', reessayer], option ? [`${option.label} · ${option.prix} braises`, relancer] : ['Carte', retourCarte]]} />
+          boutons={[['Réessayer', reessayer], option ? [`${option.label} · ${option.prix} brez`, relancer] : ['Carte', retourCarte]]} />
       )}
       <Toast msg={toast.msg} check={false} style={{ bottom: 90 + inset.bottom }} />
     </View>

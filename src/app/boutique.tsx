@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useState } from 'react';
-import { AccessibilityInfo, Animated, Easing, Pressable, ScrollView, View } from 'react-native';
+import { Animated, Easing, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { HINT_COST } from '@/game/rules';
 import { useWallet } from '@/game/wallet';
@@ -11,6 +11,7 @@ import { AluBackground } from '@/ui/backgrounds';
 import { Coin, Icon } from '@/ui/bits';
 import { T } from '@/ui/Text';
 import { Toast, useToast } from '@/ui/Toast';
+import { animationsReduites } from '@/game/reglages';
 
 const SOFT = '#3F3566';
 const WHITE_CARD = { bg: '#FFFFFF', colors: { border: '#D9D1F2', diag: '#F4F3F3', relief: '#E3DEDE' } };
@@ -38,7 +39,7 @@ export default function Boutique() {
             <Coin size={56} />
             <View style={{ flex: 1 }}>
               <T size={13} weight={700} color={ink}>Ton solde</T>
-              <T size={30} weight={700} color={ink} style={{ lineHeight: 32 }}>{braises} braises</T>
+              <T size={30} weight={700} color={ink} style={{ lineHeight: 32 }}>{braises} brez</T>
               <T size={13} weight={600} color={SOFT}>on en gagne en jouant chaque jour</T>
             </View>
           </Bubble>
@@ -50,12 +51,12 @@ export default function Boutique() {
           <Label>Recharger</Label>
           <View style={{ flexDirection: 'row', gap: 8, alignItems: 'stretch', paddingTop: 6 }}>
             <Pack n={100} price="0,99 €" onPress={buy} />
-            <Pressable accessibilityRole="button" accessibilityLabel="300 braises pour 1,99 €, le plus choisi" onPress={buy} style={{ flex: 1 }}>
+            <Pressable accessibilityRole="button" accessibilityLabel="300 brez pour 1,99 €, le plus choisi" onPress={buy} style={{ flex: 1 }}>
               <LinearGradient colors={['#FFC24A', '#FF7A2E', '#F04E24']} locations={[0, 0.55, 1]} start={{ x: 0.3, y: 0 }} end={{ x: 0.7, y: 1 }} style={{ flex: 1, padding: 3, borderRadius: 23 }}>
                 <LinearGradient colors={['#FFF8EE', '#FFEBD3']} style={{ flex: 1, borderRadius: 20, boxShadow: 'inset 0 -5px 0 #FFD9AE', paddingTop: 18, paddingHorizontal: 4, paddingBottom: 13, alignItems: 'center', gap: 4 }}>
                   <BobCoin size={50} delay={300} />
                   <T size={26} weight={700} color={ink} style={{ lineHeight: 26 }}>300</T>
-                  <T size={12} weight={600} color="#B4541E">braises</T>
+                  <T size={12} weight={600} color="#B4541E">brez</T>
                   <View style={{ marginTop: 4, paddingVertical: 5, paddingHorizontal: 12, borderRadius: 12, backgroundColor: '#F04E24' }}><T size={15} weight={700} color="#FFFFFF">1,99 €</T></View>
                   <T size={11} weight={700} color="#B4541E">le plus choisi</T>
                 </LinearGradient>
@@ -94,11 +95,11 @@ function HintCard({ icon, title, sub, tag, tagBg }: { icon: 'bolt' | 'star'; tit
 
 function Pack({ n, price, note, onPress }: { n: number; price: string; note?: string; onPress: () => void }) {
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={`${n} braises pour ${price}`} onPress={onPress} style={{ flex: 1 }}>
+    <Pressable accessibilityRole="button" accessibilityLabel={`${n} brez pour ${price}`} onPress={onPress} style={{ flex: 1 }}>
       <Bubble {...WHITE_CARD} style={{ flex: 1, paddingTop: 10, paddingHorizontal: 4, paddingBottom: 13, alignItems: 'center', gap: 4 }}>
         <BobCoin size={44} delay={n === 100 ? 0 : 600} />
         <T size={24} weight={700} color={ink} style={{ lineHeight: 24 }}>{n}</T>
-        <T size={12} weight={600} color={SOFT}>braises</T>
+        <T size={12} weight={600} color={SOFT}>brez</T>
         <View style={{ marginTop: 4, paddingVertical: 4, paddingHorizontal: 10, borderRadius: 12, backgroundColor: '#5BD67A' }}><T size={14} weight={700} color={ink}>{price}</T></View>
         <T size={11} weight={700} color="#C2410C">{note ?? ' '}</T>
       </Bubble>
@@ -111,7 +112,7 @@ function BobCoin({ size, delay }: { size: number; delay: number }) {
   const [v] = useState(() => new Animated.Value(0));
   useEffect(() => {
     let loop: Animated.CompositeAnimation | null = null;
-    AccessibilityInfo.isReduceMotionEnabled().then(r => {
+    animationsReduites().then(r => {
       if (r) return;
       loop = Animated.loop(Animated.sequence([
         Animated.delay(delay),

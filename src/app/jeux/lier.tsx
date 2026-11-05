@@ -250,7 +250,7 @@ function EnJeu({ game, setGame, onFinish, onAbandon }: { game: Game; setGame: (g
   const undo = () => { setGame({ ...game, mids: game.mids.slice(0, -1) }); setFb(null); };
   const hint = () => {
     if (fb?.kind === 'indice') return;
-    if (braises < HINT_COST) { toast.show(`Il te manque ${HINT_COST - braises} braises pour un indice`); return; }
+    if (braises < HINT_COST) { toast.show(`Il te manque ${HINT_COST - braises} brez pour un indice`); return; }
     const h = hintAfter(chain, game.target);
     if (!h) { toast.show('Pas d’étape possible d’ici : retire le dernier mot'); return; }
     if (!spend(HINT_COST)) return;
@@ -278,7 +278,7 @@ function EnJeu({ game, setGame, onFinish, onAbandon }: { game: Game; setGame: (g
                 style={{ flex: 1, paddingHorizontal: 12, paddingVertical: 0, includeFontPadding: false, textAlignVertical: 'center', fontFamily: 'Fredoka_500Medium', fontSize: 17, color: INK, outlineStyle: 'none' } as object}
               />
             </View>
-            <Pressable accessibilityRole="button" accessibilityLabel={`Indice, ${HINT_COST} braises`} onPress={hint}
+            <Pressable accessibilityRole="button" accessibilityLabel={`Indice, ${HINT_COST} brez`} onPress={hint}
               style={{ width: 50, height: 50, borderRadius: 16, backgroundColor: '#FFF4D6', alignItems: 'center', justifyContent: 'center' }}>
               <LierIcon name="bulb" size={26} />
             </Pressable>

@@ -3,7 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  AccessibilityInfo, Animated, Easing, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, Share, TextInput, View,
+  Animated, Easing, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, Share, TextInput, View,
   type TextInputInstance,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -22,6 +22,7 @@ import { Mascot } from '@/ui/Mascot';
 import { T } from '@/ui/Text';
 import { Toast, useToast } from '@/ui/Toast';
 import { GameBg, Section, Sheet, useKeyboardVisible, keepFocus } from '@/ui/game';
+import { animationsReduites } from '@/game/reglages';
 
 const INK = gameInk;
 const SH3 = { textShadowColor: INK, textShadowOffset: { width: 0, height: 3 }, textShadowRadius: 0 } as const;
@@ -50,7 +51,7 @@ function Regles({ day, onStart }: { day: number; onStart: () => void }) {
     'Propose un mot : il reçoit une température selon son sens.',
     'Plus il fait chaud, plus tu es proche du mot secret.',
     'Essais illimités : ton score, c’est ton nombre d’essais.',
-    `Un indice coûte ${HINT_COST} braises, se paie en partie et baisse ton score.`,
+    `Un indice coûte ${HINT_COST} brez, se paie en partie et baisse ton score.`,
   ];
   return (
     <View style={{ flex: 1 }}>
@@ -194,7 +195,7 @@ function EnJeu({ daily }: { daily: Daily }) {
                 fontFamily: 'Fredoka_500Medium', fontSize: 21, color: INK, outlineStyle: 'none',
               } as object}
             />
-            <Pressable accessibilityRole="button" accessibilityLabel={`Indice, ${HINT_COST} braises`} onPress={openHint}
+            <Pressable accessibilityRole="button" accessibilityLabel={`Indice, ${HINT_COST} brez`} onPress={openHint}
               style={{ width: 52, height: 52, borderRadius: 17, backgroundColor: '#FFF4D6', alignItems: 'center', justifyContent: 'center' }}>
               <Icon name="bulb" size={28} color={INK} />
             </Pressable>
@@ -214,11 +215,11 @@ function EnJeu({ daily }: { daily: Daily }) {
               <T size={22} weight={700} color={INK} style={{ lineHeight: 24 }}>Utiliser un indice</T>
               <T size={14} weight={600} color={gameInkSoft}>Mot proche : révèle un mot brûlant, tout près du mot secret</T>
             </View>
-            <Option onPress={() => hint('braises')} lead={<Coin size={44} />} title={`Payer ${HINT_COST} braises`} sub={`il t’en restera ${Math.max(0, braises - HINT_COST)}`}
+            <Option onPress={() => hint('braises')} lead={<Coin size={44} />} title={`Payer ${HINT_COST} brez`} sub={`il t’en restera ${Math.max(0, braises - HINT_COST)}`}
               tag={<View style={{ paddingVertical: 6, paddingHorizontal: 12, borderRadius: 12, backgroundColor: '#FF5A36' }}><T size={15} weight={700} color="#FFFFFF">Utiliser</T></View>} />
             <Option onPress={() => hint('pub')} disabled={adsLeft <= 0}
               lead={<View style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: '#F1EEFA', alignItems: 'center', justifyContent: 'center' }}><Icon name="video" size={24} color={INK} /></View>}
-              title="Regarder une pub" sub={`tu gardes tes braises · ${adsLeft > 0 ? `encore ${adsLeft} aujourd’hui` : 'plus de pub aujourd’hui'}`}
+              title="Regarder une pub" sub={`tu gardes tes brez · ${adsLeft > 0 ? `encore ${adsLeft} aujourd’hui` : 'plus de pub aujourd’hui'}`}
               tag={<View style={{ paddingVertical: 6, paddingHorizontal: 12, borderRadius: 12, backgroundColor: '#7CE0B5' }}><T size={15} weight={700} color={INK}>Gratuit</T></View>} />
             <Pressable accessibilityRole="button" onPress={() => setSheet(null)} style={{ paddingTop: 4, alignItems: 'center' }}>
               <T size={16} weight={700} color={gameInkSoft}>Annuler</T>
@@ -227,7 +228,7 @@ function EnJeu({ daily }: { daily: Daily }) {
         ) : (
           <>
             <View>
-              <T size={22} weight={700} color={INK} style={{ lineHeight: 24 }}>Il te manque {Math.max(0, HINT_COST - braises)} braises</T>
+              <T size={22} weight={700} color={INK} style={{ lineHeight: 24 }}>Il te manque {Math.max(0, HINT_COST - braises)} brez</T>
               <T size={14} weight={600} color={gameInkSoft}>ta partie reste en pause, tu ne perds rien</T>
             </View>
             <Pressable accessibilityRole="button" accessibilityLabel="Regarder une pub" disabled={adsLeft <= 0} onPress={() => hint('pub')} style={{ opacity: adsLeft > 0 ? 1 : 0.5 }}>
@@ -284,7 +285,7 @@ function Gauge({ t, record, seq }: { t: number | null; record: boolean; seq: num
   const [pop] = useState(() => new Animated.Value(0));
   useEffect(() => {
     let alive = true;
-    AccessibilityInfo.isReduceMotionEnabled().then(reduce => {
+    animationsReduites().then(reduce => {
       if (!alive) return;
       if (reduce) { p.setValue(target); return; }
       // à chaque nouveau mot la jauge repart de zéro ; plus le mot est chaud, plus elle va loin et plus elle ralentit en fin de course
@@ -332,16 +333,16 @@ function Option({ onPress, lead, title, sub, tag, disabled }: { onPress: () => v
   );
 }
 
-/** Pack de 300 braises mis en avant (contour en dégradé orange, étiquette « POPULAIRE »). */
+/** Pack de 300 brez mis en avant (contour en dégradé orange, étiquette « POPULAIRE »). */
 export function PackPopulaire({ onPress }: { onPress: () => void }) {
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel="300 braises pour 1,99 €" onPress={onPress} style={{ marginTop: 6 }}>
+    <Pressable accessibilityRole="button" accessibilityLabel="300 brez pour 1,99 €" onPress={onPress} style={{ marginTop: 6 }}>
       <LinearGradient colors={['#FFC24A', '#FF7A2E', '#F04E24']} locations={[0, 0.55, 1]} start={{ x: 0.3, y: 0 }} end={{ x: 0.7, y: 1 }}
         style={{ padding: 3, borderRadius: 21, boxShadow: 'inset 0 -5px 0 rgba(20,10,60,0.18)' }}>
         <LinearGradient colors={['#FFF8EE', '#FFEBD3']} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 18 }}>
           <Coin size={44} />
           <View style={{ flex: 1 }}>
-            <T size={20} weight={700} color={INK} style={{ lineHeight: 22 }}>300 braises</T>
+            <T size={20} weight={700} color={INK} style={{ lineHeight: 22 }}>300 brez</T>
             <T size={13} weight={600} color="#B4541E">l’indice s’utilise tout de suite</T>
           </View>
           <View style={{ paddingVertical: 8, paddingHorizontal: 12, borderRadius: 14, backgroundColor: '#F04E24' }}><T size={16} weight={700} color="#FFFFFF">1,99 €</T></View>
@@ -402,7 +403,7 @@ function Victoire({ daily }: { daily: Daily }) {
   useEffect(() => {
     if (!contentH || contentH <= listH) return;
     let loop: Animated.CompositeAnimation | null = null;
-    AccessibilityInfo.isReduceMotionEnabled().then(r => {
+    animationsReduites().then(r => {
       if (r) return;
       a.scroll.setValue(0);
       loop = Animated.loop(Animated.timing(a.scroll, { toValue: 1, duration: 28000, easing: Easing.linear, useNativeDriver: true }));
@@ -432,7 +433,7 @@ function Victoire({ daily }: { daily: Daily }) {
             <Icon name="close" size={20} color="#FFFFFF" />
           </Pressable>
           <T size={22} weight={700} outline style={{ flex: 1 }}>Mot du jour</T>
-          <Animated.View accessibilityLabel={`Solde : ${shownCoins} braises`} style={{ height: 38, marginLeft: 16, paddingLeft: 32, paddingRight: 12, borderRadius: 19, backgroundColor: '#FFFFFF', justifyContent: 'center', transform: [{ scale: a.bump.interpolate({ inputRange: [0, 1], outputRange: [1, 1.12] }) }] }}>
+          <Animated.View accessibilityLabel={`Solde : ${shownCoins} brez`} style={{ height: 38, marginLeft: 16, paddingLeft: 32, paddingRight: 12, borderRadius: 19, backgroundColor: '#FFFFFF', justifyContent: 'center', transform: [{ scale: a.bump.interpolate({ inputRange: [0, 1], outputRange: [1, 1.12] }) }] }}>
             <Coin size={42} style={{ position: 'absolute', left: -12, top: -2 }} />
             <T size={18} weight={700} color="#2B2150" style={{ minWidth: 36, textAlign: 'right', fontVariant: ['tabular-nums'] }}>{shownCoins}</T>
           </Animated.View>
@@ -452,7 +453,7 @@ function Victoire({ daily }: { daily: Daily }) {
           </Animated.View>
         </View>
 
-        <Animated.View accessibilityRole="text" accessibilityLabel={`${gain} braises gagnées`}
+        <Animated.View accessibilityRole="text" accessibilityLabel={`${gain} brez gagnées`}
           style={{ alignSelf: 'center', marginTop: 6, flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: 12, paddingRight: 26, paddingBottom: 14, paddingLeft: 18, borderRadius: 28, backgroundColor: 'rgba(255,255,255,0.18)', opacity: a.gain, transform: [{ scale: a.gain }] }}>
           {fresh && a.fly.map((f, i) => (
             <Animated.View key={i} pointerEvents="none" style={{
@@ -468,7 +469,7 @@ function Victoire({ daily }: { daily: Daily }) {
           <Coin size={72} />
           <View>
             <T size={60} weight={700} color="#FFFFFF" style={{ lineHeight: 62, fontVariant: ['tabular-nums'], textShadowColor: '#2B2150', textShadowOffset: { width: 0, height: 4 }, textShadowRadius: 0 }}>+{shownGain}</T>
-            <T size={18} weight={700} color="#FFFFFF" style={{ marginTop: 4, lineHeight: 18 }}>braises gagnées</T>
+            <T size={18} weight={700} color="#FFFFFF" style={{ marginTop: 4, lineHeight: 18 }}>brez gagnées</T>
           </View>
         </Animated.View>
 

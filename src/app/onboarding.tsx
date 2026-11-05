@@ -178,7 +178,7 @@ function But({ k }: { k: number }) {
       <Card bg="#FFD45C">
         <Coin size={48} />
         <View style={{ flex: 1 }}>
-          <T size={19} weight={700} color={ink}>Gagne des braises</T>
+          <T size={19} weight={700} color={ink}>Gagne des brez</T>
           <T size={14} weight={600} color={ink}>un nouveau mot à retrouver chaque jour</T>
         </View>
       </Card>
@@ -196,10 +196,10 @@ function CoupDePouce({ k }: { k: number }) {
         <View style={{ width: 46, height: 46, borderRadius: 15, backgroundColor: '#F1EEFA', alignItems: 'center', justifyContent: 'center' }}><Icon name="bulb" size={26} /></View>
         <View style={{ flex: 1 }}>
           <T size={18} weight={700} color={ink}>Indice soufflé</T>
-          <T size={13} weight={600} color="#3F3566">révèle un mot brûlant · 60 braises ou une pub</T>
+          <T size={13} weight={600} color="#3F3566">révèle un mot brûlant · 60 brez ou une pub</T>
         </View>
       </Card>
-      <Title title="Prêt à l’aider ?" sub="240 braises offertes pour commencer." />
+      <Title title="Prêt à l’aider ?" sub="240 brez offertes pour commencer." />
     </View>
   );
 }

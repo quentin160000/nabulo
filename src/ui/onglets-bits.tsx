@@ -37,11 +37,11 @@ export function goTab(t: Tab) {
   router.navigate(TAB_ROUTES[t]);
 }
 
-/** Solde de braises de la planche : pastille blanche, pièce qui dépasse à gauche, « + » jaune ; ouvre la boutique. */
+/** Solde de brez de la planche : pastille blanche, pièce qui dépasse à gauche, « + » jaune ; ouvre la boutique. */
 export function BraisesPill() {
   const { braises } = useWallet();
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={`${braises} braises, ouvrir la boutique`} onPress={() => router.push('/boutique')} hitSlop={4}
+    <Pressable accessibilityRole="button" accessibilityLabel={`${braises} brez, ouvrir la boutique`} onPress={() => router.push('/boutique')} hitSlop={4}
       style={{ height: 38, marginLeft: 16, paddingLeft: 32, paddingRight: 6, borderRadius: 19, backgroundColor: '#FFFFFF', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
       <Coin size={42} style={{ position: 'absolute', left: -12, top: -2 }} />
       <T size={18} weight={700} color={ink} style={{ minWidth: 30, textAlign: 'right', fontVariant: ['tabular-nums'] }}>{braises}</T>

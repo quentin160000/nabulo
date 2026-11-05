@@ -3,7 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
-  AccessibilityInfo, Animated, Easing, KeyboardAvoidingView, Pressable, ScrollView, TextInput, View, useWindowDimensions,
+  Animated, Easing, KeyboardAvoidingView, Pressable, ScrollView, TextInput, View, useWindowDimensions,
   type StyleProp, type ViewStyle,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -19,6 +19,7 @@ import { T } from './Text';
 import { Toast, useToast } from './Toast';
 import { keepFocus } from './game';
 import { KAV_BEHAVIOR, useMargeBasse } from './retours-jeux-clavier';
+import { animationsReduites } from '@/game/reglages';
 
 /* Briques des écrans multi (maquettes J-multi-18 à 20). Encre des maquettes : hsl(256, 45 %, 16 %) = gameInk. */
 export const INK = gameInk;
@@ -26,7 +27,7 @@ const fill = { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 } as c
 
 export function useReduceMotion() {
   const [r, setR] = useState(false);
-  useEffect(() => { AccessibilityInfo.isReduceMotionEnabled().then(setR); }, []);
+  useEffect(() => { animationsReduites().then(setR); }, []);
   return r;
 }
 

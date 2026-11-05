@@ -60,7 +60,7 @@ export function HeaderButton({ kind, onPress, label }: { kind: 'close' | 'back' 
 }
 
 /**
- * Solde de braises des écrans de jeu : pastille blanche, pièce qui dépasse à gauche, « + » jaune (ouvre la boutique).
+ * Solde de brez des écrans de jeu : pastille blanche, pièce qui dépasse à gauche, « + » jaune (ouvre la boutique).
  * `flash` affiche brièvement « −60 » au-dessus.
  */
 export function CoinPill({ value, onPress, flash, color = gameInk }: { value: number; onPress?: () => void; flash?: string | null; color?: string }) {
@@ -71,7 +71,7 @@ export function CoinPill({ value, onPress, flash, color = gameInk }: { value: nu
     Animated.timing(pop, { toValue: 1, duration: 450, easing: Easing.out(Easing.back(2)), useNativeDriver: true }).start();
   }, [flash, pop]);
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={`${value} braises, ouvrir la boutique`} onPress={onPress}
+    <Pressable accessibilityRole="button" accessibilityLabel={`${value} brez, ouvrir la boutique`} onPress={onPress}
       style={{ height: 40, marginLeft: 14, paddingLeft: 30, paddingRight: 5, borderRadius: 20, backgroundColor: '#FFFFFF', flexDirection: 'row', alignItems: 'center', gap: 5 }}>
       <Coin size={40} style={{ position: 'absolute', left: -16, top: 0 }} />
       <T size={17} weight={700} color={color} style={{ minWidth: 28, textAlign: 'right', fontVariant: ['tabular-nums'] }}>{value}</T>

@@ -134,7 +134,7 @@ export function MapTopBar({ top, n, vies, prochaine, braises, onVies }: { top: n
         <T size={16} weight={700} color={gameInk}>{vies}</T>
         {prochaine ? <T size={12} weight={700} color="#7C7399" style={{ fontVariant: ['tabular-nums'] }}>{prochaine}</T> : null}
       </Pastille2>
-      <Pastille2 label={`${braises} braises, ouvrir la boutique`} onPress={() => router.push('/boutique')}>
+      <Pastille2 label={`${braises} brez, ouvrir la boutique`} onPress={() => router.push('/boutique')}>
         <Flamme />
         <T size={16} weight={700} color={gameInk}>{braises}</T>
       </Pastille2>

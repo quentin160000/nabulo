@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useEffect, useState, type ReactNode } from 'react';
-import { AccessibilityInfo, Animated, Easing, Platform, Pressable, ScrollView, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Animated, Easing, Platform, Pressable, ScrollView, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
@@ -14,6 +14,7 @@ import { Confetti } from './Confetti';
 import { Diagonal, Relief } from './Diagonal';
 import { GameBg } from './game';
 import { T } from './Text';
+import { animationsReduites } from '@/game/reglages';
 
 /* Briques des jeux libres solo (planches J-jeux-libres-11, 12, 14). */
 
@@ -22,7 +23,7 @@ const fill = { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 } as c
 
 export function useReduceMotion() {
   const [r, setR] = useState(false);
-  useEffect(() => { AccessibilityInfo.isReduceMotionEnabled().then(setR); }, []);
+  useEffect(() => { animationsReduites().then(setR); }, []);
   return r;
 }
 

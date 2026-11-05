@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  AccessibilityInfo, Animated, Easing, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, View, type TextInputInstance,
+  Animated, Easing, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, View, type TextInputInstance,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -25,6 +25,7 @@ import { T } from '@/ui/Text';
 import { Toast, useToast } from '@/ui/Toast';
 import { useKeyboardVisible, keepFocus } from '@/ui/game';
 import { KAV_BEHAVIOR, useMargeBasse } from '@/ui/retours-jeux-clavier';
+import { animationsReduites } from '@/game/reglages';
 
 const GAME = 'Duel à l’aveugle';
 const SH = '#2B2150';
@@ -303,7 +304,7 @@ function Gauge({ t }: { t: number | null }) {
   const [p] = useState(() => new Animated.Value(target));
   useEffect(() => {
     let alive = true;
-    AccessibilityInfo.isReduceMotionEnabled().then(reduce => {
+    animationsReduites().then(reduce => {
       if (!alive) return;
       if (reduce) { p.setValue(target); return; }
       Animated.timing(p, { toValue: target, duration: 1000, easing: Easing.bezier(0.22, 1.1, 0.36, 1), useNativeDriver: false }).start();

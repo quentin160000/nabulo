@@ -3,7 +3,7 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { AccessibilityInfo, Animated, Easing, KeyboardAvoidingView, Pressable, ScrollView, TextInput, View, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
+import { Animated, Easing, KeyboardAvoidingView, Pressable, ScrollView, TextInput, View, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { load, save } from '@/game/storage';
@@ -14,6 +14,7 @@ import { images } from './bits';
 import { T } from './Text';
 import { keepFocus } from './game';
 import { KAV_BEHAVIOR, useMargeBasse } from './retours-jeux-clavier';
+import { animationsReduites } from '@/game/reglages';
 
 export const INK = gameInk;
 /** Ombre portée des titres blancs : 0 2px 0 #2B2150. */
@@ -33,7 +34,7 @@ export function CoopBg() {
 
 function useReduceMotion() {
   const [r, setR] = useState(false);
-  useEffect(() => { AccessibilityInfo.isReduceMotionEnabled().then(setR); }, []);
+  useEffect(() => { animationsReduites().then(setR); }, []);
   return r;
 }
 

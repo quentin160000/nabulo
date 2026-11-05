@@ -2,7 +2,7 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { AccessibilityInfo, Animated, Easing, Pressable, View, useWindowDimensions } from 'react-native';
+import { Animated, Easing, Pressable, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
 import type { Niveau } from '@/game/duel';
@@ -12,6 +12,7 @@ import { SlidingGradient } from './backgrounds';
 import { Coin, HeaderButton, Icon, images } from './bits';
 import { Confetti } from './Confetti';
 import { T } from './Text';
+import { animationsReduites } from '@/game/reglages';
 
 /* Briques communes des duels (planches J-duel-14 et J-duel-16). */
 
@@ -23,7 +24,7 @@ const fill = { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 } as c
 
 export function useReduceMotion() {
   const [r, setR] = useState(false);
-  useEffect(() => { AccessibilityInfo.isReduceMotionEnabled().then(setR); }, []);
+  useEffect(() => { animationsReduites().then(setR); }, []);
   return r;
 }
 
@@ -318,7 +319,7 @@ export function DuelEnd({ win, braises, title, subtitle, myName, me, opp, gain, 
             <Icon name="close" size={20} color="#FFFFFF" />
           </Pressable>
           <T size={20} weight={700} outline numberOfLines={1} style={{ flex: 1, minWidth: 0 }}>{title}</T>
-          <View accessibilityLabel={`Solde : ${braises} braises`} style={{ height: 36, marginLeft: 16, paddingLeft: 30, paddingRight: 12, borderRadius: 18, backgroundColor: '#FFFFFF', justifyContent: 'center' }}>
+          <View accessibilityLabel={`Solde : ${braises} brez`} style={{ height: 36, marginLeft: 16, paddingLeft: 30, paddingRight: 12, borderRadius: 18, backgroundColor: '#FFFFFF', justifyContent: 'center' }}>
             <Coin size={40} style={{ position: 'absolute', left: -12, top: -2 }} />
             <T size={17} weight={700} color={SHADOW} style={{ fontVariant: ['tabular-nums'] }}>{braises}</T>
           </View>
@@ -358,12 +359,12 @@ export function DuelEnd({ win, braises, title, subtitle, myName, me, opp, gain, 
           {card(opp, 'opp', !win)}
         </Animated.View>
 
-        <View accessibilityLabel={`${gain} braises ${win ? 'gagnées' : 'pour avoir joué'}`}
+        <View accessibilityLabel={`${gain} brez ${win ? 'gagnées' : 'pour avoir joué'}`}
           style={{ alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: 10, paddingRight: 22, paddingBottom: 12, paddingLeft: 14, borderRadius: 24, backgroundColor: 'rgba(255,255,255,0.18)' }}>
           <Coin size={58} />
           <View>
             <T size={46} weight={700} outline style={{ lineHeight: 46, fontVariant: ['tabular-nums'] }}>+{reduce ? gain : shown}</T>
-            <T size={15} weight={700} color="#FFFFFF" style={{ marginTop: 3, lineHeight: 15 }}>{win ? 'braises gagnées' : 'braises pour avoir joué'}</T>
+            <T size={15} weight={700} color="#FFFFFF" style={{ marginTop: 3, lineHeight: 15 }}>{win ? 'brez gagnées' : 'brez pour avoir joué'}</T>
           </View>
         </View>
 

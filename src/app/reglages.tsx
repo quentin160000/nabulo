@@ -73,7 +73,7 @@ export default function Reglages() {
 
       <Label>Ma partie</Label>
       <Row kind="white" icon="gear" leading={<ReglageTile name="revoir" />} title="Revoir l’introduction" sub="Nabulo te réexplique le jeu" onPress={revoirIntro} />
-      <Row kind="white" icon="gear" leading={<ReglageTile name="reset" bg="#FFE3EA" />} title="Réinitialiser ma progression" sub="braises, séries, parties, réglages"
+      <Row kind="white" icon="gear" leading={<ReglageTile name="reset" bg="#FFE3EA" />} title="Réinitialiser ma progression" sub="brez, séries, parties, réglages"
         onPress={() => setPanneau('reset')} />
 
       <Label>Nabulo</Label>
@@ -87,7 +87,7 @@ export default function Reglages() {
               <Image source={images.nabuloEmbete} style={{ width: 64, height: 64 }} contentFit="contain" accessibilityLabel="Nabulo embêté" />
               <View style={{ flex: 1 }}>
                 <T size={22} weight={700} color={ink} style={{ lineHeight: 24 }}>Tout effacer ?</T>
-                <T size={14} weight={600} color={gameInkSoft}>Braises, séries, parties en cours, duels et réglages repartent de zéro. Impossible de revenir en arrière.</T>
+                <T size={14} weight={600} color={gameInkSoft}>Brez, séries, parties en cours, duels et réglages repartent de zéro. Impossible de revenir en arrière.</T>
               </View>
             </View>
             <Button label="Réinitialiser ma progression" variant="yellow" border={2} color={ink} onPress={reinitialiser} />

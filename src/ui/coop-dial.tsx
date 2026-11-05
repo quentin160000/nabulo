@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { AccessibilityInfo, View } from 'react-native';
+import { View } from 'react-native';
 import Svg, { Circle, Defs, Line, LinearGradient, Path, Stop, Text as SvgText } from 'react-native-svg';
 import { mix } from '@/theme/colors';
 import { T } from './Text';
 import { INK } from './coop-kit';
+import { animationsReduites } from '@/game/reglages';
 
 /* Cadran « de synchro » de la planche J-coop-21 (220 px, arc de 270° de 0 à 100°). */
 const C = 110, R = 84, START = 135, SPAN = 270;
@@ -18,7 +19,7 @@ export function SynchroDial({ value }: { value: number }) {
   const [shown, setShown] = useState(0);
   useEffect(() => {
     let raf = 0, alive = true;
-    AccessibilityInfo.isReduceMotionEnabled().then(reduce => {
+    animationsReduites().then(reduce => {
       if (!alive) return;
       if (reduce) { setShown(value); return; }
       const t0 = Date.now();

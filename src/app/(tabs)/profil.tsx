@@ -43,13 +43,13 @@ export default function Profil() {
         ))}
       </View>
 
-      <Pressable accessibilityRole="button" accessibilityLabel={`${braises} braises, ouvrir la boutique`} onPress={() => router.push('/boutique')}
+      <Pressable accessibilityRole="button" accessibilityLabel={`${braises} brez, ouvrir la boutique`} onPress={() => router.push('/boutique')}
         style={({ pressed }) => ({ transform: [{ translateY: pressed ? 2 : 0 }] })}>
         <Bubble {...CARD.cours} style={{ paddingTop: 10, paddingHorizontal: 12, paddingBottom: 13 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
             <Coin size={46} />
             <View style={{ flex: 1, minWidth: 0 }}>
-              <T size={18} weight={700} color={ink} style={{ lineHeight: 21 }}>{braises} braises</T>
+              <T size={18} weight={700} color={ink} style={{ lineHeight: 21 }}>{braises} brez</T>
               <T size={13} weight={600} color={SOFT}>pour les indices</T>
             </View>
             <Tag label="Boutique" bg="#FFFFFF" />
