@@ -11,6 +11,7 @@ import { bubble, gameInk, ink, mix } from '@/theme/colors';
 import { SlidingGradient } from './backgrounds';
 import { Bubble } from './Bubble';
 import { images } from './bits';
+import { MotAjuste } from './libres-mot';
 import { T } from './Text';
 import { keepFocus } from './game';
 import { KAV_BEHAVIOR, useMargeBasse } from './retours-jeux-clavier';
@@ -271,9 +272,7 @@ export function EndScreen({ win, title, sub, caption, word, chips, stats, onRepl
         </View>
         <View style={{ flexGrow: 1, paddingVertical: 14, paddingHorizontal: 4, justifyContent: 'center', gap: 14 }}>
           <T size={17} weight={700} color="#FFFFFF" align="center" style={{ textShadowColor: INK, textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 0 }}>{caption}</T>
-          <View style={{ alignSelf: 'center', paddingVertical: 4, paddingHorizontal: 16, borderRadius: 16, borderWidth: 2, borderColor: 'transparent', backgroundColor: '#FFFFFF' }}>
-            <T size={fitSize(word, 46, 320)} weight={700} color={INK} numberOfLines={1}>{word}</T>
-          </View>
+          <MotAjuste mot={word} size={46} retrait={36} boite={{ paddingVertical: 4, paddingHorizontal: 16, borderRadius: 16, borderWidth: 2, borderColor: 'transparent', backgroundColor: '#FFFFFF' }} />
           <NeighborChips words={chips} />
           <View style={{ marginTop: 22, gap: 10 }}>
             {stats.map(([l, v]) => <StatRow key={l} label={l} value={v} />)}

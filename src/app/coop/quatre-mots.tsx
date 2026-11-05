@@ -4,6 +4,7 @@ import { Pressable, View, ScrollView } from 'react-native';
 import { LIVES, RECORD_QUATRE_MOTS, aiGuess, aiHint, checkHint, closeWords, hintTemperatures, makeSeries, type Series } from '@/game/coop';
 import { rng } from '@/game/lexicon';
 import { Toast, useToast } from '@/ui/Toast';
+import { MotAjuste } from '@/ui/libres-mot';
 import { T } from '@/ui/Text';
 import { Bubble } from '@/ui/Bubble';
 import {
@@ -111,7 +112,7 @@ export default function QuatreMots() {
   const row = (w: string, opts: { bg?: string; tag?: string; onPress?: () => void } = {}) => {
     const inner = (
       <View style={{ flexDirection: 'row', alignItems: 'center', height: 70, paddingHorizontal: 18, borderRadius: 18, borderWidth: 2, borderColor: 'transparent', backgroundColor: opts.bg ?? '#FFFFFF' }}>
-        <T size={26} weight={700} color={INK} style={{ flex: 1, minWidth: 0 }} numberOfLines={1} adjustsFontSizeToFit>{w}</T>
+        <MotAjuste mot={w} size={26} align="left" style={{ flex: 1, minWidth: 0, alignSelf: 'auto' }} />
         {opts.tag ? <View style={{ flexShrink: 0, marginLeft: 8, paddingVertical: 2, paddingHorizontal: 10, borderRadius: 8, backgroundColor: '#2B2150' }}><T size={13} weight={700} color="#FFFFFF" numberOfLines={1}>{opts.tag}</T></View> : null}
       </View>
     );
@@ -147,7 +148,7 @@ export default function QuatreMots() {
           <Avatar letter="IA" size={44} font={17} />
           <View style={{ flex: 1, minWidth: 0 }}>
             <T size={13} weight={600} color={INK}>Indice de l’IA</T>
-            <T size={28} weight={700} color={INK} numberOfLines={1} adjustsFontSizeToFit>{round.hint ?? 'réfléchit…'}</T>
+            <MotAjuste mot={round.hint ?? 'réfléchit…'} size={28} align="left" />
           </View>
         </Bubble>
         <T size={17} weight={700} outline align="center">Quel mot vise-t-elle ?</T>

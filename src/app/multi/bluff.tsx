@@ -13,6 +13,7 @@ import {
   BigTitle, Buttons, Dots, Grow, HeadChip, INK, InputBar, JoyHero, Lobby, MAvatar, MButton, MHeader, MScreen, PRow, RankRow, Rules, Tag,
   clock, leave, useCountdown,
 } from '@/ui/multi-ui';
+import { MotAjuste } from '@/ui/libres-mot';
 import { T } from '@/ui/Text';
 import { Toast, useToast } from '@/ui/Toast';
 
@@ -82,7 +83,7 @@ function Secret({ players, round, index, score, onDone }: { players: Player[]; r
       <Bubble bg="#FFFFFF" radius={26} border={2} inset={6} style={{ marginTop: 18, paddingTop: 30, paddingHorizontal: 16, paddingBottom: 28, alignItems: 'center', gap: 6, overflow: 'visible' }}>
         <Image source={images.nabulo} style={{ position: 'absolute', right: -10, top: -46, width: 92, height: 92 }} contentFit="contain" accessible={false} />
         <T size={15} weight={700} color={INK} style={{ opacity: 0.6 }}>Ton mot secret</T>
-        <T size={66} weight={700} color={INK} numberOfLines={1} adjustsFontSizeToFit style={{ lineHeight: 70, letterSpacing: 0.5 }}>{word}</T>
+        <MotAjuste mot={word} size={66} lineHeight={70} letterSpacing={0.5} />
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 4, paddingHorizontal: 12, borderRadius: 12, backgroundColor: '#F1EEFA' }}>
           <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="#5B4FA8" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round">
             <Path d="M3 3l18 18" /><Path d="M10.6 6.1A9.8 9.8 0 0 1 12 6c5 0 9 6 9 6a17 17 0 0 1-2.6 3.2M6.3 7.6C4.2 9.2 3 12 3 12s4 6 9 6a8.6 8.6 0 0 0 3.4-.7" /><Path d="M9.9 10a3 3 0 0 0 4.2 4.1" />
@@ -275,12 +276,12 @@ function Revelation({ players, round, index, total, onNext }: { players: Player[
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <View style={{ flex: 1, minWidth: 0, paddingTop: 10, paddingHorizontal: 12, paddingBottom: 12, borderRadius: 18, backgroundColor: '#FFFFFF', alignItems: 'center', gap: 2 }}>
           <T size={12} weight={700} color={INK} numberOfLines={1} style={{ opacity: 0.6 }}>Le mot de tous</T>
-          <T size={26} weight={700} color={INK} numberOfLines={1} adjustsFontSizeToFit>{round.secret}</T>
+          <MotAjuste mot={round.secret} size={26} />
         </View>
         <T size={24} weight={700} outline>≠</T>
         <View style={{ flex: 1, minWidth: 0, paddingTop: 10, paddingHorizontal: 12, paddingBottom: 12, borderRadius: 18, backgroundColor: '#FFD6E0', alignItems: 'center', gap: 2 }}>
           <T size={12} weight={700} color={INK} numberOfLines={1} adjustsFontSizeToFit style={{ opacity: 0.6 }}>{imp.me ? 'Ton mot' : `Le mot d’${imp.name}`}</T>
-          <T size={26} weight={700} color={INK} numberOfLines={1} adjustsFontSizeToFit>{round.fake}</T>
+          <MotAjuste mot={round.fake} size={26} />
         </View>
       </View>
       <View style={{ alignSelf: 'center', maxWidth: '100%', paddingVertical: 6, paddingHorizontal: 14, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.16)' }}>

@@ -10,10 +10,11 @@ import { warmGradient, warmStops } from '@/theme/colors';
 import { SlidingGradient } from '@/ui/backgrounds';
 import { Bubble } from '@/ui/Bubble';
 import { Confetti } from '@/ui/Confetti';
+import { MotAjuste } from '@/ui/libres-mot';
 import { T } from '@/ui/Text';
 import { Toast, useToast } from '@/ui/Toast';
 import { SynchroDial } from '@/ui/coop-dial';
-import { Avatar, CoopButton, fitSize, EndScreen, INK, PartnerPicker, RulesScreen, Screen, TopBar, WordField, useRecord } from '@/ui/coop-kit';
+import { Avatar, CoopButton, EndScreen, INK, PartnerPicker, RulesScreen, Screen, TopBar, WordField, useRecord } from '@/ui/coop-kit';
 
 type Phase = 'partner' | 'rules' | 'input' | 'reveal' | 'end';
 type Turn = { prompt: string; me: string; ai: string; score: number };
@@ -125,9 +126,7 @@ export default function Synchro() {
         <View style={{ flex: 1, gap: 10 }}>
           {header}
           <T size={17} weight={700} outline align="center">Un mot associé à</T>
-          <View style={{ alignSelf: 'center', paddingVertical: 4, paddingHorizontal: 18, borderRadius: 18, borderWidth: 2, borderColor: 'transparent', backgroundColor: '#FFFFFF' }}>
-            <T size={fitSize(prompt, 44, 320)} weight={700} color={INK} numberOfLines={1}>{prompt}</T>
-          </View>
+          <MotAjuste mot={prompt} size={44} retrait={40} boite={{ paddingVertical: 4, paddingHorizontal: 18, borderRadius: 18, borderWidth: 2, borderColor: 'transparent', backgroundColor: '#FFFFFF' }} />
           <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10 }}>
             <Avatar letter="IA" size={36} font={14} />
             <T size={15} weight={700} color="#FFFFFF">{ai ? 'L’IA a choisi son mot' : 'L’IA réfléchit…'}</T>
@@ -149,7 +148,7 @@ export default function Synchro() {
     <Bubble bg="#FFFFFF" radius={22} border={2} inset={6} style={{ flex: 1, minWidth: 0, paddingTop: 14, paddingHorizontal: 12, paddingBottom: 16, alignItems: 'center', gap: 6 }}>
       <Avatar letter={letter} color={color} size={60} font={letter.length > 1 ? 22 : 26} />
       <T size={14} weight={600} color={INK} style={{ opacity: 0.65 }}>{who}</T>
-      <T size={fitSize(word, 30, 140)} weight={700} color={INK} numberOfLines={1} adjustsFontSizeToFit style={{ lineHeight: 32, maxWidth: '100%' }}>{word}</T>
+      <MotAjuste mot={word} size={30} lineHeight={32} />
       <View style={{ marginTop: 2, paddingVertical: 3, paddingHorizontal: 12, borderRadius: 10, backgroundColor: '#FFE9D6' }}>
         <T size={13} weight={700} color="#B4541E">{Math.max(0, Math.round(temperature(word, t.prompt) ?? 0))}° du mot</T>
       </View>
@@ -160,9 +159,7 @@ export default function Synchro() {
       {header}
       <View style={{ alignItems: 'center', gap: 4, marginTop: 4 }}>
         <T size={14} weight={700} outline>Le mot de la manche</T>
-        <View style={{ paddingVertical: 4, paddingHorizontal: 20, borderRadius: 18, backgroundColor: '#FFFFFF' }}>
-          <T size={fitSize(t.prompt, 36, 318)} weight={700} color={INK} numberOfLines={1}>{t.prompt}</T>
-        </View>
+        <MotAjuste mot={t.prompt} size={36} retrait={40} boite={{ paddingVertical: 4, paddingHorizontal: 20, borderRadius: 18, backgroundColor: '#FFFFFF' }} />
       </View>
       <View style={{ flexDirection: 'row', gap: 12, marginTop: 6 }}>
         {card('T', '#FFD45C', 'Toi', t.me)}

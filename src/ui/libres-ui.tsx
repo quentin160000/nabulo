@@ -13,6 +13,7 @@ import { Icon, images } from './bits';
 import { Confetti } from './Confetti';
 import { Diagonal, Relief } from './Diagonal';
 import { GameBg } from './game';
+import { MotAjuste } from './libres-mot';
 import { T } from './Text';
 import { animationsReduites } from '@/game/reglages';
 
@@ -66,6 +67,17 @@ export function Pill({ label, bg = '#FFD45C', icon, accessibilityLabel }: { labe
       <View accessible accessibilityLabel={accessibilityLabel ?? label} style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
         {icon}
         <T size={14} weight={700} color={INK} numberOfLines={1}>{label}</T>
+      </View>
+    </Bubble>
+  );
+}
+
+/** Compteur de série de l'en-tête : le nombre seul, en grand, dans une bulle jaune (40 px, la hauteur du ✕). */
+export function Compteur({ valeur, label = 'Série', bg = '#FFD45C' }: { valeur: number; label?: string; bg?: string }) {
+  return (
+    <Bubble bg={bg} radius={14} border={2} inset={5} style={{ height: 40, minWidth: 52, paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center' }}>
+      <View accessible accessibilityLabel={`${label} ${valeur}`} accessibilityLiveRegion="polite">
+        <T size={26} weight={700} color={INK} numberOfLines={1}>{valeur}</T>
       </View>
     </Bubble>
   );
@@ -246,13 +258,15 @@ function Tear({ left, top, fall }: { left: number; top: number; fall: number }) 
 
 /* ---------- 4 · Fin ---------- */
 export type LigneFin = { label: string; value: string };
+/** Série mise en valeur sur l'écran de fin (à la place du mot et de ses voisins). */
+export type SerieFin = { valeur: number; legende: string; badge: string; detail?: string };
 
 /**
  * Écran de fin commun : fond chaud qui glisse + confettis + Nabulo qui saute (record battu),
  * ou fond froid + pluie + Nabulo triste (série terminée sans record).
  */
-export function Fin({ record, titre, sousTitre, label, mot, voisins, lignes, onReplay }: {
-  record: boolean; titre: string; sousTitre: string; label: string; mot: string; voisins: string[]; lignes: LigneFin[]; onReplay: () => void;
+export function Fin({ record, titre, sousTitre, label, mot, voisins = [], serie, lignes, onReplay }: {
+  record: boolean; titre: string; sousTitre: string; label?: string; mot?: string; voisins?: string[]; serie?: SerieFin; lignes: LigneFin[]; onReplay: () => void;
 }) {
   const cadre = useCadre();
   return (
@@ -281,10 +295,23 @@ export function Fin({ record, titre, sousTitre, label, mot, voisins, lignes, onR
         </View>
 
         <View style={{ flex: 1, minHeight: 0, paddingVertical: 14, paddingHorizontal: 4, justifyContent: 'center', gap: 14 }}>
-          <Outlined size={17} w={1.5} dy={2}>{label}</Outlined>
-          <View style={{ alignSelf: 'center', maxWidth: '100%', paddingVertical: 4, paddingHorizontal: 16, borderRadius: 16, borderWidth: 2, borderColor: 'transparent', backgroundColor: '#FFFFFF' }}>
-            <T size={46} weight={700} color={INK} numberOfLines={1} adjustsFontSizeToFit style={{ lineHeight: 51 }}>{mot}</T>
-          </View>
+          {serie && (
+            <View accessible accessibilityLabel={`${serie.legende} : ${serie.valeur}. ${serie.badge}${serie.detail ? `, ${serie.detail}` : ''}`} style={{ alignItems: 'center', gap: 10 }}>
+              <Outlined size={17} w={1.5} dy={2}>{serie.legende}</Outlined>
+              <Bubble bg="#FFFFFF" radius={26} border={3} inset={8} style={{ minWidth: 150, paddingTop: 2, paddingBottom: 10, paddingHorizontal: 24, alignItems: 'center' }}>
+                <T size={84} weight={700} color={INK} numberOfLines={1}>{serie.valeur}</T>
+              </Bubble>
+              <Bubble bg={record ? '#FFD45C' : '#FFFFFF'} radius={15} border={2} inset={5} style={{ paddingVertical: 6, paddingHorizontal: 14, alignItems: 'center' }}>
+                <T size={18} weight={700} color={INK} numberOfLines={1}>{serie.badge}</T>
+              </Bubble>
+              {serie.detail ? <Outlined size={16} weight={600} w={1.5} dy={2}>{serie.detail}</Outlined> : null}
+            </View>
+          )}
+          {label ? <Outlined size={17} w={1.5} dy={2}>{label}</Outlined> : null}
+          {mot ? (
+            <MotAjuste mot={mot} size={46} lineHeight={51} retrait={36}
+              boite={{ paddingVertical: 4, paddingHorizontal: 16, borderRadius: 16, borderWidth: 2, borderColor: 'transparent', backgroundColor: '#FFFFFF' }} />
+          ) : null}
           {voisins.length > 0 && (
             <View accessible accessibilityLabel={`Voisins : ${voisins.join(', ')}`} style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 }}>
               {voisins.map((v, i) => (
@@ -311,6 +338,27 @@ export function Fin({ record, titre, sousTitre, label, mot, voisins, lignes, onR
         </View>
       </View>
     </View>
+  );
+}
+
+/**
+ * Fin des jeux à série (Plus chaud, L'intrus) : la série obtenue en grand et le record (battu, égalé ou à battre),
+ * sans mot ni voisins.
+ */
+export function FinSerie({ serie, ancien, temps, onReplay }: { serie: number; ancien: number; temps?: boolean; onReplay: () => void }) {
+  const record = serie > ancien;
+  const egal = !record && serie > 0 && serie === ancien;
+  return (
+    <Fin
+      record={record}
+      titre={record ? 'Nouveau record !' : temps ? 'Temps écoulé !' : 'Série terminée'}
+      sousTitre={record ? (ancien > 0 ? 'Tu as battu ton record' : 'Ton premier record') : temps ? 'Série terminée' : 'Une erreur et c’est fini'}
+      serie={{ valeur: serie, legende: 'Ta série', badge: record ? 'Record battu !' : egal ? 'Record égalé !' : 'Pas de record cette fois' }}
+      lignes={record
+        ? [{ label: 'Nouveau record', value: String(serie) }, { label: 'Ancien record', value: ancien > 0 ? String(ancien) : '—' }]
+        : [{ label: 'Ton record', value: String(ancien) }, { label: 'Pour le battre', value: `${ancien - serie + 1} de plus` }]}
+      onReplay={onReplay}
+    />
   );
 }
 

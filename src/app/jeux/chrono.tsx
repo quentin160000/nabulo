@@ -6,10 +6,12 @@ import { rng } from '@/game/lexicon';
 import {
   CHRONO_ALERTE, CHRONO_DUREE, CHRONO_SEUIL, cibleChrono, cleanNeighbors, couleurPastille, essaiChrono, motsTrouves, type Essai,
 } from '@/game/libres-manches';
+import { vibrationsActives } from '@/game/reglages';
 import { enregistrerScore, finirEnCours, marquerEnCours } from '@/game/libres-stockage';
 import { Bubble } from '@/ui/Bubble';
 import { GameBg, keepFocus } from '@/ui/game';
 import { Fin, Header, INK, Pill, quitter, Regles, Stopwatch, TimerBar, useCadre } from '@/ui/libres-ui';
+import { MotAjuste } from '@/ui/libres-mot';
 import { KAV_BEHAVIOR, useMargeBasse } from '@/ui/retours-jeux-clavier';
 import { T } from '@/ui/Text';
 import { Toast, useToast } from '@/ui/Toast';
@@ -81,14 +83,14 @@ function EnJeu({ onFin }: { onFin: (r: Resultat) => void }) {
     if (!v.ok) {
       if (v.raison !== 'vide') {
         toast.show(v.raison === 'inconnu' ? `Je ne connais pas « ${text.trim()} »` : v.raison === 'cible' ? 'C’est le mot cible !' : `« ${text.trim().toLowerCase()} » est déjà proposé`);
-        if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+        if (Platform.OS !== 'web' && vibrationsActives()) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
         if (v.raison !== 'inconnu') setText('');
       }
       input.current?.focus();
       return;
     }
     toast.hide();
-    if (Platform.OS !== 'web') Haptics.impactAsync(v.essai.temperature >= CHRONO_SEUIL ? Haptics.ImpactFeedbackStyle.Medium : Haptics.ImpactFeedbackStyle.Light);
+    if (Platform.OS !== 'web' && vibrationsActives()) Haptics.impactAsync(v.essai.temperature >= CHRONO_SEUIL ? Haptics.ImpactFeedbackStyle.Medium : Haptics.ImpactFeedbackStyle.Light);
     setEssais(e => [...e, v.essai]);
     setText('');
     input.current?.focus();
@@ -105,9 +107,9 @@ function EnJeu({ onFin }: { onFin: (r: Resultat) => void }) {
             right={<Pill label={`${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`} bg={alerte ? ALERTE : '#FFD45C'} icon={<Stopwatch />} accessibilityLabel={`${s} secondes restantes`} />} />
           <TimerBar label={alerte ? 'Vite !' : 'Temps'} value={`${s} s`} frac={reste / CHRONO_DUREE} color={alerte ? ALERTE : '#FFD45C'} />
           <Bubble bg="#FFFFFF" radius={18} border={2} inset={6} style={{ paddingVertical: 10, paddingHorizontal: 12 }}>
-            <View accessible accessibilityLabel={`Autour de ${cible} : ${mots(trouves)} trouvé${trouves > 1 ? 's' : ''}`} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
+            <View accessible accessibilityLabel={`Autour de ${cible} : ${mots(trouves)} trouvé${trouves > 1 ? 's' : ''}`} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
               <T size={14} weight={600} color={INK}>Autour de</T>
-              <T size={28} weight={700} color={INK} numberOfLines={1} adjustsFontSizeToFit style={{ flexShrink: 1 }}>{cible}</T>
+              <MotAjuste mot={cible} size={28} style={{ flex: 1, minWidth: 0, alignSelf: 'auto' }} />
               <T size={22} weight={700} color={INK}>{trouves}</T>
             </View>
           </Bubble>

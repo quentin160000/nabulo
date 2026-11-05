@@ -21,6 +21,7 @@ import { Button } from '@/ui/Button';
 import { Chip, Icon, images } from '@/ui/bits';
 import { BigTitle, DuelBg, DuelEnd, DuelHeader, DuelScreen, INK, NiveauPicker, OpponentChoice, leave } from '@/ui/duel-ui';
 import { Mascot } from '@/ui/Mascot';
+import { MotAjuste } from '@/ui/libres-mot';
 import { T } from '@/ui/Text';
 import { Toast, useToast } from '@/ui/Toast';
 import { useKeyboardVisible, keepFocus } from '@/ui/game';
@@ -238,7 +239,7 @@ function EnJeu({ match, niveau, onEnd }: { match: Match; niveau: Niveau; onEnd: 
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
               {mood && last ? <Mascot mood={mood} size={92} /> : <Image source={images.nabulo} style={{ width: 92, height: 92 }} contentFit="contain" accessibilityLabel="Nabulo" />}
               <View style={{ alignItems: 'flex-start', gap: 8, minWidth: 0, flexShrink: 1 }}>
-                <T size={30} weight={700} color="#FFFFFF" numberOfLines={1} style={[{ lineHeight: 33, maxWidth: 210 }, SH2]}>{last ? last.word : 'À toi !'}</T>
+                <MotAjuste mot={last ? last.word : 'À toi !'} size={30} lineHeight={33} color="#FFFFFF" align="left" styleTexte={SH2} style={{ width: 210, maxWidth: '100%', alignSelf: 'auto' }} />
                 {last && mood ? (
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                     <Chip label={fmt1(last.temperature, ' °C')} bg={tempColor(last.temperature)} size={22} color={SH} style={{ paddingHorizontal: 12, paddingVertical: 3, borderRadius: 14, borderWidth: 0 }} />

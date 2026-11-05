@@ -16,6 +16,7 @@ import { Icon, images } from '@/ui/bits';
 import {
   BigTitle, DuelBg, DuelEnd, DuelGauge, DuelHeader, DuelScreen, INK, NiveauPicker, OpponentChoice, PlayerAvatar, WordChip,
 } from '@/ui/duel-ui';
+import { MotAjuste } from '@/ui/libres-mot';
 import { T } from '@/ui/Text';
 import { Toast, useToast } from '@/ui/Toast';
 import { keepFocus } from '@/ui/game';
@@ -178,9 +179,9 @@ function EnJeu({ round, score, niveau, myName, onEnd }: {
           <Bubble bg="#FFFFFF" radius={12} border={2} inset={5} style={{ paddingVertical: 6, paddingHorizontal: 12 }}>
             <T size={14} weight={700} color={INK} numberOfLines={2} accessibilityLiveRegion="polite">{news}</T>
           </Bubble>
-          <Bubble bg="#FFFFFF" radius={18} border={2} inset={6} style={{ paddingTop: 10, paddingBottom: 12, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
+          <Bubble bg="#FFFFFF" radius={18} border={2} inset={6} style={{ paddingTop: 10, paddingBottom: 12, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
             <T size={14} weight={600} color={INK}>Autour de</T>
-            <T size={26} weight={700} color={INK} numberOfLines={1} adjustsFontSizeToFit style={{ flexShrink: 1 }}>{round.target}</T>
+            <MotAjuste mot={round.target} size={26} style={{ flex: 1, minWidth: 0, alignSelf: 'auto' }} />
             <T size={18} weight={700} color={INK} accessibilityLabel={`${good.length} mots pour toi, ${validWords(theirs).length} pour l’IA`}>{good.length} – {validWords(theirs).length}</T>
           </Bubble>
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 7, paddingTop: 4 }} keyboardShouldPersistTaps="handled">
@@ -239,7 +240,7 @@ function WordColumn({ who, name, myName, words, lead }: { who: 'me' | 'opp'; nam
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 6 }} showsVerticalScrollIndicator={false}>
         {words.length ? words.map(w => (
           <View key={w.word} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 34, paddingVertical: 5, paddingHorizontal: 12, borderRadius: 13, backgroundColor: roundChipColor(w.temperature) }}>
-            <T size={15} weight={700} color={INK} numberOfLines={1} adjustsFontSizeToFit style={{ flex: 1, minWidth: 0 }}>{w.word}</T>
+            <MotAjuste mot={w.word} size={15} min={10} align="left" style={{ flex: 1, minWidth: 0, alignSelf: 'auto' }} />
             <T size={14} weight={700} color={INK}>{deg(w.temperature)}</T>
           </View>
         )) : <T size={14} weight={600} color={INK} align="center" style={{ opacity: 0.6, marginTop: 6 }}>aucun mot à {CHRONO_SEUIL}°+</T>}

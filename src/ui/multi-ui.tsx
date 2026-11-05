@@ -15,6 +15,7 @@ import { Confetti } from './Confetti';
 import { Diagonal, Relief } from './Diagonal';
 import { SlidingGradient } from './backgrounds';
 import { images } from './bits';
+import { MotAjuste } from './libres-mot';
 import { T } from './Text';
 import { Toast, useToast } from './Toast';
 import { keepFocus } from './game';
@@ -344,9 +345,7 @@ export function WordReveal({ caption, word, chips }: { caption: string; word: st
   return (
     <View style={{ gap: 14 }}>
       <T size={17} weight={700} color="#FFFFFF" align="center" style={{ textShadowColor: INK, textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 0 }}>{caption}</T>
-      <View style={{ alignSelf: 'center', maxWidth: '100%', paddingVertical: 4, paddingHorizontal: 16, borderRadius: 16, borderWidth: 2, borderColor: 'transparent', backgroundColor: '#FFFFFF' }}>
-        <T size={46} weight={700} color={INK} numberOfLines={1} adjustsFontSizeToFit style={{ lineHeight: 51 }}>{word}</T>
-      </View>
+      <MotAjuste mot={word} size={46} lineHeight={51} retrait={36} boite={{ paddingVertical: 4, paddingHorizontal: 16, borderRadius: 16, borderWidth: 2, borderColor: 'transparent', backgroundColor: '#FFFFFF' }} />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 }}>
         {chips.map((c, i) => <WordBubble key={c} label={c} bg={HEAT_ORDER[i % HEAT_ORDER.length]} />)}
       </View>
