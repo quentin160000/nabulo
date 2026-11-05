@@ -1,17 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { engine, type Lang } from './engine';
+import { engine, engineKind, type Lang } from './engine';
 import { bestTemperature, braisesFor, type Guess } from './rules';
 import { load, save } from './storage';
 
 export type DailyState = {
   day: number; lang: Lang; guesses: Guess[]; solved: boolean; secret: string | null;
   hintsUsed: number; adHintsUsed: number; reward: number; rewardClaimed: boolean;
+  /** Moteur qui a produit la partie : une partie locale n'a pas le même mot secret que le serveur. */
+  source?: 'supabase' | 'local';
 };
 export type Feedback = { kind: 'unknown' | 'repeat' | 'error'; word: string } | null;
 
 const keyFor = (lang: Lang, day: number) => `nabulo:mdj:${lang}:${day}`;
 const fresh = (lang: Lang, day: number): DailyState =>
-  ({ day, lang, guesses: [], solved: false, secret: null, hintsUsed: 0, adHintsUsed: 0, reward: 0, rewardClaimed: false });
+  ({ day, lang, guesses: [], solved: false, secret: null, hintsUsed: 0, adHintsUsed: 0, reward: 0, rewardClaimed: false, source: engineKind });
 
 /** Partie du jour, sauvegardée à chaque coup pour la reprendre même après avoir quitté l'appli. */
 export function useDaily(lang: Lang = 'fr', date = new Date()) {
@@ -26,7 +28,11 @@ export function useDaily(lang: Lang = 'fr', date = new Date()) {
 
   useEffect(() => {
     let alive = true;
-    load<DailyState>(keyFor(lang, day), fresh(lang, day)).then(s => { if (alive) { setState(s); setReady(true); } });
+    load<DailyState>(keyFor(lang, day), fresh(lang, day)).then(s => {
+      // une partie jouée avec l'autre moteur (mot secret différent) repart de zéro
+      const ok = (s.source ?? 'local') === engineKind ? s : fresh(lang, day);
+      if (alive) { setState(ok); setReady(true); }
+    });
     return () => { alive = false; };
   }, [lang, day]);
 

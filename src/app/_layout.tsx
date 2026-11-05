@@ -16,7 +16,8 @@ const pause = (ms: number) => new Promise(r => setTimeout(r, ms));
 async function warmUp() {
   const start = Date.now();
   await pause(50);                                   // laisse l'écran s'afficher avant le calcul
-  await engine.guess('fr', engine.dayNumber(new Date()), 'feu').catch(() => {});
+  // réveille le serveur (ou construit la table locale) sans bloquer plus de 2,5 s si le réseau est lent
+  await Promise.race([engine.guess('fr', engine.dayNumber(new Date()), 'feu').catch(() => {}), pause(2500)]);
   await pause(16);
   known('feu');
   const left = 1200 - (Date.now() - start);          // le temps de voir Nabulo faire un tour, sans traîner
