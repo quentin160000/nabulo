@@ -9,7 +9,7 @@ import { T } from './Text';
 import { animationsReduites } from '@/game/reglages';
 
 /** Écran de chargement (planche M-mascotte-tison-3d) : Nabulo qui tourne, titre, jauge froid → chaud. */
-export function Loading() {
+export function Loading({ onReady }: { onReady?: () => void }) {
   const inset = useSafeAreaInsets();
   const [v] = useState(() => new Animated.Value(0));
   const [reduce, setReduce] = useState(false);
@@ -35,7 +35,7 @@ export function Loading() {
       <View style={{ flex: 1, paddingTop: inset.top + 4, paddingBottom: inset.bottom + 24, paddingHorizontal: 16, gap: 10 }}>
         <View style={{ flex: 1 }} />
         <View style={{ alignItems: 'center', gap: 8 }}>
-          <Image source={images.nabuloTour} autoplay style={{ width: 280, height: 280 }} contentFit="contain" accessibilityLabel="Nabulo qui tourne sur lui-même" />
+          <Image source={images.nabuloTour} autoplay onLoad={onReady} onError={onReady} style={{ width: 280, height: 280 }} contentFit="contain" accessibilityLabel="Nabulo qui tourne sur lui-même" />
           <T size={46} weight={700} outline style={{ letterSpacing: 0.5 }}>Nabulo</T>
           <T size={16} weight={600} color="#FFFFFF">le jeu des mots chauds et froids</T>
         </View>

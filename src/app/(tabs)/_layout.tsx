@@ -11,7 +11,7 @@ export default function TabsLayout() {
   const inset = useSafeAreaInsets();
   return (
     <Tabs
-      screenOptions={{ headerShown: false, animation: 'fade', sceneStyle: { backgroundColor: 'transparent' } }}
+      screenOptions={{ headerShown: false, animation: 'fade', sceneStyle: { backgroundColor: '#4B33B8' } }}
       tabBar={({ state, navigateToTab }) => {
         const active = ROUTES[state.routes[state.index].name];
         return (

@@ -1,6 +1,6 @@
 /* Coop · Trouve le mot (planche J-coop-17), avec un partenaire IA. */
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Pressable, View, ScrollView } from 'react-native';
 import { LIVES, RECORD_QUATRE_MOTS, aiGuess, aiHint, checkHint, closeWords, hintTemperatures, makeSeries, type Series } from '@/game/coop';
 import { rng } from '@/game/lexicon';
 import { Toast, useToast } from '@/ui/Toast';
@@ -126,10 +126,11 @@ export default function QuatreMots() {
         <View style={{ flex: 1, gap: 10 }}>
           {header}
           <T size={17} weight={700} outline align="center">{thinking ? `« ${round.hint} » envoyé · l’IA réfléchit…` : 'Fais deviner le bon mot à l’IA'}</T>
-          <View style={{ gap: 10 }}>
+          {/* clavier ouvert : les 4 mots défilent au lieu de pousser le champ contre le clavier */}
+          <ScrollView style={{ flexShrink: 1 }} contentContainerStyle={{ gap: 10 }} keyboardShouldPersistTaps="handled">
             {s.words.map(w => row(w, w === s.secret ? { bg: GREEN, tag: 'le bon' } : {}))}
-          </View>
-          <View style={{ marginTop: 'auto' }}>
+          </ScrollView>
+          <View style={{ marginTop: 'auto', paddingTop: 10 }}>
             <WordField value={text} onChange={setText} onSubmit={sendHint} placeholder="Un seul mot, pas un des 4" action="Envoyer" disabled={thinking} label="Ton mot-indice" />
           </View>
         </View>

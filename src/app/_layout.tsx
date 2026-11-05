@@ -1,6 +1,6 @@
 import { Fredoka_500Medium, Fredoka_600SemiBold, Fredoka_700Bold, useFonts } from '@expo-google-fonts/fredoka';
 import { Inter_500Medium, Inter_700Bold } from '@expo-google-fonts/inter';
-import { Stack } from 'expo-router';
+import { DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
@@ -9,6 +9,9 @@ import { engine } from '@/game/engine';
 import { known } from '@/game/lexicon';
 import { WalletProvider } from '@/game/wallet';
 import { Loading } from '@/ui/Loading';
+
+/** Thème de navigation : fond violet partout, pour qu'aucune transition ne laisse voir de blanc. */
+const THEME = { ...DefaultTheme, colors: { ...DefaultTheme.colors, background: '#4B33B8', card: '#4B33B8' } };
 
 const pause = (ms: number) => new Promise(r => setTimeout(r, ms));
 
@@ -29,12 +32,21 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const [loaded, error] = useFonts({ Fredoka_500Medium, Fredoka_600SemiBold, Fredoka_700Bold, Inter_500Medium, Inter_700Bold });
   const [ready, setReady] = useState(false);
-  useEffect(() => { if (loaded || error) SplashScreen.hideAsync(); }, [loaded, error]);
-  useEffect(() => { if (loaded || error) warmUp().finally(() => setReady(true)); }, [loaded, error]);
+  // l'écran de démarrage natif reste affiché jusqu'à ce que Nabulo soit prêt à tourner (au plus 2 s), pour qu'il n'arrive pas après la jauge
+  const [shown, setShown] = useState(false);
+  const reveal = () => { if (!shown) { setShown(true); SplashScreen.hideAsync(); } };
+  useEffect(() => {
+    if (!loaded && !error) return;
+    const t = setTimeout(() => { setShown(true); SplashScreen.hideAsync(); }, 2000);
+    return () => clearTimeout(t);
+  }, [loaded, error]);
+  // la préparation des mots ne commence qu'une fois l'écran de chargement visible, et il reste au moins 1,2 s
+  useEffect(() => { if (shown) warmUp().finally(() => setReady(true)); }, [shown]);
   if (!loaded && !error) return null;
-  if (!ready) return <SafeAreaProvider><StatusBar style="light" /><Loading /></SafeAreaProvider>;
+  if (!ready) return <SafeAreaProvider><StatusBar style="light" /><Loading onReady={reveal} /></SafeAreaProvider>;
   return (
     <SafeAreaProvider>
+      <ThemeProvider value={THEME}>
       <WalletProvider>
         <StatusBar style="auto" />
         <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right', contentStyle: { backgroundColor: '#4B33B8' } }}>
@@ -42,6 +54,7 @@ export default function RootLayout() {
           <Stack.Screen name="onboarding" options={{ animation: 'fade', gestureEnabled: false }} />
         </Stack>
       </WalletProvider>
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }

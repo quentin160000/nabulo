@@ -107,28 +107,30 @@ function Pack({ n, price, note, onPress }: { n: number; price: string; note?: st
   );
 }
 
-/** Pièce de braise qui flotte et se balance doucement (packs « Recharger »), décalée d'un pack à l'autre. */
+/**
+ * Pièce de braise des packs « Recharger » : immobile, puis de temps en temps elle fait un tour sur elle-même
+ * comme une pièce qu'on fait tourner (rotation 3D autour de l'axe vertical), décalée d'un pack à l'autre.
+ */
 function BobCoin({ size, delay }: { size: number; delay: number }) {
   const [v] = useState(() => new Animated.Value(0));
   useEffect(() => {
-    let loop: Animated.CompositeAnimation | null = null;
-    animationsReduites().then(r => {
-      if (r) return;
-      loop = Animated.loop(Animated.sequence([
-        Animated.delay(delay),
-        Animated.timing(v, { toValue: 1, duration: 900, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-        Animated.timing(v, { toValue: 0, duration: 900, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-        Animated.delay(900 - delay),
-      ]));
-      loop.start();
-    });
-    return () => loop?.stop();
+    let alive = true;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const spin = () => {
+      if (!alive) return;
+      v.setValue(0);
+      Animated.timing(v, { toValue: 1, duration: 900, easing: Easing.inOut(Easing.cubic), useNativeDriver: true }).start(() => {
+        timer = setTimeout(spin, 3200 + Math.random() * 2600);
+      });
+    };
+    animationsReduites().then(r => { if (!r && alive) timer = setTimeout(spin, 800 + delay); });
+    return () => { alive = false; if (timer) clearTimeout(timer); };
   }, [v, delay]);
   return (
     <Animated.View style={{ transform: [
-      { translateY: v.interpolate({ inputRange: [0, 1], outputRange: [0, -5] }) },
-      { rotate: v.interpolate({ inputRange: [0, 0.5, 1], outputRange: ['-6deg', '0deg', '6deg'] }) },
-      { scale: v.interpolate({ inputRange: [0, 1], outputRange: [1, 1.06] }) },
+      { perspective: 400 },
+      { rotateY: v.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] }) },
+      { scale: v.interpolate({ inputRange: [0, 0.5, 1], outputRange: [1, 1.12, 1] }) },
     ] }}>
       <Coin size={size} />
     </Animated.View>
