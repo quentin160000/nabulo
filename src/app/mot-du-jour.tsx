@@ -3,7 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  AccessibilityInfo, Animated, Easing, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Share, TextInput, View,
+  AccessibilityInfo, Animated, Easing, Keyboard, KeyboardAvoidingView, LayoutAnimation, Modal, Platform, Pressable, ScrollView, Share, TextInput, View,
   type TextInputInstance,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -12,7 +12,7 @@ import { FREE_AD_HINTS_PER_DAY, HINT_COST, bestTemperature, sortGuesses, type Gu
 import { moodLabel, moodOf, tempColor } from '@/game/temperature';
 import { useDaily } from '@/game/useDaily';
 import { useWallet } from '@/game/wallet';
-import { appGradient, appGradientStops, bgDeep, gameInk, gameInkSoft, gaugeGradient, gaugeStops, mix, panel, warmGradient, warmStops } from '@/theme/colors';
+import { appGradient, appGradientStops, bgDeep, gameInk, gameInkSoft, gaugeGradient, gaugeStops, panel, warmGradient, warmStops } from '@/theme/colors';
 import { Bubble } from '@/ui/Bubble';
 import { Button } from '@/ui/Button';
 import { AluBackground, SlidingGradient } from '@/ui/backgrounds';
@@ -40,6 +40,18 @@ type Daily = ReturnType<typeof useDaily>;
 
 function GameBg() {
   return <LinearGradient colors={appGradient as unknown as [string, string, string]} locations={appGradientStops as unknown as [number, number, number]} style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }} />;
+}
+
+/** Le clavier est-il ouvert ? (avec une animation douce de la mise en page quand il s'ouvre ou se ferme) */
+function useKeyboardVisible() {
+  const [v, setV] = useState(Platform.OS !== 'web');
+  useEffect(() => {
+    const ease = () => LayoutAnimation.configureNext(LayoutAnimation.create(220, 'easeInEaseOut', 'opacity'));
+    const show = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow', () => { ease(); setV(true); });
+    const hide = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide', () => { ease(); setV(false); });
+    return () => { show.remove(); hide.remove(); };
+  }, []);
+  return v;
 }
 
 /** Section foncée des écrans de jeu (« Comment jouer », « Les plus chauds »…). */
@@ -129,6 +141,7 @@ function EnJeu({ daily }: { daily: Daily }) {
   const lastGuess = state.guesses.find(g => g.word === last) ?? state.guesses[state.guesses.length - 1] ?? null;
   const prevBest = useRef(state.guesses.length ? bestTemperature(state.guesses) : -100);
   const [record, setRecord] = useState(false);
+  const kb = useKeyboardVisible();
 
   useEffect(() => {
     if (feedback) toast.show(feedback.kind === 'unknown' ? `Je ne connais pas « ${feedback.word} »` : feedback.kind === 'repeat' ? `« ${feedback.word} » est déjà dans ta liste` : 'Connexion impossible, réessaie');
@@ -167,7 +180,8 @@ function EnJeu({ daily }: { daily: Daily }) {
             <CoinPill value={braises} flash={flash} onPress={() => router.push('/boutique')} />
           </View>
 
-          <View style={{ flex: 1, minHeight: 0, justifyContent: 'center', gap: 10 }}>
+          {/* clavier ouvert : tout est centré ; clavier fermé : le classement prend toute la place libre */}
+          <View style={{ flex: 1, minHeight: 0, justifyContent: kb ? 'center' : 'flex-start', gap: 10, paddingTop: kb ? 0 : 6 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
               {mood && lastGuess ? <Mascot mood={mood} size={96} /> : <Image source={images.nabulo} style={{ width: 96, height: 96 }} contentFit="contain" accessibilityLabel="Nabulo" />}
               <View style={{ alignItems: 'flex-start', gap: 8, minWidth: 0, flexShrink: 1 }}>
@@ -185,8 +199,9 @@ function EnJeu({ daily }: { daily: Daily }) {
 
             <Gauge t={lastGuess?.temperature ?? null} record={record} />
 
-            <Section title="Les plus chauds" right={rows.length > 4 ? 'glisse ↓' : undefined} padding={8} gap={6} style={{ flexShrink: 1, minHeight: 0 }}>
-              <ScrollView style={{ maxHeight: 202, borderRadius: 14 }} contentContainerStyle={{ gap: 6 }} keyboardShouldPersistTaps="handled" snapToInterval={52} decelerationRate="fast">
+            <Section title="Les plus chauds" right={rows.length > 4 ? 'glisse ↓' : undefined} padding={8} gap={6} style={kb ? { flexShrink: 1, minHeight: 0 } : { flex: 1, minHeight: 0 }}>
+              <ScrollView style={kb ? { maxHeight: 202, borderRadius: 14 } : { flex: 1, borderRadius: 14 }} contentContainerStyle={{ gap: 6 }}
+                keyboardDismissMode="on-drag" onTouchStart={() => { if (kb) Keyboard.dismiss(); }} snapToInterval={52} decelerationRate="fast">
                 {rows.length === 0 && (
                   <View style={{ height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.12)' }}>
                     <T size={14} weight={600} color="#FFFFFF">tes essais s’afficheront ici, du plus chaud au plus froid</T>
@@ -203,8 +218,8 @@ function EnJeu({ daily }: { daily: Daily }) {
               ref={input} value={text} onChangeText={setText} onSubmitEditing={send} placeholder="Tape un mot" placeholderTextColor="#7C7399"
               autoFocus autoCapitalize="none" autoCorrect={false} returnKeyType="send" submitBehavior="submit" accessibilityLabel="Ton mot"
               style={{
-                flex: 1, minWidth: 0, height: 52, borderRadius: 17, borderWidth: 2, borderColor: '#D9D1F2', backgroundColor: '#FFFFFF',
-                boxShadow: `inset 0 -6px 0 ${mix('#FFFFFF', 84, '#3A2A7A')}`, paddingHorizontal: 16, paddingBottom: 4,
+                flex: 1, minWidth: 0, height: 52, borderRadius: 17, backgroundColor: '#FFFFFF', paddingHorizontal: 16, paddingVertical: 0,
+                includeFontPadding: false, textAlignVertical: 'center',
                 fontFamily: 'Fredoka_500Medium', fontSize: 21, color: INK, outlineStyle: 'none',
               } as object}
             />
@@ -316,7 +331,7 @@ function Gauge({ t, record }: { t: number | null; record: boolean }) {
     <View accessibilityRole="image" accessibilityLabel={t === null ? 'Jauge de température vide' : `Jauge de température · ${fmt(t, ' °C')}`} onLayout={e => setW(e.nativeEvent.layout.width)}
       style={{ height: 34, borderRadius: 17, backgroundColor: bgDeep, paddingVertical: 8, paddingHorizontal: 14 }}>
       <View style={{ flex: 1, borderRadius: 9, backgroundColor: 'rgba(255,255,255,0.25)', overflow: 'hidden' }}>
-        <Animated.View style={{ height: '100%', width: fillW, overflow: 'hidden', borderRadius: 9 }}>
+        <Animated.View style={{ height: '100%', width: fillW, overflow: 'hidden' }}>
           <LinearGradient colors={gaugeGradient as unknown as [string, string, ...string[]]} locations={gaugeStops as unknown as [number, number, ...number[]]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ width: track, height: '100%' }} />
         </Animated.View>
       </View>
@@ -334,8 +349,10 @@ function Gauge({ t, record }: { t: number | null; record: boolean }) {
 function Sheet({ visible, onClose, children }: { visible: boolean; onClose: () => void; children: React.ReactNode }) {
   const inset = useSafeAreaInsets();
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable accessibilityRole="button" accessibilityLabel="Fermer et revenir à la partie" style={{ flex: 1, backgroundColor: 'rgba(24,14,60,0.45)' }} onPress={onClose} />
+    <Modal visible={visible} transparent animationType="fade" statusBarTranslucent navigationBarTranslucent onRequestClose={onClose}>
+      {/* le voile couvre tout l'écran, y compris derrière les coins arrondis du panneau */}
+      <Pressable accessibilityRole="button" accessibilityLabel="Fermer et revenir à la partie" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: 'rgba(24,14,60,0.45)' }} onPress={onClose} />
+      <View pointerEvents="box-none" style={{ flex: 1 }} />
       <View style={{ borderTopLeftRadius: 28, borderTopRightRadius: 28, overflow: 'hidden', paddingTop: 10, paddingHorizontal: 18, paddingBottom: 28 + inset.bottom, gap: 14 }}>
         <AluBackground />
         <View style={{ alignSelf: 'center', width: 44, height: 5, borderRadius: 3, backgroundColor: 'rgba(43,33,80,0.18)' }} />
