@@ -12,7 +12,7 @@
        $env:DATABASE_URL = "postgresql://..."
        python scripts/seed_supabase.py --model scripts/data/frWac_non_lem_no_postag_no_phrase_200_cbow_cut100.bin
 
-Options : --limit (mots gardés, les plus fréquents d'abord, défaut 80 000), --days (jours programmés, défaut 500),
+Options : --limit (mots gardés, les plus fréquents d'abord, défaut 80 000), --days (jours programmés, défaut 1000),
 --secrets (liste des mots du jour, un par ligne, défaut scripts/secrets_fr.txt), --dry-run (vérifie sans écrire).
 Accepte aussi des vecteurs fastText au format texte (.vec).
 """
@@ -59,7 +59,7 @@ def main():
     ap.add_argument('--model', required=True, help='frWac .bin (word2vec) ou .vec (fastText texte)')
     ap.add_argument('--lang', default='fr')
     ap.add_argument('--limit', type=int, default=80000)
-    ap.add_argument('--days', type=int, default=500)
+    ap.add_argument("--days", type=int, default=1000)
     ap.add_argument('--secrets', default=os.path.join(os.path.dirname(__file__), 'secrets_fr.txt'))
     ap.add_argument('--dry-run', action='store_true')
     a = ap.parse_args()
