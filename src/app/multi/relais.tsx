@@ -42,7 +42,7 @@ export default function Relais() {
 
   if (phase === 'salon') return <Lobby title="Salon · Le relais" players={players} min={3} max={8} secondary="Inviter" onLaunch={() => setPhase('regles')} />;
   if (phase === 'regles') {
-    return <Rules n={20} title="Le relais" sub="Multi · en équipe" onPlay={newGame} steps={[
+    return <Rules title="Le relais" sub="Multi · en équipe" onPlay={newGame} steps={[
       'Chacun à son tour ajoute un mot à la chaîne.',
       `Ton mot doit être à ${RELAIS_MIN}° ou plus du dernier mot.`,
       'Un mot trop froid coûte un cœur à l’équipe.',

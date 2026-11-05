@@ -9,7 +9,7 @@ import { GameBg } from '@/ui/game';
 import { Fin, Header, INK, Pill, quitter, Regles, ROSE, TimerBar, useCadre, VERT } from '@/ui/libres-ui';
 import { T } from '@/ui/Text';
 
-/* Jeux libres 11 · Plus chaud / plus froid (planche J-jeux-libres-11-plus-chaud-plus-froid). */
+/* Jeux libres · Plus chaud / plus froid (planche J-jeux-libres-11-plus-chaud-plus-froid). */
 
 const JEU = 'plus-chaud' as const;
 const TITRE = 'Plus chaud / plus froid';
@@ -27,7 +27,7 @@ export default function PlusChaud() {
   const [phase, setPhase] = useState<'regles' | 'jeu' | 'fin'>('regles');
   const [partie, setPartie] = useState(0);
   const [res, setRes] = useState<Resultat | null>(null);
-  if (phase === 'regles') return <Regles num={11} titre={TITRE} regles={REGLES} onPlay={() => setPhase('jeu')} />;
+  if (phase === 'regles') return <Regles titre={TITRE} regles={REGLES} onPlay={() => setPhase('jeu')} />;
   if (phase === 'fin' && res) return <FinPlusChaud res={res} onReplay={() => { setPartie(p => p + 1); setPhase('jeu'); }} />;
   return <EnJeu key={partie} onFin={r => { setRes(r); setPhase('fin'); }} />;
 }

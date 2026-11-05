@@ -97,7 +97,7 @@ export function Towards({ target, t }: { target: string; t: number }) {
 /** Étiquette de température d'un lien (pastille blanche, point coloré). */
 export function LinkTag({ t }: { t: number }) {
   return (
-    <Bubble bg="#FFFFFF" radius={12} border={2} inset={4} style={{ height: 24, paddingLeft: 5, paddingRight: 8, flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+    <Bubble bg="#FFFFFF" radius={12} border={2} inset={4} style={{ height: 24, paddingLeft: 6, paddingRight: 10, flexDirection: 'row', alignItems: 'center', gap: 5 }}>
       <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: tempColor(t) }} />
       <T size={13} weight={700} color={INK}>{Math.round(t)}°</T>
     </Bubble>
@@ -107,8 +107,10 @@ export function LinkTag({ t }: { t: number }) {
 export type NodeLook = 'start' | 'mid' | 'target' | 'reached' | 'ring' | 'pink';
 /** Un mot de la chaîne : 170 px de large au minimum, 36 px de haut. */
 export function ChainNode({ word, look, t }: { word: string; look: NodeLook; t?: number }) {
-  const label = <T size={18} weight={700} color={INK} numberOfLines={1}>{word}</T>;
-  const base = { minWidth: 170, height: 36, paddingHorizontal: 18, borderRadius: 18, alignItems: 'center', justifyContent: 'center' } as const;
+  // largeur réelle du mot : l'étiquette de température se cale à sa droite sans jamais le chevaucher
+  const [w, setW] = useState(0);
+  const label = <T size={18} weight={700} color={INK} numberOfLines={1} adjustsFontSizeToFit>{word}</T>;
+  const base = { minWidth: 170, maxWidth: 230, height: 36, paddingHorizontal: 18, borderRadius: 18, alignItems: 'center', justifyContent: 'center' } as const;
   let node: ReactNode;
   if (look === 'start' || look === 'reached' || look === 'pink') {
     const bg = look === 'start' ? '#FFD45C' : look === 'reached' ? '#FFD23F' : '#FFD6E0';
@@ -119,16 +121,16 @@ export function ChainNode({ word, look, t }: { word: string; look: NodeLook; t?:
     node = <View style={[base, { borderWidth: 2, borderStyle: 'dashed', borderColor: INK, backgroundColor: 'rgba(255,255,255,0.55)' }]}>{label}</View>;
   } else {
     node = (
-      <Bubble bg="#FFD45C" radius={23} border={2} inset={5} style={{ minWidth: 184, height: 46, padding: 4 }}>
+      <Bubble bg="#FFD45C" radius={23} border={2} inset={5} style={{ minWidth: 184, maxWidth: 244, height: 46, padding: 4 }}>
         <Bubble bg="#FFFFFF" radius={16} border={2} inset={5} style={{ flex: 1, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center' }}>{label}</Bubble>
       </Bubble>
     );
   }
   return (
     <View style={{ zIndex: 1, alignSelf: 'stretch', alignItems: 'center' }}>
-      {node}
+      <View onLayout={e => setW(e.nativeEvent.layout.width)}>{node}</View>
       {t !== undefined && (
-        <View pointerEvents="none" style={{ position: 'absolute', left: '50%', marginLeft: 102, top: 0, bottom: 0, justifyContent: 'center' }}>
+        <View pointerEvents="none" style={{ position: 'absolute', left: '50%', marginLeft: Math.max(102, w / 2 + 10), top: 0, bottom: 0, justifyContent: 'center' }}>
           <LinkTag t={t} />
         </View>
       )}
@@ -176,7 +178,7 @@ export function Chain({ words, target, complete, temps, last, compact }: {
 export function WordChip({ word, bg }: { word: string; bg: string }) {
   return (
     <View style={{ paddingVertical: 5, paddingHorizontal: 12, borderRadius: 13, borderWidth: 2, borderColor: 'transparent', backgroundColor: bg }}>
-      <T size={14} weight={700} color={INK}>{word}</T>
+      <T size={14} weight={700} color={INK} numberOfLines={1}>{word}</T>
     </View>
   );
 }

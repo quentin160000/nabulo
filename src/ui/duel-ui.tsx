@@ -301,11 +301,11 @@ export function DuelEnd({ win, braises, title, subtitle, myName, me, opp, gain, 
   }, [a, gain, reduce, win]);
   const rise = { opacity: a.rise, transform: [{ translateY: a.rise.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }] };
   const card = (side: Side, who: 'me' | 'opp', lead: boolean) => (
-    <View style={{ flex: 1, alignItems: 'center', gap: 4, paddingVertical: 12, paddingHorizontal: 6, borderRadius: 20, backgroundColor: lead ? '#FFF3B0' : '#FFFFFF' }}>
+    <View style={{ flex: 1, minWidth: 0, alignItems: 'center', gap: 4, paddingVertical: 12, paddingHorizontal: 12, borderRadius: 20, backgroundColor: lead ? '#FFF3B0' : '#FFFFFF' }}>
       <PlayerAvatar who={who} name={myName} size={46} />
       <T size={15} weight={700} color={SHADOW}>{who === 'me' ? 'Toi' : 'IA'}</T>
       <T size={40} weight={700} color={SHADOW} style={{ lineHeight: 42 }}>{side.value}</T>
-      <T size={12} weight={600} color="#6B6290" align="center">{side.label}</T>
+      <T size={12} weight={600} color="#6B6290" align="center" numberOfLines={2}>{side.label}</T>
     </View>
   );
   return (
@@ -317,7 +317,7 @@ export function DuelEnd({ win, braises, title, subtitle, myName, me, opp, gain, 
             style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.22)', alignItems: 'center', justifyContent: 'center' }}>
             <Icon name="close" size={20} color="#FFFFFF" />
           </Pressable>
-          <T size={20} weight={700} outline style={{ flex: 1 }}>{title}</T>
+          <T size={20} weight={700} outline numberOfLines={1} style={{ flex: 1, minWidth: 0 }}>{title}</T>
           <View accessibilityLabel={`Solde : ${braises} braises`} style={{ height: 36, marginLeft: 16, paddingLeft: 30, paddingRight: 12, borderRadius: 18, backgroundColor: '#FFFFFF', justifyContent: 'center' }}>
             <Coin size={40} style={{ position: 'absolute', left: -12, top: -2 }} />
             <T size={17} weight={700} color={SHADOW} style={{ fontVariant: ['tabular-nums'] }}>{braises}</T>
@@ -348,7 +348,7 @@ export function DuelEnd({ win, braises, title, subtitle, myName, me, opp, gain, 
           </Animated.View>
           <Animated.View style={[{ alignItems: 'center', gap: 4 }, rise]}>
             <T size={38} weight={700} outline style={{ lineHeight: 40 }}>{win ? 'Victoire !' : 'Perdu…'}</T>
-            <T size={16} weight={600} color="#FFFFFF" align="center">{subtitle}</T>
+            <T size={16} weight={600} color="#FFFFFF" align="center" style={{ paddingHorizontal: 12 }}>{subtitle}</T>
           </Animated.View>
         </View>
 
@@ -371,7 +371,7 @@ export function DuelEnd({ win, braises, title, subtitle, myName, me, opp, gain, 
           <>
             <T size={15} weight={600} color="#FFFFFF" align="center">{chipsTitle}</T>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6 }}>
-              {chips.map(c => <WordChip key={c.label} label={c.label} bg={c.bg} radius={12} px={11} border={0} />)}
+              {chips.map(c => <WordChip key={c.label} label={c.label} bg={c.bg} radius={12} px={12} border={0} />)}
             </View>
           </>
         )}

@@ -86,7 +86,7 @@ export default function BattleRoyale() {
 
   if (phase === 'salon') return <Lobby title="Salon · Battle royale" players={players} min={BR_PLAYERS} max={BR_PLAYERS} secondary="Annuler" onSecondary={leave} onLaunch={() => setPhase('regles')} />;
   if (phase === 'regles') {
-    return <Rules n={19} title="Battle royale" sub={`Multi · ${BR_PLAYERS} joueurs`} onPlay={newGame} steps={[
+    return <Rules title="Battle royale" sub={`Multi · ${BR_PLAYERS} joueurs`} onPlay={newGame} steps={[
       'Tout le monde cherche le même mot secret, en même temps.',
       `Chaque manche dure ${BR_ROUND_SECONDS} secondes.`,
       'À la fin de la manche, les 2 joueurs les plus froids sont éliminés.',

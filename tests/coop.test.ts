@@ -4,7 +4,7 @@ import {
   SERIE_PLANCHER, SYNCHRO_PAS_MAL, aiAssociate, aiGuess, aiHint, checkAssociate, checkHint, closeWords, commonSeed, makeSeries, nounish, synchroLabel, synchroScore, variant,
 } from '../src/game/coop';
 
-describe('coop · 4 mots + mot-indice', () => {
+describe('coop · Trouve le mot', () => {
   it('tire 4 mots distincts et proches, dont le mot visé', () => {
     const r = rng(3);
     for (let i = 0; i < 10; i++) {

@@ -10,10 +10,11 @@ import { enregistrerScore, finirEnCours, marquerEnCours } from '@/game/libres-st
 import { Bubble } from '@/ui/Bubble';
 import { GameBg, keepFocus } from '@/ui/game';
 import { Fin, Header, INK, Pill, quitter, Regles, Stopwatch, TimerBar, useCadre } from '@/ui/libres-ui';
+import { KAV_BEHAVIOR, useMargeBasse } from '@/ui/retours-jeux-clavier';
 import { T } from '@/ui/Text';
 import { Toast, useToast } from '@/ui/Toast';
 
-/* Jeux libres 14 · Contre-la-montre (planche J-jeux-libres-14-contre-la-montre). */
+/* Jeux libres · Contre-la-montre (planche J-jeux-libres-14-contre-la-montre). */
 
 const JEU = 'chrono' as const;
 const TITRE = 'Contre-la-montre';
@@ -32,7 +33,7 @@ export default function Chrono() {
   const [phase, setPhase] = useState<'regles' | 'jeu' | 'fin'>('regles');
   const [partie, setPartie] = useState(0);
   const [res, setRes] = useState<Resultat | null>(null);
-  if (phase === 'regles') return <Regles num={14} titre={TITRE} regles={REGLES} onPlay={() => setPhase('jeu')} />;
+  if (phase === 'regles') return <Regles titre={TITRE} regles={REGLES} onPlay={() => setPhase('jeu')} />;
   if (phase === 'fin' && res) return <FinChrono res={res} onReplay={() => { setPartie(p => p + 1); setPhase('jeu'); }} />;
   return <EnJeu key={partie} onFin={r => { setRes(r); setPhase('fin'); }} />;
 }
@@ -41,6 +42,7 @@ export default function Chrono() {
 function EnJeu({ onFin }: { onFin: (r: Resultat) => void }) {
   const cadre = useCadre(10);
   const inset = useSafeAreaInsets();
+  const bas = useMargeBasse(cadre.paddingBottom);
   const [cible] = useState(() => cibleChrono(rng(Date.now())));
   const [essais, setEssais] = useState<Essai[]>([]);
   const [text, setText] = useState('');
@@ -97,15 +99,15 @@ function EnJeu({ onFin }: { onFin: (r: Resultat) => void }) {
   return (
     <View style={{ flex: 1 }}>
       <GameBg />
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={[{ flex: 1, gap: 10 }, cadre]}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={KAV_BEHAVIOR}>
+        <View style={[{ flex: 1, gap: 10 }, cadre, { paddingBottom: bas }]}>
           <Header title={TITRE} onClose={() => { finirEnCours(JEU); quitter(); }}
             right={<Pill label={`${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`} bg={alerte ? ALERTE : '#FFD45C'} icon={<Stopwatch />} accessibilityLabel={`${s} secondes restantes`} />} />
           <TimerBar label={alerte ? 'Vite !' : 'Temps'} value={`${s} s`} frac={reste / CHRONO_DUREE} color={alerte ? ALERTE : '#FFD45C'} />
           <Bubble bg="#FFFFFF" radius={18} border={2} inset={6} style={{ paddingVertical: 10, paddingHorizontal: 12 }}>
-            <View accessible accessibilityLabel={`Autour de ${cible} : ${mots(trouves)} trouvé${trouves > 1 ? 's' : ''}`} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <View accessible accessibilityLabel={`Autour de ${cible} : ${mots(trouves)} trouvé${trouves > 1 ? 's' : ''}`} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
               <T size={14} weight={600} color={INK}>Autour de</T>
-              <T size={28} weight={700} color={INK} numberOfLines={1} style={{ flexShrink: 1 }}>{cible}</T>
+              <T size={28} weight={700} color={INK} numberOfLines={1} adjustsFontSizeToFit style={{ flexShrink: 1 }}>{cible}</T>
               <T size={22} weight={700} color={INK}>{trouves}</T>
             </View>
           </Bubble>

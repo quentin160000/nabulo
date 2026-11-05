@@ -15,7 +15,8 @@ import { Bubble } from '@/ui/Bubble';
 import { SlidingGradient } from '@/ui/backgrounds';
 import { Coin, images } from '@/ui/bits';
 import { Confetti } from '@/ui/Confetti';
-import { GameBg, Sheet, useKeyboardVisible, keepFocus } from '@/ui/game';
+import { GameBg, Sheet, keepFocus } from '@/ui/game';
+import { KAV_BEHAVIOR, useMargeBasse } from '@/ui/retours-jeux-clavier';
 import { BigButton, Chain, Header, LierIcon, SHADOW, StepsPill, Towards, WordChip } from '@/ui/lier-bits';
 import { Mascot } from '@/ui/Mascot';
 import { T } from '@/ui/Text';
@@ -152,9 +153,6 @@ function Regles({ onClose, onPlay }: { onClose: () => void; onPlay: () => void }
     <Frame>
       <Header title="Règles" onClose={onClose} closeLabel="Retour au menu" />
       <View style={{ alignItems: 'center', gap: 6, marginTop: 6 }}>
-        <Bubble bg="#FFD45C" radius={27} border={2} inset={6} style={{ width: 54, height: 54, alignItems: 'center', justifyContent: 'center' }}>
-          <T size={24} weight={700} color={INK}>13</T>
-        </Bubble>
         <Title title="Lier" sub="Jeux libres · rejouable à volonté" />
       </View>
       <Image source={images.nabulo} style={{ width: 110, height: 110, alignSelf: 'center' }} contentFit="contain" accessibilityLabel="Nabulo" />
@@ -188,12 +186,12 @@ function Choix({ day, round, records, onClose, onPick }: { day: number; round: n
     return (
       <Pressable key={key} accessibilityRole="button" accessibilityLabel={`${label} : ${pair[0]} vers ${pair[1]}${rec ? `, record ${rec}` : ''}`} onPress={() => onPick(pair, isDefi)}
         style={({ pressed }) => ({ borderRadius: 18, borderWidth: 2, borderColor: 'transparent', backgroundColor: bg, paddingVertical: 12, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 10, opacity: pressed ? 0.85 : 1 })}>
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, minWidth: 0 }}>
           <T size={13} weight={700} color={INK}>{label}</T>
-          <T size={21} weight={700} color={INK}>{pair[0]} → {pair[1]}</T>
-          {sub ? <T size={13} weight={500} color={INK}>{sub}</T> : null}
+          <T size={21} weight={700} color={INK} numberOfLines={1} adjustsFontSizeToFit>{pair[0]} → {pair[1]}</T>
+          {sub ? <T size={13} weight={500} color={INK} numberOfLines={1}>{sub}</T> : null}
         </View>
-        <View style={{ paddingVertical: 5, paddingHorizontal: 12, borderRadius: 13, borderWidth: 2, borderColor: 'transparent', backgroundColor: color }}>
+        <View style={{ flexShrink: 0, paddingVertical: 5, paddingHorizontal: 12, borderRadius: 13, borderWidth: 2, borderColor: 'transparent', backgroundColor: color }}>
           <T size={14} weight={700} color={INK}>{rec ? `record ${rec}` : '—'}</T>
         </View>
       </Pressable>
@@ -215,7 +213,7 @@ function Choix({ day, round, records, onClose, onPick }: { day: number; round: n
 /* ---------- 2, 6-11 · En jeu ---------- */
 function EnJeu({ game, setGame, onFinish, onAbandon }: { game: Game; setGame: (g: Game) => void; onFinish: (g: Game) => void; onAbandon: (g: Game) => void }) {
   const inset = useSafeAreaInsets();
-  const kb = useKeyboardVisible();
+  const bas = useMargeBasse(24 + inset.bottom);
   const { braises, spend } = useWallet();
   const toast = useToast();
   const [text, setText] = useState('');
@@ -264,8 +262,8 @@ function EnJeu({ game, setGame, onFinish, onAbandon }: { game: Game; setGame: (g
   return (
     <View style={{ flex: 1 }}>
       <GameBg />
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={{ flex: 1, paddingTop: Math.max(inset.top, 44) + 4, paddingBottom: (kb && Platform.OS !== 'web' ? 10 : 24) + inset.bottom, paddingHorizontal: 16, gap: 10 }}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={KAV_BEHAVIOR}>
+        <View style={{ flex: 1, paddingTop: Math.max(inset.top, 44) + 4, paddingBottom: bas, paddingHorizontal: 16, gap: 10 }}>
           <Header title="Lier" onClose={() => setMenu(true)} closeLabel="Quitter ou abandonner" right={<StepsPill n={game.mids.length} />} />
           <Towards target={game.target} t={heat} />
           <ScrollView ref={scroll} style={{ flex: 1, marginHorizontal: -16 }} contentContainerStyle={{ paddingHorizontal: 16, gap: 10, paddingBottom: 4 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
@@ -327,9 +325,9 @@ function FeedbackView({ fb, recul, canUndo, onUndo, onUseHint }: { fb: Feedback;
     return (
       <Pressable accessibilityRole="button" accessibilityLabel={`Indice : ${fb.word}. Toucher pour l’écrire`} onPress={() => onUseHint(fb.word)}
         style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 16, borderWidth: 2, borderStyle: 'dashed', borderColor: INK, backgroundColor: '#FFF3B0' }}>
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, minWidth: 0 }}>
           <T size={13} weight={700} color={INK}>Indice · une bonne étape suivante</T>
-          <T size={22} weight={700} color={INK}>{fb.word}</T>
+          <T size={22} weight={700} color={INK} numberOfLines={1} adjustsFontSizeToFit>{fb.word}</T>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 5, paddingHorizontal: 12, borderRadius: 13, borderWidth: 2, borderColor: 'transparent', backgroundColor: '#FFD45C' }}>
           <T size={15} weight={700} color={INK}>−{HINT_COST}</T>
@@ -344,8 +342,8 @@ function FeedbackView({ fb, recul, canUndo, onUndo, onUseHint }: { fb: Feedback;
     return (
       <View style={{ gap: 10 }} accessibilityLiveRegion="polite">
         <View style={{ alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Bubble bg="#FFB3C7" radius={16} border={2} inset={5} style={{ paddingVertical: 6, paddingHorizontal: 16 }}>
-            <T size={21} weight={700} color={INK} style={{ textDecorationLine: 'line-through' }}>{fb.word}</T>
+          <Bubble bg="#FFB3C7" radius={16} border={2} inset={5} style={{ flexShrink: 1, paddingVertical: 6, paddingHorizontal: 16 }}>
+            <T size={21} weight={700} color={INK} numberOfLines={1} adjustsFontSizeToFit style={{ textDecorationLine: 'line-through' }}>{fb.word}</T>
           </Bubble>
           <View style={{ paddingVertical: 2, paddingHorizontal: 9, borderRadius: 9, borderWidth: 2, borderColor: 'transparent', backgroundColor: '#FFFFFF' }}>
             <T size={14} weight={700} color={INK}>{tag}</T>
@@ -403,7 +401,7 @@ function Resultat({ done, onMenu, onNew }: { done: Done; onMenu: () => void; onN
       </View>
       <View style={{ flex: 1, paddingVertical: 14, paddingHorizontal: 4, justifyContent: 'center', gap: 14 }}>
         <T size={17} weight={700} color="#FFFFFF" align="center" style={SHADOW}>Mot trouvé · ses voisins</T>
-        <View style={{ alignSelf: 'center', paddingVertical: 4, paddingHorizontal: 16, borderRadius: 16, borderWidth: 2, borderColor: 'transparent', backgroundColor: '#FFFFFF' }}>
+        <View style={{ alignSelf: 'center', maxWidth: '100%', paddingVertical: 4, paddingHorizontal: 16, borderRadius: 16, borderWidth: 2, borderColor: 'transparent', backgroundColor: '#FFFFFF' }}>
           <T size={46} weight={700} color={INK} numberOfLines={1} adjustsFontSizeToFit style={{ lineHeight: 51 }}>{target}</T>
         </View>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 }}>
@@ -427,9 +425,9 @@ function Resultat({ done, onMenu, onNew }: { done: Done; onMenu: () => void; onN
 }
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 11, paddingHorizontal: 14, borderRadius: 15, borderWidth: 2, borderColor: 'rgba(255,255,255,0.55)', backgroundColor: 'rgba(255,255,255,0.92)', boxShadow: 'inset 0 -5px 0 rgba(20,10,60,0.18)' }}>
-      <T size={17} weight={600} color={INK}>{label}</T>
-      <T size={17} weight={700} color={INK}>{value}</T>
+    <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 10, paddingVertical: 11, paddingHorizontal: 14, borderRadius: 15, borderWidth: 2, borderColor: 'rgba(255,255,255,0.55)', backgroundColor: 'rgba(255,255,255,0.92)', boxShadow: 'inset 0 -5px 0 rgba(20,10,60,0.18)' }}>
+      <T size={17} weight={600} color={INK} numberOfLines={1}>{label}</T>
+      <T size={17} weight={700} color={INK} numberOfLines={1} adjustsFontSizeToFit style={{ flexShrink: 1 }}>{value}</T>
     </View>
   );
 }

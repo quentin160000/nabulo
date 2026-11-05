@@ -3,7 +3,7 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { AccessibilityInfo, Animated, Easing, Pressable, ScrollView, TextInput, View, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
+import { AccessibilityInfo, Animated, Easing, KeyboardAvoidingView, Pressable, ScrollView, TextInput, View, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { load, save } from '@/game/storage';
@@ -13,6 +13,7 @@ import { Bubble } from './Bubble';
 import { images } from './bits';
 import { T } from './Text';
 import { keepFocus } from './game';
+import { KAV_BEHAVIOR, useMargeBasse } from './retours-jeux-clavier';
 
 export const INK = gameInk;
 /** Ombre portée des titres blancs : 0 2px 0 #2B2150. */
@@ -90,13 +91,19 @@ export function CloseButton({ label = 'Quitter', onPress }: { label?: string; on
   );
 }
 
-/** Mise en page d'un écran coop : marges de la maquette (16 px), espacement de 10 px. */
-export function Screen({ children, bg = <CoopBg />, gap = 10 }: { children: ReactNode; bg?: ReactNode; gap?: number }) {
+/**
+ * Mise en page d'un écran coop : marges de la maquette (16 px), espacement de 10 px.
+ * `keyboard` : écran avec barre de saisie, remonté au-dessus du clavier avec 12 px d'air.
+ */
+export function Screen({ children, bg = <CoopBg />, gap = 10, keyboard }: { children: ReactNode; bg?: ReactNode; gap?: number; keyboard?: boolean }) {
   const inset = useSafeAreaInsets();
+  const ferme = Math.max(24, inset.bottom + 10);
+  const bas = useMargeBasse(ferme);
+  const body = <View style={{ flex: 1, paddingTop: inset.top + 14, paddingBottom: keyboard ? bas : ferme, paddingHorizontal: 16, gap }}>{children}</View>;
   return (
     <View style={{ flex: 1 }}>
       {bg}
-      <View style={{ flex: 1, paddingTop: inset.top + 14, paddingBottom: Math.max(24, inset.bottom + 10), paddingHorizontal: 16, gap }}>{children}</View>
+      {keyboard ? <KeyboardAvoidingView style={{ flex: 1 }} behavior={KAV_BEHAVIOR}>{body}</KeyboardAvoidingView> : body}
     </View>
   );
 }
@@ -134,15 +141,6 @@ export function CoopButton({ label, onPress, look = 'yellow', height = 62, fontS
   );
 }
 
-/** Pastille jaune numérotée (n° du mode). */
-export function NumberBadge({ n }: { n: number }) {
-  return (
-    <Bubble bg="#FFD45C" radius={27} border={2} inset={6} style={{ width: 54, height: 54, alignItems: 'center', justifyContent: 'center' }}>
-      <T size={24} weight={700} color={INK}>{n}</T>
-    </Bubble>
-  );
-}
-
 export function Avatar({ letter, color = '#7CE0B5', size = 38, font }: { letter: string; color?: string; size?: number; font?: number }) {
   return (
     <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: color, alignItems: 'center', justifyContent: 'center' }}>
@@ -158,7 +156,7 @@ export function PartnerPicker({ mode, footer, onAI, onSoon }: { mode: string; fo
       <TopBar title={mode} />
       <View style={{ alignItems: 'center' }}>
         <T size={30} weight={700} outline style={{ lineHeight: 33 }}>Avec qui ?</T>
-        <T size={15} weight={600} outline>{mode}</T>
+        <T size={15} weight={600} outline align="center">{mode}</T>
       </View>
       <T size={16} weight={700} outline align="center">Amis</T>
       <Pressable accessibilityRole="button" accessibilityLabel="Inviter un ami" onPress={onSoon}
@@ -179,15 +177,14 @@ export function PartnerPicker({ mode, footer, onAI, onSoon }: { mode: string; fo
 }
 
 /** Écran 2 · Règles. */
-export function RulesScreen({ n, title, steps, onReady }: { n: number; title: string; steps: string[]; onReady: () => void }) {
+export function RulesScreen({ title, steps, onReady }: { title: string; steps: string[]; onReady: () => void }) {
   return (
     <>
       <TopBar title="Règles" />
       <ScrollView style={{ flex: 1, marginHorizontal: -16 }} contentContainerStyle={{ paddingHorizontal: 16, gap: 10 }} showsVerticalScrollIndicator={false}>
         <View style={{ alignItems: 'center', gap: 6, marginTop: 6 }}>
-          <NumberBadge n={n} />
           <View style={{ alignItems: 'center' }}>
-            <T size={30} weight={700} outline style={{ lineHeight: 33 }}>{title}</T>
+            <T size={30} weight={700} outline align="center" style={{ lineHeight: 33 }}>{title}</T>
             <T size={15} weight={600} outline>Coop · à 2</T>
           </View>
         </View>
@@ -245,8 +242,8 @@ export function NeighborChips({ words }: { words: string[] }) {
 export function StatRow({ label, value }: { label: string; value: string }) {
   return (
     <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8, paddingVertical: 11, paddingHorizontal: 14, borderRadius: 15, borderWidth: 2, borderColor: 'rgba(255,255,255,0.55)', backgroundColor: 'rgba(255,255,255,0.92)', boxShadow: 'inset 0 -5px 0 rgba(20,10,60,0.18)' }}>
-      <T size={17} weight={600} color={INK}>{label}</T>
-      <T size={17} weight={700} color={INK} numberOfLines={1} style={{ flexShrink: 1 }}>{value}</T>
+      <T size={17} weight={600} color={INK} numberOfLines={1}>{label}</T>
+      <T size={17} weight={700} color={INK} numberOfLines={1} adjustsFontSizeToFit style={{ flexShrink: 1 }}>{value}</T>
     </View>
   );
 }

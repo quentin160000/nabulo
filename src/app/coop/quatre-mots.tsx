@@ -1,6 +1,6 @@
-/* Coop · 4 mots + mot-indice (planche J-coop-17), avec un partenaire IA. */
+/* Coop · Trouve le mot (planche J-coop-17), avec un partenaire IA. */
 import { useEffect, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { LIVES, RECORD_QUATRE_MOTS, aiGuess, aiHint, checkHint, closeWords, hintTemperatures, makeSeries, type Series } from '@/game/coop';
 import { rng } from '@/game/lexicon';
 import { Toast, useToast } from '@/ui/Toast';
@@ -73,12 +73,12 @@ export default function QuatreMots() {
   if (phase === 'partner') {
     return (
       <Screen>
-        <PartnerPicker mode="Coop 4 mots" footer={record > 0 ? `Record avec l’IA : série de ${record}` : null} onAI={() => setPhase('rules')} onSoon={() => toast.show('Bientôt disponible')} />
+        <PartnerPicker mode="Trouve le mot" footer={record > 0 ? `Record avec l’IA : série de ${record}` : null} onAI={() => setPhase('rules')} onSoon={() => toast.show('Bientôt disponible')} />
         <Toast msg={toast.msg} check={false} style={{ bottom: 90 }} />
       </Screen>
     );
   }
-  if (phase === 'rules') return <Screen><RulesScreen n={17} title="4 mots + mot-indice" steps={STEPS} onReady={start} /></Screen>;
+  if (phase === 'rules') return <Screen><RulesScreen title="Trouve le mot" steps={STEPS} onReady={start} /></Screen>;
   if (!round) return <Screen>{null}</Screen>;
 
   if (phase === 'end') {
@@ -96,7 +96,7 @@ export default function QuatreMots() {
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
       <CloseButton />
       <View pointerEvents="none" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' }}>
-        <View accessibilityLabel={`Série de ${streak}`} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, height: 34, paddingLeft: 7, paddingRight: 10, borderRadius: 17, backgroundColor: '#FFFFFF' }}>
+        <View accessibilityLabel={`Série de ${streak}`} style={{ flexDirection: 'row', alignItems: 'center', gap: 4, height: 34, paddingLeft: 8, paddingRight: 12, borderRadius: 17, backgroundColor: '#FFFFFF' }}>
           <Flame />
           <T size={20} weight={700} color={INK} style={{ lineHeight: 20 }}>{streak}</T>
           <T size={11} weight={700} color={INK} style={{ lineHeight: 11, opacity: 0.6, marginTop: 4 }}>série</T>
@@ -111,8 +111,8 @@ export default function QuatreMots() {
   const row = (w: string, opts: { bg?: string; tag?: string; onPress?: () => void } = {}) => {
     const inner = (
       <View style={{ flexDirection: 'row', alignItems: 'center', height: 70, paddingHorizontal: 18, borderRadius: 18, borderWidth: 2, borderColor: 'transparent', backgroundColor: opts.bg ?? '#FFFFFF' }}>
-        <T size={26} weight={700} color={INK} style={{ flex: 1 }} numberOfLines={1}>{w}</T>
-        {opts.tag ? <View style={{ paddingVertical: 2, paddingHorizontal: 8, borderRadius: 8, backgroundColor: '#2B2150' }}><T size={13} weight={700} color="#FFFFFF">{opts.tag}</T></View> : null}
+        <T size={26} weight={700} color={INK} style={{ flex: 1, minWidth: 0 }} numberOfLines={1} adjustsFontSizeToFit>{w}</T>
+        {opts.tag ? <View style={{ flexShrink: 0, marginLeft: 8, paddingVertical: 2, paddingHorizontal: 10, borderRadius: 8, backgroundColor: '#2B2150' }}><T size={13} weight={700} color="#FFFFFF" numberOfLines={1}>{opts.tag}</T></View> : null}
       </View>
     );
     return opts.onPress
@@ -122,8 +122,8 @@ export default function QuatreMots() {
 
   if (phase === 'give') {
     return (
-      <Screen>
-        <KeyboardAvoidingView style={{ flex: 1, gap: 10 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <Screen keyboard>
+        <View style={{ flex: 1, gap: 10 }}>
           {header}
           <T size={17} weight={700} outline align="center">{thinking ? `« ${round.hint} » envoyé · l’IA réfléchit…` : 'Fais deviner le bon mot à l’IA'}</T>
           <View style={{ gap: 10 }}>
@@ -132,7 +132,7 @@ export default function QuatreMots() {
           <View style={{ marginTop: 'auto' }}>
             <WordField value={text} onChange={setText} onSubmit={sendHint} placeholder="Un seul mot, pas un des 4" action="Envoyer" disabled={thinking} label="Ton mot-indice" />
           </View>
-        </KeyboardAvoidingView>
+        </View>
         <Toast msg={toast.msg} check={false} style={{ bottom: 90 }} />
       </Screen>
     );
@@ -144,9 +144,9 @@ export default function QuatreMots() {
         {header}
         <Bubble bg="#FFF3B0" radius={16} border={2} inset={5} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 14 }}>
           <Avatar letter="IA" size={44} font={17} />
-          <View style={{ flex: 1 }}>
+          <View style={{ flex: 1, minWidth: 0 }}>
             <T size={13} weight={600} color={INK}>Indice de l’IA</T>
-            <T size={28} weight={700} color={INK} numberOfLines={1}>{round.hint ?? 'réfléchit…'}</T>
+            <T size={28} weight={700} color={INK} numberOfLines={1} adjustsFontSizeToFit>{round.hint ?? 'réfléchit…'}</T>
           </View>
         </Bubble>
         <T size={17} weight={700} outline align="center">Quel mot vise-t-elle ?</T>

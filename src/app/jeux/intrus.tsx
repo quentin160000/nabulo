@@ -8,7 +8,7 @@ import { GameBg } from '@/ui/game';
 import { Fin, Header, INK, Pill, quitter, Regles, ROSE, useCadre, VERT } from '@/ui/libres-ui';
 import { T } from '@/ui/Text';
 
-/* Jeux libres 12 · L'intrus (planche J-jeux-libres-12-lintrus). */
+/* Jeux libres · L'intrus (planche J-jeux-libres-12-lintrus). */
 
 const JEU = 'intrus' as const;
 const TITRE = 'L’intrus';
@@ -25,7 +25,7 @@ export default function Intrus() {
   const [phase, setPhase] = useState<'regles' | 'jeu' | 'fin'>('regles');
   const [partie, setPartie] = useState(0);
   const [res, setRes] = useState<Resultat | null>(null);
-  if (phase === 'regles') return <Regles num={12} titre={TITRE} regles={REGLES} onPlay={() => setPhase('jeu')} />;
+  if (phase === 'regles') return <Regles titre={TITRE} regles={REGLES} onPlay={() => setPhase('jeu')} />;
   if (phase === 'fin' && res) return <FinIntrus res={res} onReplay={() => { setPartie(p => p + 1); setPhase('jeu'); }} />;
   return <EnJeu key={partie} onFin={r => { setRes(r); setPhase('fin'); }} />;
 }

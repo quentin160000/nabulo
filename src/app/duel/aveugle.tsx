@@ -24,6 +24,7 @@ import { Mascot } from '@/ui/Mascot';
 import { T } from '@/ui/Text';
 import { Toast, useToast } from '@/ui/Toast';
 import { useKeyboardVisible, keepFocus } from '@/ui/game';
+import { KAV_BEHAVIOR, useMargeBasse } from '@/ui/retours-jeux-clavier';
 
 const GAME = 'Duel à l’aveugle';
 const SH = '#2B2150';
@@ -77,7 +78,7 @@ function Versions({ value, onChange, niveau, setNiveau, onNext }: { value: Versi
   const card = (v: Version, title: string, desc: string) => (
     <Pressable accessibilityRole="radio" accessibilityState={{ selected: value === v }} accessibilityLabel={title} accessibilityHint={desc} onPress={() => onChange(v)}
       style={{ borderRadius: 18, borderWidth: 2, borderColor: 'transparent', backgroundColor: value === v ? '#FFF3B0' : '#FFFFFF', paddingVertical: 12, paddingHorizontal: 14 }}>
-      <T size={24} weight={700} color={INK}>{title}</T>
+      <T size={24} weight={700} color={INK} numberOfLines={1} adjustsFontSizeToFit>{title}</T>
       <T size={15} weight={500} color={INK}>{desc}</T>
     </Pressable>
   );
@@ -101,6 +102,7 @@ function Secret({ onValid }: { onValid: (w: string) => void }) {
   const [text, setText] = useState('');
   const toast = useToast();
   const kb = useKeyboardVisible();
+  const bas = useMargeBasse(inset.bottom + 10);
   const ok = () => {
     const r = secretOk(text);
     if (r === 'vide') return;
@@ -112,8 +114,8 @@ function Secret({ onValid }: { onValid: (w: string) => void }) {
   return (
     <View style={{ flex: 1 }}>
       <DuelBg />
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={{ flex: 1, paddingTop: inset.top + 8, paddingBottom: inset.bottom + 10, paddingHorizontal: 16, gap: 10 }}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={KAV_BEHAVIOR}>
+        <View style={{ flex: 1, paddingTop: inset.top + 8, paddingBottom: bas, paddingHorizontal: 16, gap: 10 }}>
           <DuelHeader title="Mots croisés" />
           <BigTitle title="Choisis un mot pour l’IA" sub="elle devra le trouver" />
           {!kb || Platform.OS === 'web' ? <Image source={images.nabulo} style={{ width: 100, height: 100, alignSelf: 'center' }} contentFit="contain" accessibilityLabel="Nabulo" /> : null}
@@ -151,6 +153,7 @@ function EnJeu({ match, niveau, onEnd }: { match: Match; niveau: Niveau; onEnd: 
   const [text, setText] = useState('');
   const toast = useToast();
   const kb = useKeyboardVisible();
+  const bas = useMargeBasse(inset.bottom + 10);
   const input = useRef<TextInputInstance>(null);
   const ref = useRef({ mine: [] as BlindGuess[], theirs: [] as BlindGuess[], done: false, warned: false });
   const finish = (winner: 'me' | 'opp', byTime: boolean) => {
@@ -213,8 +216,8 @@ function EnJeu({ match, niveau, onEnd }: { match: Match; niveau: Niveau; onEnd: 
   return (
     <View style={{ flex: 1 }}>
       <DuelBg />
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={{ flex: 1, paddingTop: inset.top + 10, paddingBottom: inset.bottom + 10, paddingHorizontal: 16, gap: 10 }}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={KAV_BEHAVIOR}>
+        <View style={{ flex: 1, paddingTop: inset.top + 10, paddingBottom: bas, paddingHorizontal: 16, gap: 10 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
             <Pressable accessibilityRole="button" accessibilityLabel="Quitter le duel" onPress={leave} hitSlop={4}
               style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.22)', alignItems: 'center', justifyContent: 'center' }}>
@@ -258,7 +261,7 @@ function EnJeu({ match, niveau, onEnd }: { match: Match; niveau: Niveau; onEnd: 
                   </View>
                 )}
                 {rows.map((g, i) => (
-                  <View key={g.word} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, height: 42, paddingLeft: 6, paddingRight: 10, borderRadius: 14, backgroundColor: i === 0 ? '#FFF3B0' : '#F4F1FF' }}>
+                  <View key={g.word} style={{ flexDirection: 'row', alignItems: 'center', gap: 8, height: 42, paddingLeft: 6, paddingRight: 12, borderRadius: 14, backgroundColor: i === 0 ? '#FFF3B0' : '#F4F1FF' }}>
                     <View style={{ minWidth: 32, paddingVertical: 2, paddingHorizontal: 5, borderRadius: 9, backgroundColor: '#FFFFFF', alignItems: 'center' }}>
                       <T size={12} weight={700} color={SH}>{i + 1}</T>
                     </View>

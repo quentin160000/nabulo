@@ -64,7 +64,7 @@ export function Pill({ label, bg = '#FFD45C', icon, accessibilityLabel }: { labe
     <Bubble bg={bg} radius={15} border={2} inset={5} style={{ height: 30, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', gap: 5 }}>
       <View accessible accessibilityLabel={accessibilityLabel ?? label} style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
         {icon}
-        <T size={14} weight={700} color={INK}>{label}</T>
+        <T size={14} weight={700} color={INK} numberOfLines={1}>{label}</T>
       </View>
     </Bubble>
   );
@@ -125,7 +125,7 @@ export function LButton({ label, onPress, mix, height = 62, fontSize = 22, icon,
 }
 
 /* ---------- 1 · Règles ---------- */
-export function Regles({ num, titre, regles, onPlay }: { num: number; titre: string; regles: string[]; onPlay: () => void }) {
+export function Regles({ titre, regles, onPlay }: { titre: string; regles: string[]; onPlay: () => void }) {
   const cadre = useCadre();
   return (
     <View style={{ flex: 1 }}>
@@ -134,9 +134,6 @@ export function Regles({ num, titre, regles, onPlay }: { num: number; titre: str
         <Header title="Règles" onClose={quitter} />
         <ScrollView style={{ flex: 1, marginHorizontal: -16 }} contentContainerStyle={{ paddingHorizontal: 16, gap: 10 }} showsVerticalScrollIndicator={false}>
           <View style={{ alignItems: 'center', gap: 6, marginTop: 6 }}>
-            <Bubble bg="#FFD45C" radius={27} border={2} inset={6} style={{ width: 54, height: 54, alignItems: 'center', justifyContent: 'center' }}>
-              <T size={24} weight={700} color={INK}>{num}</T>
-            </Bubble>
             <View style={{ alignItems: 'center' }}>
               <T size={30} weight={700} outline align="center" style={{ lineHeight: 33 }} accessibilityRole="header">{titre}</T>
               <T size={15} weight={600} outline align="center">Jeux libres · rejouable à volonté</T>
@@ -284,7 +281,7 @@ export function Fin({ record, titre, sousTitre, label, mot, voisins, lignes, onR
 
         <View style={{ flex: 1, minHeight: 0, paddingVertical: 14, paddingHorizontal: 4, justifyContent: 'center', gap: 14 }}>
           <Outlined size={17} w={1.5} dy={2}>{label}</Outlined>
-          <View style={{ alignSelf: 'center', paddingVertical: 4, paddingHorizontal: 16, borderRadius: 16, borderWidth: 2, borderColor: 'transparent', backgroundColor: '#FFFFFF' }}>
+          <View style={{ alignSelf: 'center', maxWidth: '100%', paddingVertical: 4, paddingHorizontal: 16, borderRadius: 16, borderWidth: 2, borderColor: 'transparent', backgroundColor: '#FFFFFF' }}>
             <T size={46} weight={700} color={INK} numberOfLines={1} adjustsFontSizeToFit style={{ lineHeight: 51 }}>{mot}</T>
           </View>
           {voisins.length > 0 && (
@@ -299,9 +296,9 @@ export function Fin({ record, titre, sousTitre, label, mot, voisins, lignes, onR
           <View style={{ marginTop: 22, gap: 10 }}>
             {lignes.map(l => (
               <View key={l.label} accessible accessibilityLabel={`${l.label} : ${l.value}`}
-                style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 11, paddingHorizontal: 14, borderRadius: 15, borderWidth: 2, borderColor: 'rgba(255,255,255,0.55)', backgroundColor: 'rgba(255,255,255,0.92)', boxShadow: 'inset 0 -5px 0 rgba(20,10,60,0.18)' }}>
-                <T size={17} weight={600} color={INK}>{l.label}</T>
-                <T size={17} weight={700} color={INK}>{l.value}</T>
+                style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 10, paddingVertical: 11, paddingHorizontal: 14, borderRadius: 15, borderWidth: 2, borderColor: 'rgba(255,255,255,0.55)', backgroundColor: 'rgba(255,255,255,0.92)', boxShadow: 'inset 0 -5px 0 rgba(20,10,60,0.18)' }}>
+                <T size={17} weight={600} color={INK} numberOfLines={1}>{l.label}</T>
+                <T size={17} weight={700} color={INK} numberOfLines={1} adjustsFontSizeToFit style={{ flexShrink: 1 }}>{l.value}</T>
               </View>
             ))}
           </View>

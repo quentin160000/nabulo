@@ -23,7 +23,7 @@ describe('multi · commun', () => {
   });
 });
 
-describe('le bluff', () => {
+describe('imposteur', () => {
   const players = makePlayers(4);
   it('donne un mot proche à l’imposteur et le même mot aux autres', () => {
     const r = newBluffRound(players, rng(1), 0);

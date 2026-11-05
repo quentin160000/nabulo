@@ -40,8 +40,8 @@ export default function MiniJeux() {
               {e?.enCours != null && <Tag label="en cours" bg={meRow} />}
             </View>
             <View>
-              <T size={18} weight={700} color={ink} style={{ lineHeight: 20 }}>{j.titre}</T>
-              <T size={13} weight={600} color={SOFT}>{sub}</T>
+              <T size={18} weight={700} color={ink} numberOfLines={2} adjustsFontSizeToFit style={{ lineHeight: 20 }}>{j.titre}</T>
+              <T size={13} weight={600} color={SOFT} numberOfLines={2}>{sub}</T>
             </View>
           </View>
         </Bubble>

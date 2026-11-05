@@ -3,7 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
-  AccessibilityInfo, Animated, Easing, KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, View, useWindowDimensions,
+  AccessibilityInfo, Animated, Easing, KeyboardAvoidingView, Pressable, ScrollView, TextInput, View, useWindowDimensions,
   type StyleProp, type ViewStyle,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -18,6 +18,7 @@ import { images } from './bits';
 import { T } from './Text';
 import { Toast, useToast } from './Toast';
 import { keepFocus } from './game';
+import { KAV_BEHAVIOR, useMargeBasse } from './retours-jeux-clavier';
 
 /* Briques des écrans multi (maquettes J-multi-18 à 20). Encre des maquettes : hsl(256, 45 %, 16 %) = gameInk. */
 export const INK = gameInk;
@@ -121,11 +122,13 @@ type Bg = 'multi' | 'warm' | 'cold' | 'warm-calm';
 /** Écran multi : fond, marges de la maquette (16 px sur les côtés, 10 px entre les blocs). */
 export function MScreen({ children, bg = 'multi', keyboard, gap = 10 }: { children: ReactNode; bg?: Bg; keyboard?: boolean; gap?: number }) {
   const inset = useSafeAreaInsets();
-  const body = <View style={{ flex: 1, paddingTop: inset.top + 14, paddingBottom: (keyboard ? 10 : 24) + inset.bottom, paddingHorizontal: 16, gap }}>{children}</View>;
+  // avec une barre de saisie : 12 px d'air au-dessus du clavier quand il est ouvert
+  const bas = useMargeBasse(10 + inset.bottom);
+  const body = <View style={{ flex: 1, paddingTop: inset.top + 14, paddingBottom: keyboard ? bas : 24 + inset.bottom, paddingHorizontal: 16, gap }}>{children}</View>;
   return (
     <View style={{ flex: 1, backgroundColor: '#138A8A' }}>
       {bg === 'multi' ? <MultiBg /> : bg === 'cold' ? <ColdBg /> : <WarmBg confetti={bg === 'warm'} />}
-      {keyboard ? <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>{body}</KeyboardAvoidingView> : body}
+      {keyboard ? <KeyboardAvoidingView style={{ flex: 1 }} behavior={KAV_BEHAVIOR}>{body}</KeyboardAvoidingView> : body}
     </View>
   );
 }
@@ -150,16 +153,7 @@ export function MHeader({ title, right, onClose = leave }: { title: string; righ
 export function HeadChip({ label, bg = '#FFD45C' }: { label: string; bg?: string }) {
   return (
     <Bubble bg={bg} radius={15} border={2} inset={5} style={{ height: 30, paddingHorizontal: 10, alignItems: 'center', justifyContent: 'center' }}>
-      <T size={14} weight={700} color={INK} numberOfLines={1}>{label}</T>
-    </Bubble>
-  );
-}
-
-/** Pastille ronde jaune numérotée (n° du jeu). */
-export function Badge({ n }: { n: number }) {
-  return (
-    <Bubble bg="#FFD45C" radius={27} border={2} inset={6} style={{ width: 54, height: 54, alignItems: 'center', justifyContent: 'center' }}>
-      <T size={24} weight={700} color={INK}>{n}</T>
+      <T size={14} weight={700} color={INK} numberOfLines={1} adjustsFontSizeToFit>{label}</T>
     </Bubble>
   );
 }
@@ -287,8 +281,8 @@ export const HEAT_ORDER = ['#FF5A36', '#FF7240', '#FF9A3C', '#FFB35C', '#FFD45C'
 export function StatRow({ label, value }: { label: string; value: string }) {
   return (
     <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 10, paddingVertical: 11, paddingHorizontal: 14, borderRadius: 15, borderWidth: 2, borderColor: 'rgba(255,255,255,0.55)', backgroundColor: 'rgba(255,255,255,0.92)', boxShadow: 'inset 0 -5px 0 rgba(20,10,60,0.18)' }}>
-      <T size={17} weight={600} color={INK}>{label}</T>
-      <T size={17} weight={700} color={INK} numberOfLines={1} style={{ flexShrink: 1 }}>{value}</T>
+      <T size={17} weight={600} color={INK} numberOfLines={1}>{label}</T>
+      <T size={17} weight={700} color={INK} numberOfLines={1} adjustsFontSizeToFit style={{ flexShrink: 1 }}>{value}</T>
     </View>
   );
 }
@@ -349,8 +343,8 @@ export function WordReveal({ caption, word, chips }: { caption: string; word: st
   return (
     <View style={{ gap: 14 }}>
       <T size={17} weight={700} color="#FFFFFF" align="center" style={{ textShadowColor: INK, textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 0 }}>{caption}</T>
-      <View style={{ alignSelf: 'center', paddingVertical: 4, paddingHorizontal: 16, borderRadius: 16, borderWidth: 2, borderColor: 'transparent', backgroundColor: '#FFFFFF' }}>
-        <T size={46} weight={700} color={INK} style={{ lineHeight: 51 }}>{word}</T>
+      <View style={{ alignSelf: 'center', maxWidth: '100%', paddingVertical: 4, paddingHorizontal: 16, borderRadius: 16, borderWidth: 2, borderColor: 'transparent', backgroundColor: '#FFFFFF' }}>
+        <T size={46} weight={700} color={INK} numberOfLines={1} adjustsFontSizeToFit style={{ lineHeight: 51 }}>{word}</T>
       </View>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 }}>
         {chips.map((c, i) => <WordBubble key={c} label={c} bg={HEAT_ORDER[i % HEAT_ORDER.length]} />)}
@@ -407,13 +401,12 @@ export function Lobby({ title, players, min, max, secondary, onSecondary, onLaun
   );
 }
 
-export function Rules({ n, title, sub, steps, onPlay }: { n: number; title: string; sub: string; steps: string[]; onPlay: () => void }) {
+export function Rules({ title, sub, steps, onPlay }: { title: string; sub: string; steps: string[]; onPlay: () => void }) {
   return (
     <MScreen>
       <MHeader title="Règles" />
       <ScrollView style={{ flex: 1, marginHorizontal: -16 }} contentContainerStyle={{ paddingHorizontal: 16, gap: 10, flexGrow: 1 }} showsVerticalScrollIndicator={false}>
         <View style={{ alignItems: 'center', gap: 6, marginTop: 6 }}>
-          <Badge n={n} />
           <BigTitle title={title} sub={sub} />
         </View>
         <Image source={images.nabulo} style={{ alignSelf: 'center', width: 110, height: 110 }} contentFit="contain" accessibilityLabel="Nabulo" />

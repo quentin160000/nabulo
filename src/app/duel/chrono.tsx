@@ -14,11 +14,12 @@ import { Bubble } from '@/ui/Bubble';
 import { Button } from '@/ui/Button';
 import { Icon, images } from '@/ui/bits';
 import {
-  BigTitle, DuelBg, DuelEnd, DuelGauge, DuelHeader, DuelScreen, INK, NiveauPicker, OpponentChoice, WordChip,
+  BigTitle, DuelBg, DuelEnd, DuelGauge, DuelHeader, DuelScreen, INK, NiveauPicker, OpponentChoice, PlayerAvatar, WordChip,
 } from '@/ui/duel-ui';
 import { T } from '@/ui/Text';
 import { Toast, useToast } from '@/ui/Toast';
 import { keepFocus } from '@/ui/game';
+import { KAV_BEHAVIOR, useMargeBasse } from '@/ui/retours-jeux-clavier';
 
 const GAME = 'Contre-la-montre duel';
 type Phase = 'choix' | 'regles' | 'jeu' | 'manche' | 'fin';
@@ -82,9 +83,6 @@ function Regles({ niveau, setNiveau, onReady }: { niveau: 'facile' | 'normal'; s
       <DuelHeader title="Règles" />
       <ScrollView style={{ flex: 1, marginHorizontal: -16 }} contentContainerStyle={{ paddingHorizontal: 16, gap: 10 }} showsVerticalScrollIndicator={false}>
         <View style={{ alignItems: 'center', gap: 6, marginTop: 6 }}>
-          <Bubble bg="#FFD45C" radius={27} border={2} inset={6} style={{ width: 54, height: 54, alignItems: 'center', justifyContent: 'center' }}>
-            <T size={24} weight={700} color={INK}>14</T>
-          </Bubble>
           <BigTitle title={GAME} sub="1 contre 1 · best of 5" />
         </View>
         <Image source={images.nabulo} style={{ width: 110, height: 110, alignSelf: 'center' }} contentFit="contain" accessibilityLabel="Nabulo" />
@@ -113,6 +111,7 @@ function EnJeu({ round, score, niveau, myName, onEnd }: {
   const [theirs, setTheirs] = useState<ChronoWord[]>([]);
   const [left, setLeft] = useState(CHRONO_DUREE);
   const [news, setNews] = useState<string>('C’est parti ! Trouve des mots proches de la cible.');
+  const bas = useMargeBasse(inset.bottom + 10);
   const [text, setText] = useState('');
   const toast = useToast();
   const input = useRef<TextInputInstance>(null);
@@ -138,8 +137,8 @@ function EnJeu({ round, score, niveau, myName, onEnd }: {
         const p = chronoAiPick(round.target, niveau, ref.current.theirs.map(w => w.word), rand);
         if (p) {
           ref.current.theirs = [...ref.current.theirs, p];
+          // on ne dévoile pas les mots de l'IA pendant la manche : seul le score bouge
           setTheirs(ref.current.theirs);
-          if (p.temperature >= CHRONO_SEUIL) setNews(`L’IA vient de trouver « ${p.word} » · ${deg(p.temperature)}`);
         }
         play();
       }, aiDelay(niveau, rand));
@@ -158,16 +157,17 @@ function EnJeu({ round, score, niveau, myName, onEnd }: {
     if (c.kind === 'cible') { toast.show('Pas le mot cible lui-même !'); return; }
     ref.current.mine = [...ref.current.mine, { word: c.word, temperature: c.temperature }];
     setMine(ref.current.mine);
-    if (c.kind === 'froid') toast.show(`« ${c.word} » · ${deg(c.temperature)}, il faut ${CHRONO_SEUIL}°+`);
-    else if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    if (c.kind === 'froid') { toast.show(`« ${c.word} » · ${deg(c.temperature)}, il faut ${CHRONO_SEUIL}°+`); return; }
+    setNews(`« ${c.word} » · ${deg(c.temperature)} : ça compte !`);
+    if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   };
 
   const good = validWords(mine).sort((a, b) => b.temperature - a.temperature);
   return (
     <View style={{ flex: 1 }}>
       <DuelBg />
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={{ flex: 1, paddingTop: inset.top + 8, paddingBottom: inset.bottom + 10, paddingHorizontal: 16, gap: 10 }}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={KAV_BEHAVIOR}>
+        <View style={{ flex: 1, paddingTop: inset.top + 8, paddingBottom: bas, paddingHorizontal: 16, gap: 10 }}>
           <DuelHeader title={`Manche ${round.n}`} right={
             <Bubble bg="#FFD45C" radius={15} border={2} inset={5} style={{ height: 30, paddingHorizontal: 10, flexDirection: 'row', alignItems: 'center', gap: 5 }}>
               <View><Icon name="clock" size={14} color={INK} width={2.4} /></View>
@@ -176,11 +176,11 @@ function EnJeu({ round, score, niveau, myName, onEnd }: {
           } />
           <DuelGauge me={score.me} opp={score.opp} split={gaugeSplit(score.me, score.opp)} myName={myName} />
           <Bubble bg="#FFFFFF" radius={12} border={2} inset={5} style={{ paddingVertical: 6, paddingHorizontal: 12 }}>
-            <T size={14} weight={700} color={INK} accessibilityLiveRegion="polite">{news}</T>
+            <T size={14} weight={700} color={INK} numberOfLines={2} accessibilityLiveRegion="polite">{news}</T>
           </Bubble>
-          <Bubble bg="#FFFFFF" radius={18} border={2} inset={6} style={{ paddingTop: 10, paddingBottom: 12, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}>
+          <Bubble bg="#FFFFFF" radius={18} border={2} inset={6} style={{ paddingTop: 10, paddingBottom: 12, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
             <T size={14} weight={600} color={INK}>Autour de</T>
-            <T size={26} weight={700} color={INK} numberOfLines={1} style={{ flexShrink: 1 }}>{round.target}</T>
+            <T size={26} weight={700} color={INK} numberOfLines={1} adjustsFontSizeToFit style={{ flexShrink: 1 }}>{round.target}</T>
             <T size={18} weight={700} color={INK} accessibilityLabel={`${good.length} mots pour toi, ${validWords(theirs).length} pour l’IA`}>{good.length} – {validWords(theirs).length}</T>
           </Bubble>
           <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 7, paddingTop: 4 }} keyboardShouldPersistTaps="handled">
@@ -204,25 +204,47 @@ function EnJeu({ round, score, niveau, myName, onEnd }: {
   );
 }
 
-/* ---------- 5 · Fin de manche ---------- */
+/* ---------- 5 · Fin de manche : mes mots et ceux de l'IA, côte à côte ---------- */
 function FinManche({ round, score, myName, over, onNext }: { round: Round; score: { me: number; opp: number }; myName: string | null; over: boolean; onNext: () => void }) {
-  const a = validWords(round.mine).length, b = validWords(round.theirs).length;
+  const mine = validWords(round.mine).sort((x, y) => y.temperature - x.temperature);
+  const theirs = validWords(round.theirs).sort((x, y) => y.temperature - x.temperature);
+  const a = mine.length, b = theirs.length;
   const title = round.winner === 'me' ? 'Manche pour toi !' : round.winner === 'opp' ? 'Manche pour l’IA' : 'Égalité !';
   const sub = a === b ? `${a} mot${a > 1 ? 's' : ''} partout${round.winner ? ', départagés par le plus chaud' : ''}` : `${a} mot${a > 1 ? 's' : ''} contre ${b}`;
-  const chips = validWords(round.mine).sort((x, y) => y.temperature - x.temperature);
   return (
     <DuelScreen>
       <DuelHeader title={`Manche ${round.n} terminée`} />
-      <View style={{ flex: 1 }} />
       <BigTitle title={title} sub={sub} />
       <DuelGauge me={score.me} opp={score.opp} split={gaugeSplit(score.me, score.opp)} myName={myName} />
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 7 }}>
-        {chips.length ? chips.map(w => <WordChip key={w.word} label={w.word} bg={roundChipColor(w.temperature)} />)
-          : <T size={15} weight={600} outline align="center">Aucun mot à {CHRONO_SEUIL}°+ autour de « {round.target} »</T>}
+      <T size={14} weight={600} outline align="center" numberOfLines={1}>Autour de « {round.target} » · {CHRONO_SEUIL}°+</T>
+      <View style={{ flex: 1, minHeight: 0, flexDirection: 'row', gap: 10 }}>
+        <WordColumn who="me" name={myName ?? 'Toi'} myName={myName} words={mine} lead={round.winner === 'me'} />
+        <WordColumn who="opp" name="IA" myName={myName} words={theirs} lead={round.winner === 'opp'} />
       </View>
-      <View style={{ flex: 1 }} />
       <Button label={over ? 'Voir le résultat' : 'Manche suivante'} variant="yellow" border={2} height={60} fontSize={20} onPress={onNext} />
     </DuelScreen>
+  );
+}
+
+/** Colonne de fin de manche : avatar, nom, nombre de mots, puis les mots valides en bulles avec leur température. */
+function WordColumn({ who, name, myName, words, lead }: { who: 'me' | 'opp'; name: string; myName: string | null; words: ChronoWord[]; lead: boolean }) {
+  return (
+    <Bubble bg={lead ? '#FFF3B0' : '#FFFFFF'} radius={20} border={2} inset={6} style={{ flex: 1, minWidth: 0, paddingTop: 12, paddingBottom: 16, paddingHorizontal: 12, gap: 8 }}>
+      <View accessible accessibilityLabel={`${who === 'me' ? 'Tes mots' : 'Les mots de l’IA'} : ${words.length ? words.map(w => `${w.word} ${deg(w.temperature)}`).join(', ') : 'aucun'}`}
+        style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <PlayerAvatar who={who} name={myName} size={34} />
+        <T size={16} weight={700} color={INK} numberOfLines={1} style={{ flex: 1, minWidth: 0 }}>{name}</T>
+        <T size={18} weight={700} color={INK}>{words.length}</T>
+      </View>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ gap: 6 }} showsVerticalScrollIndicator={false}>
+        {words.length ? words.map(w => (
+          <View key={w.word} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 34, paddingVertical: 5, paddingHorizontal: 12, borderRadius: 13, backgroundColor: roundChipColor(w.temperature) }}>
+            <T size={15} weight={700} color={INK} numberOfLines={1} adjustsFontSizeToFit style={{ flex: 1, minWidth: 0 }}>{w.word}</T>
+            <T size={14} weight={700} color={INK}>{deg(w.temperature)}</T>
+          </View>
+        )) : <T size={14} weight={600} color={INK} align="center" style={{ opacity: 0.6, marginTop: 6 }}>aucun mot à {CHRONO_SEUIL}°+</T>}
+      </ScrollView>
+    </Bubble>
   );
 }
 

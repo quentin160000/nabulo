@@ -1,7 +1,7 @@
 /* Coop · Synchro (planche J-coop-21), avec un partenaire IA. */
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, View } from 'react-native';
+import { View } from 'react-native';
 import {
   RECORD_SYNCHRO, SYNCHRO_ROUNDS, aiAssociate, checkAssociate, closeWords, commonSeed, firstPrompt, synchroLabel, synchroScore,
 } from '@/game/coop';
@@ -95,7 +95,7 @@ export default function Synchro() {
       </Screen>
     );
   }
-  if (phase === 'rules') return <Screen><RulesScreen n={21} title="Synchro" steps={STEPS} onReady={start} /></Screen>;
+  if (phase === 'rules') return <Screen><RulesScreen title="Synchro" steps={STEPS} onReady={start} /></Screen>;
 
   if (phase === 'end') {
     const best = turns.reduce((b, t) => (t.score > b.score ? t : b), turns[0]);
@@ -121,8 +121,8 @@ export default function Synchro() {
 
   if (phase === 'input') {
     return (
-      <Screen>
-        <KeyboardAvoidingView style={{ flex: 1, gap: 10 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <Screen keyboard>
+        <View style={{ flex: 1, gap: 10 }}>
           {header}
           <T size={17} weight={700} outline align="center">Un mot associé à</T>
           <View style={{ alignSelf: 'center', paddingVertical: 4, paddingHorizontal: 18, borderRadius: 18, borderWidth: 2, borderColor: 'transparent', backgroundColor: '#FFFFFF' }}>
@@ -136,7 +136,7 @@ export default function Synchro() {
           <View style={{ marginTop: 'auto' }}>
             <WordField value={text} onChange={setText} onSubmit={validate} placeholder="Ton mot associé" action="Valider" disabled={!!me} label="Ton mot associé" />
           </View>
-        </KeyboardAvoidingView>
+        </View>
         <Toast msg={toast.msg} check={false} style={{ bottom: 90 }} />
       </Screen>
     );
@@ -146,11 +146,11 @@ export default function Synchro() {
   const t = turns[turns.length - 1];
   const target = Math.max(record, SYNCHRO_ROUNDS * 60);
   const card = (letter: string, color: string, who: string, word: string) => (
-    <Bubble bg="#FFFFFF" radius={22} border={2} inset={6} style={{ flex: 1, minWidth: 0, paddingTop: 14, paddingHorizontal: 10, paddingBottom: 16, alignItems: 'center', gap: 6 }}>
+    <Bubble bg="#FFFFFF" radius={22} border={2} inset={6} style={{ flex: 1, minWidth: 0, paddingTop: 14, paddingHorizontal: 12, paddingBottom: 16, alignItems: 'center', gap: 6 }}>
       <Avatar letter={letter} color={color} size={60} font={letter.length > 1 ? 22 : 26} />
       <T size={14} weight={600} color={INK} style={{ opacity: 0.65 }}>{who}</T>
-      <T size={fitSize(word, 30, 146)} weight={700} color={INK} numberOfLines={1} style={{ lineHeight: 32 }}>{word}</T>
-      <View style={{ marginTop: 2, paddingVertical: 3, paddingHorizontal: 10, borderRadius: 10, backgroundColor: '#FFE9D6' }}>
+      <T size={fitSize(word, 30, 140)} weight={700} color={INK} numberOfLines={1} adjustsFontSizeToFit style={{ lineHeight: 32, maxWidth: '100%' }}>{word}</T>
+      <View style={{ marginTop: 2, paddingVertical: 3, paddingHorizontal: 12, borderRadius: 10, backgroundColor: '#FFE9D6' }}>
         <T size={13} weight={700} color="#B4541E">{Math.max(0, Math.round(temperature(word, t.prompt) ?? 0))}° du mot</T>
       </View>
     </Bubble>

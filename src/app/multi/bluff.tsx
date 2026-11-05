@@ -16,7 +16,7 @@ import {
 import { T } from '@/ui/Text';
 import { Toast, useToast } from '@/ui/Toast';
 
-/* Le bluff · l'imposteur (maquette J-multi-18) — partie d'entraînement : toi + 4 IA. */
+/* Imposteur (maquette J-multi-18) — partie d'entraînement : toi + 4 IA. */
 
 type Phase = 'salon' | 'regles' | 'secret' | 'indices' | 'vote' | 'revelation' | 'fin';
 const AI_COUNT = 4;
@@ -47,9 +47,9 @@ export default function Bluff() {
     setRound(r); setPhase('revelation');
   };
 
-  if (phase === 'salon') return <Lobby title="Salon · Le bluff" players={players} min={4} max={8} secondary="Inviter" onLaunch={() => setPhase('regles')} />;
+  if (phase === 'salon') return <Lobby title="Salon · Imposteur" players={players} min={4} max={8} secondary="Inviter" onLaunch={() => setPhase('regles')} />;
   if (phase === 'regles') {
-    return <Rules n={18} title="Le bluff · l’imposteur" sub="Multi · 4 à 8 joueurs" onPlay={newGame} steps={[
+    return <Rules title="Imposteur" sub="Multi · 4 à 8 joueurs" onPlay={newGame} steps={[
       'Tout le monde reçoit le même mot… sauf un : l’imposteur, qui a un mot proche.',
       'Personne ne sait qui est l’imposteur, pas même lui.',
       'Chacun à son tour donne un mot-indice.',
@@ -116,11 +116,11 @@ function Secret({ players, round, index, score, onDone }: { players: Player[]; r
           <T size={14} weight={700} color={INK} style={{ marginBottom: 8 }}>Prépare ton indice</T>
           <View style={{ gap: 6 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <View style={{ paddingVertical: 3, paddingHorizontal: 10, borderRadius: 10, backgroundColor: '#D8F5E6' }}><T size={13} weight={700} color="#1E7A4A">{tips.good}</T></View>
-              <T size={13} weight={600} color={INK}>assez proche pour tes alliés</T>
+              <View style={{ flexShrink: 0, maxWidth: '50%', paddingVertical: 3, paddingHorizontal: 12, borderRadius: 10, backgroundColor: '#D8F5E6' }}><T size={13} weight={700} color="#1E7A4A" numberOfLines={1} adjustsFontSizeToFit>{tips.good}</T></View>
+              <T size={13} weight={600} color={INK} style={{ flexShrink: 1 }}>assez proche pour tes alliés</T>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <View style={{ paddingVertical: 3, paddingHorizontal: 10, borderRadius: 10, backgroundColor: '#FFE0D6' }}><T size={13} weight={700} color="#B4321E">{tips.bad}</T></View>
+              <View style={{ flexShrink: 0, maxWidth: '50%', paddingVertical: 3, paddingHorizontal: 12, borderRadius: 10, backgroundColor: '#FFE0D6' }}><T size={13} weight={700} color="#B4321E" numberOfLines={1} adjustsFontSizeToFit>{tips.bad}</T></View>
               <T size={13} weight={600} color={INK} style={{ flexShrink: 1 }}>trop évident : l’imposteur devine</T>
             </View>
           </View>
@@ -273,18 +273,18 @@ function Revelation({ players, round, index, total, onNext }: { players: Player[
         sub={o.found ? `démasqué par ${o.against} joueur${o.against > 1 ? 's' : ''} sur ${voters}` : `passé inaperçu · ${o.against} vote${o.against > 1 ? 's' : ''} sur ${voters}`} />
       <Grow max={48} />
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <View style={{ flex: 1, minWidth: 0, paddingTop: 10, paddingHorizontal: 8, paddingBottom: 12, borderRadius: 18, backgroundColor: '#FFFFFF', alignItems: 'center', gap: 2 }}>
-          <T size={12} weight={700} color={INK} style={{ opacity: 0.6 }}>Le mot de tous</T>
+        <View style={{ flex: 1, minWidth: 0, paddingTop: 10, paddingHorizontal: 12, paddingBottom: 12, borderRadius: 18, backgroundColor: '#FFFFFF', alignItems: 'center', gap: 2 }}>
+          <T size={12} weight={700} color={INK} numberOfLines={1} style={{ opacity: 0.6 }}>Le mot de tous</T>
           <T size={26} weight={700} color={INK} numberOfLines={1} adjustsFontSizeToFit>{round.secret}</T>
         </View>
         <T size={24} weight={700} outline>≠</T>
-        <View style={{ flex: 1, minWidth: 0, paddingTop: 10, paddingHorizontal: 8, paddingBottom: 12, borderRadius: 18, backgroundColor: '#FFD6E0', alignItems: 'center', gap: 2 }}>
-          <T size={12} weight={700} color={INK} style={{ opacity: 0.6 }}>{imp.me ? 'Ton mot' : `Le mot d’${imp.name}`}</T>
+        <View style={{ flex: 1, minWidth: 0, paddingTop: 10, paddingHorizontal: 12, paddingBottom: 12, borderRadius: 18, backgroundColor: '#FFD6E0', alignItems: 'center', gap: 2 }}>
+          <T size={12} weight={700} color={INK} numberOfLines={1} adjustsFontSizeToFit style={{ opacity: 0.6 }}>{imp.me ? 'Ton mot' : `Le mot d’${imp.name}`}</T>
           <T size={26} weight={700} color={INK} numberOfLines={1} adjustsFontSizeToFit>{round.fake}</T>
         </View>
       </View>
-      <View style={{ alignSelf: 'center', paddingVertical: 6, paddingHorizontal: 14, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.16)' }}>
-        <T size={14} weight={700} color="#FFFFFF">{imp.me ? 'Ton' : 'Son'} indice « {clue} » {o.found ? (imp.me ? 't’a trahi' : 'l’a trahi') : 'est passé inaperçu'}</T>
+      <View style={{ alignSelf: 'center', maxWidth: '100%', paddingVertical: 6, paddingHorizontal: 14, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.16)' }}>
+        <T size={14} weight={700} color="#FFFFFF" align="center">{imp.me ? 'Ton' : 'Son'} indice « {clue} » {o.found ? (imp.me ? 't’a trahi' : 'l’a trahi') : 'est passé inaperçu'}</T>
       </View>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', columnGap: 14, rowGap: 8 }}>
         {round.order.filter(id => id !== imp.id && round.votes[id]).map(id => (
