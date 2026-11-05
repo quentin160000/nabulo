@@ -1,14 +1,15 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useMemo, useState } from 'react';
-import { AccessibilityInfo, Animated, Easing, View, useWindowDimensions } from 'react-native';
+import { Animated, Easing, View, useWindowDimensions } from 'react-native';
 import Svg, { Polygon } from 'react-native-svg';
+import { animationsReduites } from '@/game/reglages';
 import { alu, aluStops } from '@/theme/colors';
 
 const fill = { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 } as const;
 
 function useReduceMotion() {
   const [r, setR] = useState(false);
-  useEffect(() => { AccessibilityInfo.isReduceMotionEnabled().then(setR); }, []);
+  useEffect(() => { animationsReduites().then(setR); }, []);
   return r;
 }
 

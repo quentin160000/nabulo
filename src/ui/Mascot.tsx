@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { AccessibilityInfo, Animated, Easing } from 'react-native';
+import { Animated, Easing } from 'react-native';
 import Svg, { Circle, Ellipse, G, Path, Rect } from 'react-native-svg';
+import { animationsReduites } from '@/game/reglages';
 import type { Mood } from '@/game/temperature';
 
 const INK = '#2B2150';
@@ -11,7 +12,7 @@ export function Mascot({ mood, size = 96, animate = true }: { mood: Mood; size?:
   useEffect(() => {
     if (!animate) return;
     let loop: Animated.CompositeAnimation | null = null;
-    AccessibilityInfo.isReduceMotionEnabled().then(r => {
+    animationsReduites().then(r => {
       if (r) return;
       loop = Animated.loop(Animated.sequence([
         Animated.timing(v, { toValue: 1, duration: 1200, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),

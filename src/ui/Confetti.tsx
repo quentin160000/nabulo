@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react';
-import { AccessibilityInfo, Animated, Easing, View, useWindowDimensions } from 'react-native';
+import { Animated, Easing, View, useWindowDimensions } from 'react-native';
+import { animationsReduites } from '@/game/reglages';
 
 const COLORS = ['#FFD45C', '#FF5A36', '#5B8DEF', '#7CE0B5', '#FF86C8', '#FFFFFF', '#9DD8FF'];
 /** Pseudo-hasard stable (même tirage à chaque rendu). */
@@ -15,7 +16,7 @@ export function Confetti({ count = 30 }: { count?: number }) {
   })), [count, width]);
   useEffect(() => {
     let loops: Animated.CompositeAnimation[] = [];
-    AccessibilityInfo.isReduceMotionEnabled().then(r => {
+    animationsReduites().then(r => {
       if (r) return;
       loops = pieces.map(p => Animated.loop(Animated.sequence([
         Animated.delay(p.delay),

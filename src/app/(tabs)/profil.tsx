@@ -8,16 +8,13 @@ import { Bubble } from '@/ui/Bubble';
 import { Coin } from '@/ui/bits';
 import { CARD, Glyph, Row, SOFT, TabScreen, Tag } from '@/ui/onglets-bits';
 import { T } from '@/ui/Text';
-import { useToast } from '@/ui/Toast';
 
 const moisAnnee = (d: Date) => d.toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' });
 
 export default function Profil() {
-  const toast = useToast();
   const { braises } = useWallet();
   const [stats, setStats] = useState<Stats | null>(null);
   useFocusEffect(useCallback(() => { statsMotDuJour().then(setStats); }, []));
-  const soon = () => toast.show('Bientôt disponible');
 
   const cases: [string, string][] = [
     [String(stats?.serie ?? 0), (stats?.serie ?? 0) > 1 ? 'jours de série' : 'jour de série'],
@@ -26,7 +23,7 @@ export default function Profil() {
   ];
 
   return (
-    <TabScreen title="Profil" tab="profil" toast={toast.msg}>
+    <TabScreen title="Profil" tab="profil">
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
         <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#7CE0B5', alignItems: 'center', justifyContent: 'center' }}>
           <Glyph name="user" size={34} />
@@ -60,9 +57,9 @@ export default function Profil() {
         </Bubble>
       </Pressable>
 
-      <Row kind="white" icon="friend" title="Amis" sub="inviter tes amis" onPress={soon} />
-      <Row kind="white" icon="bolt" title="Historique des duels" sub="tes victoires et défaites" onPress={soon} />
-      <Row kind="white" icon="gear" title="Réglages" sub="langue, sons, notifications, compte" onPress={soon} />
+      <Row kind="white" icon="friend" title="Amis" sub="inviter tes amis" onPress={() => router.push('/amis')} />
+      <Row kind="white" icon="bolt" title="Historique des duels" sub="tes victoires et défaites" onPress={() => router.push('/historique')} />
+      <Row kind="white" icon="gear" title="Réglages" sub="vibrations, animations, langue, données" onPress={() => router.push('/reglages')} />
     </TabScreen>
   );
 }

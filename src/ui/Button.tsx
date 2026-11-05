@@ -1,5 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { Platform, Pressable, View, type StyleProp, type ViewStyle } from 'react-native';
+import { vibrationsActives } from '@/game/reglages';
 import { bubble, gameInk, panel } from '@/theme/colors';
 import { Diagonal, Relief } from './Diagonal';
 import { T } from './Text';
@@ -31,7 +32,7 @@ export function Button({ label, onPress, variant = 'yellow', height = 56, fontSi
       accessibilityHint={accessibilityHint}
       accessibilityState={{ disabled: !!disabled }}
       disabled={disabled}
-      onPress={() => { if (Platform.OS !== 'web') Haptics.selectionAsync(); onPress?.(); }}
+      onPress={() => { if (Platform.OS !== 'web' && vibrationsActives()) Haptics.selectionAsync(); onPress?.(); }}
       style={({ pressed }) => [{ height, opacity: disabled ? 0.5 : 1, transform: [{ translateY: pressed && !flat ? 2 : 0 }] }, style]}
     >
       <View
