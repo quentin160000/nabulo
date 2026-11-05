@@ -111,20 +111,12 @@ function EnJeu({ daily }: { daily: Daily }) {
   const input = useRef<TextInputInstance>(null);
   const rows = useMemo(() => sortGuesses(state.guesses).slice(0, 20), [state.guesses]);
   const lastGuess = state.guesses.find(g => g.word === last) ?? state.guesses[state.guesses.length - 1] ?? null;
-  const prevBest = useRef(state.guesses.length ? bestTemperature(state.guesses) : -100);
-  const [record, setRecord] = useState(false);
   const kb = useKeyboardVisible();
 
   useEffect(() => {
     if (feedback) toast.show(feedback.kind === 'unknown' ? `Je ne connais pas « ${feedback.word} »` : feedback.kind === 'repeat' ? `« ${feedback.word} » est déjà dans ta liste` : 'Connexion impossible, réessaie');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [feedback]);
-  useEffect(() => {
-    if (!lastGuess) return;
-    const isRecord = lastGuess.temperature > prevBest.current && state.guesses.length > 1 && !lastGuess.hint;
-    setRecord(isRecord);
-    prevBest.current = Math.max(prevBest.current, lastGuess.temperature);
-  }, [lastGuess, state.guesses.length]);
 
   const send = async () => { const w = text; setText(''); setFlash(null); await submit(w); input.current?.focus(); };
   const openHint = () => { toast.hide(); setSheet(braises < HINT_COST ? 'manque' : 'confirm'); };
@@ -169,7 +161,7 @@ function EnJeu({ daily }: { daily: Daily }) {
               </View>
             </View>
 
-            <Gauge t={lastGuess?.temperature ?? null} record={record} seq={state.guesses.length} />
+            <Gauge t={lastGuess?.temperature ?? null} seq={state.guesses.length} />
 
             <Section title="Les plus chauds" right={rows.length > 4 ? 'glisse ↓' : undefined} padding={8} gap={6} style={kb ? { flexShrink: 1, minHeight: 0 } : { flex: 1, minHeight: 0 }}>
               <ScrollView style={kb ? { maxHeight: 202, borderRadius: 14 } : { flex: 1, borderRadius: 14 }} contentContainerStyle={{ gap: 6 }}
@@ -277,12 +269,11 @@ function GuessRow({ g, last }: { g: Guess; last: boolean }) {
   );
 }
 
-/** Jauge horizontale : dégradé froid → chaud rempli jusqu'à la température, aiguille blanche, « Record ! » au-dessus. */
-function Gauge({ t, record, seq }: { t: number | null; record: boolean; seq: number }) {
+/** Jauge horizontale : dégradé froid → chaud rempli jusqu'à la température, aiguille blanche. */
+function Gauge({ t, seq }: { t: number | null; seq: number }) {
   const [w, setW] = useState(0);
   const target = t === null ? 0 : gaugePos(t);
   const [p] = useState(() => new Animated.Value(target));
-  const [pop] = useState(() => new Animated.Value(0));
   useEffect(() => {
     let alive = true;
     animationsReduites().then(reduce => {
@@ -294,10 +285,6 @@ function Gauge({ t, record, seq }: { t: number | null; record: boolean; seq: num
     });
     return () => { alive = false; };
   }, [target, t, p, seq]);
-  useEffect(() => {
-    pop.setValue(0);
-    if (record) Animated.sequence([Animated.delay(1100), Animated.spring(pop, { toValue: 1, useNativeDriver: false, friction: 5 })]).start();
-  }, [record, t, pop]);
   const track = Math.max(0, w - 28);
   const left = p.interpolate({ inputRange: [0, 1], outputRange: [14 - 5, 14 + track - 5] });
   const fillW = p.interpolate({ inputRange: [0, 1], outputRange: [0, track] });
@@ -310,9 +297,6 @@ function Gauge({ t, record, seq }: { t: number | null; record: boolean; seq: num
         </Animated.View>
       </View>
       <Animated.View style={{ position: 'absolute', left, top: 0, bottom: 0, width: 10 }}>
-        <Animated.View style={{ position: 'absolute', left: -25, top: -26, width: 60, paddingVertical: 1, borderRadius: 9, backgroundColor: '#FFD23F', alignItems: 'center', opacity: pop, transform: [{ scale: pop }] }}>
-          <T size={11} weight={700} color={INK}>Record !</T>
-        </Animated.View>
         <View style={{ position: 'absolute', left: 0, top: 4, bottom: 4, width: 10, borderRadius: 5, backgroundColor: '#FFFFFF' }} />
       </Animated.View>
     </View>
