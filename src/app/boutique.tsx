@@ -8,8 +8,6 @@ import { ink } from '@/theme/colors';
 import { Bubble } from '@/ui/Bubble';
 import { AluBackground } from '@/ui/backgrounds';
 import { Coin, Icon } from '@/ui/bits';
-import { goTab } from '@/ui/onglets-bits';
-import { TabBar } from '@/ui/TabBar';
 import { T } from '@/ui/Text';
 import { Toast, useToast } from '@/ui/Toast';
 
@@ -70,7 +68,6 @@ export default function Boutique() {
           <T size={12} weight={600} color="#4A4E57" align="center">Paiement via l’App Store ou Google Play</T>
         </ScrollView>
 
-        <TabBar onPress={goTab} />
       </View>
       <Toast msg={toast.msg} check={false} style={{ bottom: inset.bottom + 104 }} />
     </View>

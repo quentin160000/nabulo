@@ -37,7 +37,8 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <WalletProvider>
         <StatusBar style="auto" />
-        <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
+        <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right', contentStyle: { backgroundColor: '#4B33B8' } }}>
+          <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
           <Stack.Screen name="onboarding" options={{ animation: 'fade', gestureEnabled: false }} />
         </Stack>
       </WalletProvider>

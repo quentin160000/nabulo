@@ -16,7 +16,7 @@ import { AluBackground } from '@/ui/backgrounds';
 import { Icon, IconTile, images } from '@/ui/bits';
 import { Mascot } from '@/ui/Mascot';
 import { goTab } from '@/ui/onglets-bits';
-import { TabBar } from '@/ui/TabBar';
+import { TAB_BAR_SPACE } from '@/ui/TabBar';
 import { T } from '@/ui/Text';
 
 const SOFT = '#3F3566';
@@ -58,7 +58,7 @@ function Home() {
   return (
     <View style={{ flex: 1 }}>
       <AluBackground />
-      <View style={{ flex: 1, paddingTop: inset.top + 6, paddingBottom: inset.bottom + 12, paddingHorizontal: 16, gap: 13 }}>
+      <View style={{ flex: 1, paddingTop: inset.top + 6, paddingBottom: inset.bottom + TAB_BAR_SPACE, paddingHorizontal: 16, gap: 13 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 2 }}>
           <View style={{ flex: 1 }}>
             <T size={14} weight={600} color={LABEL}>{hour >= 5 && hour < 18 ? 'Bonjour' : 'Bonsoir'}</T>
@@ -152,7 +152,6 @@ function Home() {
           </Pressable>
         </ScrollView>
 
-        <TabBar active="accueil" onPress={t => { if (t !== 'accueil') goTab(t); }} />
       </View>
     </View>
   );

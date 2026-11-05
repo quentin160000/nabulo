@@ -7,7 +7,7 @@ import { ink } from '@/theme/colors';
 import { Bubble } from './Bubble';
 import { Coin } from './bits';
 import { GameBg } from './game';
-import { TabBar, type Tab } from './TabBar';
+import { TAB_BAR_SPACE, type Tab } from './TabBar';
 import { T } from './Text';
 import { Toast } from './Toast';
 import type { ReactNode } from 'react';
@@ -32,9 +32,9 @@ const TAB_ROUTES: Record<Tab, Href> = { accueil: '/', jeux: '/jeux', classement:
 
 /** Navigation des onglets : on remplace l'écran au lieu d'empiler (retour à l'accueil = on dépile tout). */
 export function goTab(t: Tab) {
-  if (t === 'accueil') { router.dismissTo('/'); return; }
+  // les onglets vivent dans le groupe (tabs) : on revient à la racine puis on y sélectionne l'onglet
   if (router.canDismiss()) router.dismissAll();
-  router.replace(TAB_ROUTES[t]);
+  router.navigate(TAB_ROUTES[t]);
 }
 
 /** Solde de braises de la planche : pastille blanche, pièce qui dépasse à gauche, « + » jaune ; ouvre la boutique. */
@@ -62,7 +62,7 @@ export function TabScreen({ title, back, badge, tab, children, toast, below }: S
   return (
     <View style={{ flex: 1, backgroundColor: '#4B33B8' }}>
       <GameBg />
-      <View style={{ flex: 1, paddingTop: inset.top + 6, paddingBottom: inset.bottom + 20, paddingHorizontal: 16, gap: 12 }}>
+      <View style={{ flex: 1, paddingTop: inset.top + 6, paddingBottom: inset.bottom + (back ? 20 : TAB_BAR_SPACE), paddingHorizontal: 16, gap: 12 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 2, minHeight: 40 }}>
           {back && (
             <Pressable accessibilityRole="button" accessibilityLabel="Retour" hitSlop={4}
@@ -81,7 +81,6 @@ export function TabScreen({ title, back, badge, tab, children, toast, below }: S
           {children}
         </ScrollView>
         {below}
-        <TabBar active={tab} onPress={t => { if (back || t !== tab) goTab(t); }} />
       </View>
       <Toast msg={toast ?? null} check={false} style={{ bottom: inset.bottom + 104 }} />
     </View>

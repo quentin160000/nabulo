@@ -27,3 +27,6 @@ export function TabBar({ active, onPress }: { active?: Tab; onPress?: (t: Tab) =
     </View>
   );
 }
+
+/** Place à laisser en bas d'un écran d'onglet pour la barre flottante (hors zone sûre). */
+export const TAB_BAR_SPACE = 84;
