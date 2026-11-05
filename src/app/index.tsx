@@ -7,6 +7,7 @@ import { engine } from '@/game/engine';
 import { dailyKey, onboardingSeen, shortDate, streak, untilMidnight } from '@/game/history';
 import { bestTemperature } from '@/game/rules';
 import { load, resetAll } from '@/game/storage';
+import { partiesEnCours, type Partie } from '@/game/onglets-parties';
 import type { DailyState } from '@/game/useDaily';
 import { ink } from '@/theme/colors';
 import { Bubble } from '@/ui/Bubble';
@@ -14,9 +15,9 @@ import { Button } from '@/ui/Button';
 import { AluBackground } from '@/ui/backgrounds';
 import { Icon, IconTile, images } from '@/ui/bits';
 import { Mascot } from '@/ui/Mascot';
+import { goTab } from '@/ui/onglets-bits';
 import { TabBar } from '@/ui/TabBar';
 import { T } from '@/ui/Text';
-import { Toast, useToast } from '@/ui/Toast';
 
 const SOFT = '#3F3566';
 const LABEL = '#4A4E57';
@@ -42,17 +43,17 @@ function Home() {
   const day = engine.dayNumber(new Date());
   const [daily, setDaily] = useState<DailyState | null>(null);
   const [serie, setSerie] = useState(0);
-  const toast = useToast();
+  const [enCours, setEnCours] = useState<Partie[]>([]);
   useFocusEffect(useCallback(() => {
     load<DailyState | null>(dailyKey(day), null).then(setDaily);
     streak(day).then(setSerie);
+    partiesEnCours().then(setEnCours);
   }, [day]));
 
   const n = daily?.guesses.length ?? 0;
   const solved = !!daily?.solved;
   const playing = !solved && n > 0;
   const hour = new Date().getHours();
-  const soon = () => toast.show('Bientôt disponible');
 
   return (
     <View style={{ flex: 1 }}>
@@ -69,7 +70,7 @@ function Home() {
             style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: '#FFD45C', alignItems: 'center', justifyContent: 'center' }}>
             <Icon name="bag" size={22} />
           </Pressable>
-          <Pressable accessibilityRole="button" accessibilityLabel="Profil" onPress={soon}
+          <Pressable accessibilityRole="button" accessibilityLabel="Profil" onPress={() => goTab('profil')}
             style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: '#7CE0B5', alignItems: 'center', justifyContent: 'center' }}>
             <Icon name="user" size={22} width={2.2} />
           </Pressable>
@@ -101,17 +102,17 @@ function Home() {
             </Bubble>
           </Pressable>
 
-          {playing && (
-            <Pressable accessibilityRole="button" accessibilityLabel="Parties en cours" onPress={() => router.push('/mot-du-jour')}>
+          {enCours.length > 0 && (
+            <Pressable accessibilityRole="button" accessibilityLabel={`${enCours.length} partie${enCours.length > 1 ? 's' : ''} en cours`} onPress={() => router.push('/en-cours')}>
               <Bubble {...CARDS.cours} style={{ paddingVertical: 10, paddingHorizontal: 12 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                   <IconTile name="clock" />
                   <View style={{ flex: 1, minWidth: 0 }}>
                     <T size={19} weight={700} color={ink} style={{ lineHeight: 21 }}>En cours</T>
-                    <T size={14} weight={600} color={SOFT}>Jeu du jour · {n} essais</T>
+                    <T size={14} weight={600} color={SOFT} numberOfLines={1}>{enCours.map(p => (p.id === 'jour' ? `Jeu du jour · ${n} essais` : p.titre)).join(' · ')}</T>
                   </View>
                   <View style={{ minWidth: 28, height: 28, paddingHorizontal: 7, borderRadius: 14, borderWidth: 3, borderColor: '#B02E58', backgroundColor: '#FF5A8A', boxShadow: 'inset 0 -3px 0 #D63E6C', alignItems: 'center', justifyContent: 'center' }}>
-                    <T size={14} weight={700} color="#FFFFFF" style={{ lineHeight: 16 }}>1</T>
+                    <T size={14} weight={700} color="#FFFFFF" style={{ lineHeight: 16 }}>{enCours.length}</T>
                   </View>
                   <Icon name="chevron" size={22} />
                 </View>
@@ -122,7 +123,7 @@ function Home() {
           <SectionLabel>Jouer avec d’autres</SectionLabel>
           <View style={{ flexDirection: 'row', gap: 12 }}>
             {([['duel', 'bolt', 'Duel', '1 contre 1'], ['multi', 'multi', 'Multi', 'coop · groupe']] as const).map(([k, icon, title, sub]) => (
-              <Pressable key={k} style={{ flex: 1 }} accessibilityRole="button" accessibilityLabel={title} onPress={soon}>
+              <Pressable key={k} style={{ flex: 1 }} accessibilityRole="button" accessibilityLabel={title} onPress={() => router.push(k === 'duel' ? '/duel' : '/multi')}>
                 <Bubble {...CARDS[k]} style={{ paddingTop: 14, paddingHorizontal: 14, paddingBottom: 16 }}>
                   <View style={{ height: 112, justifyContent: 'space-between' }}>
                     <IconTile name={icon} />
@@ -137,7 +138,7 @@ function Home() {
           </View>
 
           <SectionLabel>Seul</SectionLabel>
-          <Pressable accessibilityRole="button" accessibilityLabel="Mini-jeux" onPress={soon}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Mini-jeux" onPress={() => router.push('/mini-jeux')}>
             <Bubble {...CARDS.mini} style={{ paddingVertical: 10, paddingHorizontal: 12 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                 <IconTile name="pad" />
@@ -151,9 +152,8 @@ function Home() {
           </Pressable>
         </ScrollView>
 
-        <TabBar active="accueil" onPress={t => { if (t !== 'accueil') soon(); }} />
+        <TabBar active="accueil" onPress={t => { if (t !== 'accueil') goTab(t); }} />
       </View>
-      <Toast msg={toast.msg} check={false} style={{ bottom: inset.bottom + 96 }} />
     </View>
   );
 }
