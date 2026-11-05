@@ -3,7 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  AccessibilityInfo, Animated, Easing, Keyboard, KeyboardAvoidingView, LayoutAnimation, Modal, Platform, Pressable, ScrollView, Share, TextInput, View,
+  AccessibilityInfo, Animated, Easing, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, Share, TextInput, View,
   type TextInputInstance,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -12,15 +12,16 @@ import { FREE_AD_HINTS_PER_DAY, HINT_COST, bestTemperature, sortGuesses, type Gu
 import { moodLabel, moodOf, tempColor } from '@/game/temperature';
 import { useDaily } from '@/game/useDaily';
 import { useWallet } from '@/game/wallet';
-import { appGradient, appGradientStops, bgDeep, gameInk, gameInkSoft, gaugeGradient, gaugeStops, panel, warmGradient, warmStops } from '@/theme/colors';
+import { bgDeep, gameInk, gameInkSoft, gaugeGradient, gaugeStops, panel, warmGradient, warmStops } from '@/theme/colors';
 import { Bubble } from '@/ui/Bubble';
 import { Button } from '@/ui/Button';
-import { AluBackground, SlidingGradient } from '@/ui/backgrounds';
+import { SlidingGradient } from '@/ui/backgrounds';
 import { Chip, Coin, CoinPill, HeaderButton, Icon, images } from '@/ui/bits';
 import { Confetti } from '@/ui/Confetti';
 import { Mascot } from '@/ui/Mascot';
 import { T } from '@/ui/Text';
 import { Toast, useToast } from '@/ui/Toast';
+import { GameBg, Section, Sheet, useKeyboardVisible } from '@/ui/game';
 
 const INK = gameInk;
 const SH3 = { textShadowColor: INK, textShadowOffset: { width: 0, height: 3 }, textShadowRadius: 0 } as const;
@@ -37,35 +38,6 @@ export default function MotDuJour() {
 }
 
 type Daily = ReturnType<typeof useDaily>;
-
-function GameBg() {
-  return <LinearGradient colors={appGradient as unknown as [string, string, string]} locations={appGradientStops as unknown as [number, number, number]} style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }} />;
-}
-
-/** Le clavier est-il ouvert ? (avec une animation douce de la mise en page quand il s'ouvre ou se ferme) */
-function useKeyboardVisible() {
-  const [v, setV] = useState(Platform.OS !== 'web');
-  useEffect(() => {
-    const ease = () => LayoutAnimation.configureNext(LayoutAnimation.create(220, 'easeInEaseOut', 'opacity'));
-    const show = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow', () => { ease(); setV(true); });
-    const hide = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide', () => { ease(); setV(false); });
-    return () => { show.remove(); hide.remove(); };
-  }, []);
-  return v;
-}
-
-/** Section foncée des écrans de jeu (« Comment jouer », « Les plus chauds »…). */
-function Section({ title, right, children, padding = 10, gap = 7, style }: { title: string; right?: string; children: React.ReactNode; padding?: number; gap?: number; style?: object }) {
-  return (
-    <View style={[{ backgroundColor: bgDeep, borderRadius: 22, padding, gap }, style]}>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 6 }}>
-        <T size={14} weight={600} color="#FFFFFF">{title}</T>
-        {right ? <T size={14} weight={600} color="#FFFFFF" style={{ opacity: 0.85 }}>{right}</T> : null}
-      </View>
-      {children}
-    </View>
-  );
-}
 
 /* ---------- 1 · Règles (tant qu'aucun essai) ---------- */
 const SCALE: [string, string, string][] = [
@@ -342,23 +314,6 @@ function Gauge({ t, record }: { t: number | null; record: boolean }) {
         <View style={{ position: 'absolute', left: 0, top: 4, bottom: 4, width: 10, borderRadius: 5, backgroundColor: '#FFFFFF' }} />
       </Animated.View>
     </View>
-  );
-}
-
-/** Panneau du bas en aluminium (indice). */
-function Sheet({ visible, onClose, children }: { visible: boolean; onClose: () => void; children: React.ReactNode }) {
-  const inset = useSafeAreaInsets();
-  return (
-    <Modal visible={visible} transparent animationType="fade" statusBarTranslucent navigationBarTranslucent onRequestClose={onClose}>
-      {/* le voile couvre tout l'écran, y compris derrière les coins arrondis du panneau */}
-      <Pressable accessibilityRole="button" accessibilityLabel="Fermer et revenir à la partie" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, backgroundColor: 'rgba(24,14,60,0.45)' }} onPress={onClose} />
-      <View pointerEvents="box-none" style={{ flex: 1 }} />
-      <View style={{ borderTopLeftRadius: 28, borderTopRightRadius: 28, overflow: 'hidden', paddingTop: 10, paddingHorizontal: 18, paddingBottom: 28 + inset.bottom, gap: 14 }}>
-        <AluBackground />
-        <View style={{ alignSelf: 'center', width: 44, height: 5, borderRadius: 3, backgroundColor: 'rgba(43,33,80,0.18)' }} />
-        {children}
-      </View>
-    </Modal>
   );
 }
 
