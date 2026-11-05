@@ -363,6 +363,7 @@ function Victoire({ daily }: { daily: Daily }) {
     fly: Array.from({ length: 8 }, () => new Animated.Value(0)), serie: new Animated.Value(fresh ? 0 : 1),
   }));
   const [partage, setPartage] = useState(false);
+  const [gainY, setGainY] = useState(250);
   // bonus de série (tous les 3 jours d'affilée) : annoncé pendant l'animation, versé et enregistré à la fin
   const [serie, setSerie] = useState<Paiement | null>(null);
   const bonusRef = useRef(0);
@@ -431,29 +432,32 @@ function Victoire({ daily }: { daily: Daily }) {
           </Animated.View>
         </View>
 
-        <View style={{ alignItems: 'center', gap: 6, marginTop: 4 }}>
-          <Animated.View style={{ width: 104, height: 104, marginTop: 33, marginBottom: 6, transform: [{ translateY: 52 }, { scale: a.pop }, { translateY: -52 }] }}>
-            <Image source={images.nabuloSaut} autoplay style={{ position: 'absolute', left: -31, top: -58, width: 166, height: 166 }} contentFit="contain" accessibilityLabel="Nabulo saute de joie, le poing en l’air" />
+        {/* Nabulo qui saute à gauche, le résultat à droite : libère de la hauteur pour le classement */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 30, paddingHorizontal: 4 }}>
+          <Animated.View style={{ width: 92, height: 92, transform: [{ translateY: 46 }, { scale: a.pop }, { translateY: -46 }] }}>
+            <Image source={images.nabuloSaut} autoplay style={{ position: 'absolute', left: -27, top: -51, width: 146, height: 146 }} contentFit="contain" accessibilityLabel="Nabulo saute de joie, le poing en l’air" />
           </Animated.View>
-          <Animated.View style={[{ alignItems: 'center', gap: 8 }, rise(a.rise)]}>
-            <T size={34} weight={700} color="#FFFFFF" style={[{ lineHeight: 36 }, { textShadowColor: '#2B2150', textShadowOffset: { width: 0, height: 3 }, textShadowRadius: 0 }]}>Trouvé !</T>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <View style={{ paddingVertical: 3, paddingHorizontal: 14, borderRadius: 14, backgroundColor: '#FFD23F', boxShadow: 'inset 0 -4px 0 #E3A91C' }}><T size={22} weight={700} color="#2B2150">{state.secret}</T></View>
-              <T size={19} weight={700} color="#FFFFFF">100 °C</T>
+          <Animated.View style={[{ flex: 1, minWidth: 0, alignItems: 'flex-start', gap: 6 }, rise(a.rise)]}>
+            <T size={32} weight={700} color="#FFFFFF" style={[{ lineHeight: 34 }, { textShadowColor: '#2B2150', textShadowOffset: { width: 0, height: 3 }, textShadowRadius: 0 }]}>Trouvé !</T>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, maxWidth: '100%' }}>
+              <View style={{ flexShrink: 1, paddingVertical: 2, paddingHorizontal: 12, borderRadius: 14, backgroundColor: '#FFD23F', boxShadow: 'inset 0 -4px 0 #E3A91C' }}>
+                <T size={(state.secret ?? '').length > 11 ? 17 : 21} weight={700} color="#2B2150">{state.secret}</T>
+              </View>
+              <T size={18} weight={700} color="#FFFFFF" style={{ flexShrink: 0 }}>100 °C</T>
             </View>
-            <T size={17} weight={600} color="#FFFFFF">en <T size={17} weight={700} color="#FFFFFF">{state.guesses.length} essais</T>{state.hintsUsed ? ` · ${state.hintsUsed} indice${state.hintsUsed > 1 ? 's' : ''}` : ''}</T>
+            <T size={16} weight={600} color="#FFFFFF">en <T size={16} weight={700} color="#FFFFFF">{state.guesses.length} essai{state.guesses.length > 1 ? 's' : ''}</T>{state.hintsUsed ? ` · ${state.hintsUsed} indice${state.hintsUsed > 1 ? 's' : ''}` : ''}</T>
           </Animated.View>
         </View>
 
-        <Animated.View accessibilityRole="text" accessibilityLabel={`${gain} brez gagnées`}
-          style={{ alignSelf: 'center', marginTop: 6, flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: 12, paddingRight: 26, paddingBottom: 14, paddingLeft: 18, borderRadius: 28, backgroundColor: 'rgba(255,255,255,0.18)', opacity: a.gain, transform: [{ scale: a.gain }] }}>
+        <Animated.View accessibilityRole="text" accessibilityLabel={`${gain} brez gagnées`} onLayout={e => setGainY(e.nativeEvent.layout.y)}
+          style={{ alignSelf: 'center', marginTop: 2, flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: 12, paddingRight: 26, paddingBottom: 14, paddingLeft: 18, borderRadius: 28, backgroundColor: 'rgba(255,255,255,0.18)', opacity: a.gain, transform: [{ scale: a.gain }] }}>
           {fresh && a.fly.map((f, i) => (
             <Animated.View key={i} pointerEvents="none" style={{
               position: 'absolute', left: 54 - 15, top: 50 - 15,
               opacity: f.interpolate({ inputRange: [0, 0.15, 0.85, 1], outputRange: [0, 1, 1, 0] }),
               transform: [
                 { translateX: f.interpolate({ inputRange: [0, 0.15, 1], outputRange: [0, [-30, 20, -10, 34, -24, 8, 28, -16][i], 178] }) },
-                { translateY: f.interpolate({ inputRange: [0, 0.15, 1], outputRange: [0, -40, -300] }) },
+                { translateY: f.interpolate({ inputRange: [0, 0.15, 1], outputRange: [0, -40, Math.min(-120, 20 - (gainY + 50))] }) },
                 { scale: f.interpolate({ inputRange: [0, 0.15, 1], outputRange: [0.6, 1, 0.5] }) },
               ],
             }}><Coin size={30} /></Animated.View>
@@ -490,7 +494,7 @@ function Victoire({ daily }: { daily: Daily }) {
       </View>
       {partage && (
         <View style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}>
-          <PartageMotDuJour day={state.day} guesses={state.guesses} hintsUsed={state.hintsUsed} onClose={() => setPartage(false)} />
+          <PartageMotDuJour day={state.day} guesses={state.guesses} hintsUsed={state.hintsUsed} serie={serie?.serie} onClose={() => setPartage(false)} />
         </View>
       )}
     </View>

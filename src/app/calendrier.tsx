@@ -162,8 +162,7 @@ function Mois({ an, mois, today, now, trouves, onChange }: MoisProps) {
                 backgroundColor: trouve ? JAUNE : 'transparent',
                 borderWidth: estAujourdhui ? 2.5 : 0, borderColor: MAUVE,
               }}>
-                <T size={15} weight={700} color={trouve ? ink : futur ? '#CFC9DE' : manque ? '#A79FBF' : ink} style={{ marginTop: trouve ? -6 : 0 }}>{d}</T>
-                {trouve && <View style={{ position: 'absolute', bottom: 3 }}><Flamme size={13} /></View>}
+                <T size={15} weight={700} color={trouve ? ink : futur ? '#CFC9DE' : manque ? '#A79FBF' : ink}>{d}</T>
               </View>
             </View>
           );
@@ -200,7 +199,7 @@ function Fleche({ sens, actif, onPress }: { sens: 'prec' | 'suiv'; actif: boolea
   );
 }
 
-/** Petite flamme (jour trouvé, palier atteint) ; grise quand le palier n'est pas encore atteint. */
+/** Petite flamme des paliers ; grise quand le palier n'est pas encore atteint. */
 function Flamme({ size, eteinte }: { size: number; eteinte?: boolean }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24">
