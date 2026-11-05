@@ -1,12 +1,12 @@
 import { Image } from 'expo-image';
 import { Redirect, router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { DevSettings, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { engine } from '@/game/engine';
 import { dailyKey, onboardingSeen, shortDate, streak, untilMidnight } from '@/game/history';
 import { bestTemperature } from '@/game/rules';
-import { load } from '@/game/storage';
+import { load, resetAll } from '@/game/storage';
 import type { DailyState } from '@/game/useDaily';
 import { ink } from '@/theme/colors';
 import { Bubble } from '@/ui/Bubble';
@@ -61,7 +61,9 @@ function Home() {
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 2 }}>
           <View style={{ flex: 1 }}>
             <T size={14} weight={600} color={LABEL}>{hour >= 5 && hour < 18 ? 'Bonjour' : 'Bonsoir'}</T>
-            <T size={30} weight={700} color={ink} style={{ lineHeight: 32 }}>Nabulo</T>
+            {/* en développement : appui long sur « Nabulo » = repartir de zéro (onboarding, partie, braises) */}
+            <T size={30} weight={700} color={ink} style={{ lineHeight: 32 }}
+              onLongPress={__DEV__ ? async () => { await resetAll(); DevSettings.reload(); } : undefined}>Nabulo</T>
           </View>
           <Pressable accessibilityRole="button" accessibilityLabel="Boutique" onPress={() => router.push('/boutique')}
             style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: '#FFD45C', alignItems: 'center', justifyContent: 'center' }}>

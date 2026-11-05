@@ -8,3 +8,11 @@ export async function load<T>(key: string, fallback: T): Promise<T> {
 export async function save(key: string, value: unknown): Promise<void> {
   try { await AsyncStorage.setItem(key, JSON.stringify(value)); } catch { /* sans effet : on rejouera depuis la mémoire */ }
 }
+
+/** Efface toutes les données de Nabulo (outil de développement). */
+export async function resetAll(): Promise<void> {
+  try {
+    const keys = (await AsyncStorage.getAllKeys()).filter(k => k.startsWith('nabulo:'));
+    await AsyncStorage.multiRemove(keys);
+  } catch { /* rien à effacer */ }
+}
