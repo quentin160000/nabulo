@@ -54,7 +54,7 @@ export default function RootLayout() {
       <ThemeProvider value={THEME}>
       <WalletProvider>
         <StatusBar style="auto" />
-        <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right', contentStyle: { backgroundColor: VIOLET } }}>
+        <Stack screenOptions={{ headerShown: false, animation: 'ios_from_right', contentStyle: { backgroundColor: VIOLET } }}>
           <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
           <Stack.Screen name="onboarding" options={{ animation: 'fade', gestureEnabled: false }} />
         </Stack>
