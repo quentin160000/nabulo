@@ -3,7 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Animated, Easing, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, Share, TextInput, View,
+  Animated, Easing, Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, View,
   type TextInputInstance,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -25,6 +25,8 @@ import { GameBg, Section, Sheet, useKeyboardVisible, keepFocus } from '@/ui/game
 import { animationsReduites } from '@/game/reglages';
 import { apercuPaliers, paliersAPayer, payeAujourdhui, type Paiement } from '@/game/serie';
 import { CalendrierBouton } from '@/ui/calendrier-bits';
+import { ClassementDefilant } from '@/ui/classement-defilant';
+import { PartageMotDuJour } from '@/ui/partage-mdj';
 
 const INK = gameInk;
 const SH3 = { textShadowColor: INK, textShadowOffset: { width: 0, height: 3 }, textShadowRadius: 0 } as const;
@@ -358,9 +360,9 @@ function Victoire({ daily }: { daily: Daily }) {
   const [a] = useState(() => ({
     pop: new Animated.Value(fresh ? 0 : 1), rise: new Animated.Value(fresh ? 0 : 1), gain: new Animated.Value(fresh ? 0 : 1),
     count: new Animated.Value(0), solde: new Animated.Value(0), list: new Animated.Value(fresh ? 0 : 1), bump: new Animated.Value(0),
-    fly: Array.from({ length: 8 }, () => new Animated.Value(0)), scroll: new Animated.Value(0), serie: new Animated.Value(fresh ? 0 : 1),
+    fly: Array.from({ length: 8 }, () => new Animated.Value(0)), serie: new Animated.Value(fresh ? 0 : 1),
   }));
-  const [listH, setListH] = useState(0);
+  const [partage, setPartage] = useState(false);
   // bonus de série (tous les 3 jours d'affilée) : annoncé pendant l'animation, versé et enregistré à la fin
   const [serie, setSerie] = useState<Paiement | null>(null);
   const bonusRef = useRef(0);
@@ -399,21 +401,9 @@ function Victoire({ daily }: { daily: Daily }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // la liste défile toute seule, en boucle
   const mine = useMemo(() => new Set(state.guesses.map(g => g.word)), [state.guesses]);
-  const rows = closest;
-  const contentH = rows.length * 43;
-  useEffect(() => {
-    if (!contentH || contentH <= listH) return;
-    let loop: Animated.CompositeAnimation | null = null;
-    animationsReduites().then(r => {
-      if (r) return;
-      a.scroll.setValue(0);
-      loop = Animated.loop(Animated.timing(a.scroll, { toValue: 1, duration: 28000, easing: Easing.linear, useNativeDriver: true }));
-      loop.start();
-    });
-    return () => loop?.stop();
-  }, [contentH, listH, a.scroll]);
+  // la liste défile toute seule une fois apparue (maquette : 1,6 s après le gain, comme scrollA)
+  const [listDelay] = useState(() => (fresh ? 1300 + Math.min(2600, Math.max(800, gain * 50)) + 1600 : 1600));
 
   const rise = (v: Animated.Value) => ({ opacity: v, transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) }] });
   const row = (c: { word: string; temperature: number }, i: number, key: string) => (
@@ -423,7 +413,6 @@ function Victoire({ daily }: { daily: Daily }) {
       <T size={15} weight={700} color="#B8381A">{fmt(c.temperature)}</T>
     </View>
   );
-  const share = () => Share.share({ message: `Nabulo · Mot du jour trouvé en ${state.guesses.length} essais${state.hintsUsed ? ` (${state.hintsUsed} indice${state.hintsUsed > 1 ? 's' : ''})` : ''} 🔥` }).catch(() => {});
 
   return (
     <View style={{ flex: 1 }}>
@@ -472,7 +461,7 @@ function Victoire({ daily }: { daily: Daily }) {
           <Coin size={72} />
           <View>
             <T size={60} weight={700} color="#FFFFFF" style={{ lineHeight: 62, fontVariant: ['tabular-nums'], textShadowColor: '#2B2150', textShadowOffset: { width: 0, height: 4 }, textShadowRadius: 0 }}>+{shownGain}</T>
-            <T size={18} weight={700} color="#FFFFFF" style={{ marginTop: 4, lineHeight: 18 }}>brez gagnées</T>
+            <T size={18} weight={700} color="#FFFFFF" style={{ marginTop: 2 }}>brez gagnées</T>
           </View>
         </Animated.View>
 
@@ -488,19 +477,22 @@ function Victoire({ daily }: { daily: Daily }) {
             <T size={14} weight={700} color="#FFFFFF">Les plus proches de « {state.secret} »</T>
             <T size={14} weight={700} color="#FFFFFF" style={{ opacity: 0.85 }}>jaune = tes mots</T>
           </View>
-          <View style={{ flex: 1, minHeight: 0, overflow: 'hidden', borderRadius: 16 }} onLayout={e => setListH(e.nativeEvent.layout.height)}>
-            <Animated.View style={{ gap: 5, transform: [{ translateY: a.scroll.interpolate({ inputRange: [0, 1], outputRange: [0, -contentH] }) }] }}>
-              {rows.map((c, i) => row(c, i, 'a' + c.word))}
-              {contentH > listH && rows.map((c, i) => row(c, i, 'b' + c.word))}
-            </Animated.View>
+          <View style={{ flex: 1, minHeight: 0 }}>
+            <ClassementDefilant rows={closest} rowHeight={38} gap={5} renderRow={row} keyOf={c => c.word} startDelay={listDelay}
+              accessibilityLabel={`Les mots les plus proches de ${state.secret ?? 'ce mot'}`} />
           </View>
         </Animated.View>
 
         <View style={{ flexDirection: 'row', gap: 10 }}>
-          <Button label="Partager" variant="white" fontSize={18} color="#2B2150" style={{ flex: 1 }} onPress={share} />
+          <Button label="Partager" variant="white" fontSize={18} color="#2B2150" style={{ flex: 1 }} onPress={() => setPartage(true)} />
           <Button label="Continuer" fontSize={18} color="#2B2150" style={{ flex: 1 }} onPress={() => router.back()} />
         </View>
       </View>
+      {partage && (
+        <View style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }}>
+          <PartageMotDuJour day={state.day} guesses={state.guesses} hintsUsed={state.hintsUsed} onClose={() => setPartage(false)} />
+        </View>
+      )}
     </View>
   );
 }
