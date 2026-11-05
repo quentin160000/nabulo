@@ -170,3 +170,19 @@ export function couleurPastille(temp: number): string {
 
 /** Couleurs des voisins de l'écran de fin, du plus proche au moins proche. */
 export const COULEURS_VOISINS = ['#FF5A36', '#FF7240', '#FF9A3C', '#FFB35C', '#FFD45C'] as const;
+
+/* ---------- Minuteur et correction des jeux à série (Plus chaud, L'intrus) ---------- */
+/** Secondes par manche : le minuteur repart plein à chaque nouvelle manche ; temps écoulé = erreur. */
+export const PLUS_CHAUD_DUREE = 5, INTRUS_DUREE = 12;
+
+/**
+ * Couleur d'un mot une fois la manche corrigée. `choix` : `undefined` = en attente, `null` = temps écoulé, sinon l'indice touché.
+ * Plus chaud (`rateEnRose`) : au temps écoulé, le mauvais mot passe aussi en rose pour montrer la bonne réponse.
+ * L'intrus : seul le mot touché à tort est rose ; au temps écoulé, l'intrus est vert et les autres restent neutres.
+ */
+export function etatReponse(i: number, bonne: number, choix: number | null | undefined, rateEnRose = false): 'neutre' | 'bon' | 'faux' {
+  if (choix === undefined) return 'neutre';
+  if (i === bonne) return 'bon';
+  if (i === choix || (choix === null && rateEnRose)) return 'faux';
+  return 'neutre';
+}

@@ -2,7 +2,7 @@ import * as Haptics from 'expo-haptics';
 import { useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, View } from 'react-native';
 import { rng } from '@/game/lexicon';
-import { mancheIntrus, type MancheIntrus } from '@/game/libres-manches';
+import { etatReponse, mancheIntrus, INTRUS_DUREE, type MancheIntrus } from '@/game/libres-manches';
 import { enregistrerScore, finirEnCours, marquerEnCours } from '@/game/libres-stockage';
 import { GameBg } from '@/ui/game';
 import { vibrationsActives } from '@/game/reglages';
@@ -14,11 +14,11 @@ import { T } from '@/ui/Text';
 
 const JEU = 'intrus' as const;
 const TITRE = 'L’intrus';
-/** Secondes par manche : 5 mots à lire, donc un peu plus que les 10 s de Plus chaud. Temps écoulé = erreur. */
-const DUREE = 12;
+/** Secondes par manche (5 mots à lire, donc plus que Plus chaud) ; le temps repart à chaque manche. Temps écoulé = erreur. */
+const DUREE = INTRUS_DUREE;
 const REGLES = [
   '5 mots s’affichent : 4 vont ensemble, 1 n’a rien à faire là.',
-  `Touche l’intrus avant la fin du temps (${DUREE} s).`,
+  `Touche l’intrus en moins de ${DUREE} s : le temps repart à chaque manche.`,
   'Chaque bonne réponse allonge ta série.',
   'Une erreur ou le temps écoulé, et c’est fini.',
 ];
@@ -93,7 +93,8 @@ function EnJeu({ onFin }: { onFin: (r: Resultat) => void }) {
         <T size={18} weight={700} outline align="center" accessibilityLiveRegion="polite">{message}</T>
         <View style={{ flex: 1, gap: 12, paddingBottom: 8 }}>
           {manche.mots.map((m, i) => {
-            const bg = !revele ? '#FFFFFF' : i === manche.intrus ? VERT : i === choix ? ROSE : '#FFFFFF';
+            const etat = etatReponse(i, manche.intrus, choix);
+            const bg = etat === 'bon' ? VERT : etat === 'faux' ? ROSE : '#FFFFFF';
             return (
               <Pressable key={m + i} accessibilityRole="button" accessibilityLabel={m} disabled={revele} onPress={() => { if (revele) return; if (i === manche.intrus) setSerie(n => n + 1); setChoix(i); }}
                 style={({ pressed }) => ({ flex: 1, maxHeight: 96, borderRadius: 18, borderWidth: 2, borderColor: 'transparent', backgroundColor: bg, justifyContent: 'center', paddingHorizontal: 16, transform: [{ scale: pressed ? 0.98 : 1 }] })}>

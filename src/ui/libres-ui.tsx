@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useEffect, useState, type ReactNode } from 'react';
-import { Animated, Easing, Platform, Pressable, ScrollView, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Animated, Easing, Platform, Pressable, ScrollView, useWindowDimensions, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Path } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
@@ -269,6 +269,9 @@ export function Fin({ record, titre, sousTitre, label, mot, voisins = [], serie,
   record: boolean; titre: string; sousTitre: string; label?: string; mot?: string; voisins?: string[]; serie?: SerieFin; lignes: LigneFin[]; onReplay: () => void;
 }) {
   const cadre = useCadre();
+  // écran bas (< 800 px, ex. 360×740) : Nabulo réduit (160 → 120 px) et moins de marge en haut, pour que tout tienne
+  const compact = useWindowDimensions().height < 800;
+  const k = compact ? 0.75 : 1, n = 160 * k;
   return (
     <View style={{ flex: 1, backgroundColor: '#4B33B8' }}>
       {record ? (
@@ -277,15 +280,15 @@ export function Fin({ record, titre, sousTitre, label, mot, voisins = [], serie,
         <><SlidingGradient colors={COLD} stops={COLD_STOPS} duration={10000} /><Rain /></>
       )}
       <View style={[{ flex: 1 }, cadre]}>
-        <View style={{ paddingTop: 40, paddingHorizontal: 4, paddingBottom: 10, alignItems: 'center', gap: 4 }}>
+        <View style={{ paddingTop: compact ? 16 : 40, paddingHorizontal: 4, paddingBottom: 10, alignItems: 'center', gap: 4 }}>
           {record ? (
-            <View style={{ width: 160, height: 160, marginBottom: 10 }}>
-              <Image source={images.nabuloSaut} autoplay style={{ position: 'absolute', left: -48, top: -90, width: 256, height: 256 }} contentFit="contain" accessibilityLabel="Nabulo saute de joie, le poing en l’air" />
+            <View style={{ width: n, height: n, marginBottom: 10 }}>
+              <Image source={images.nabuloSaut} autoplay style={{ position: 'absolute', left: -48 * k, top: -90 * k, width: 256 * k, height: 256 * k }} contentFit="contain" accessibilityLabel="Nabulo saute de joie, le poing en l’air" />
             </View>
           ) : (
-            <View style={{ width: 160, height: 160, marginBottom: 38 }}>
-              <Image source={images.nabuloTriste} autoplay style={{ position: 'absolute', left: -36, top: -36, width: 232, height: 232 }} contentFit="contain" accessibilityLabel="Nabulo triste sous la pluie" />
-              <Tear left={93.8} top={103.9} fall={39} />
+            <View style={{ width: n, height: n, marginBottom: 38 * k }}>
+              <Image source={images.nabuloTriste} autoplay style={{ position: 'absolute', left: -36 * k, top: -36 * k, width: 232 * k, height: 232 * k }} contentFit="contain" accessibilityLabel="Nabulo triste sous la pluie" />
+              <Tear left={93.8 * k} top={103.9 * k} fall={39 * k} />
             </View>
           )}
           <View accessible accessibilityRole="header" accessibilityLabel={`${titre} ${sousTitre}`} style={{ alignItems: 'center', gap: 4 }}>
@@ -294,7 +297,9 @@ export function Fin({ record, titre, sousTitre, label, mot, voisins = [], serie,
           </View>
         </View>
 
-        <View style={{ flex: 1, minHeight: 0, paddingVertical: 14, paddingHorizontal: 4, justifyContent: 'center', gap: 14 }}>
+        {/* le milieu défile sur les petits écrans plutôt que de passer sous les boutons ; 18 px d'air avant eux */}
+        <ScrollView style={{ flex: 1, minHeight: 0, marginHorizontal: -16 }} showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ flexGrow: 1, paddingTop: 14, paddingBottom: 18, paddingHorizontal: 20, justifyContent: 'center', gap: 14 }}>
           {serie && (
             <View accessible accessibilityLabel={`${serie.legende} : ${serie.valeur}. ${serie.badge}${serie.detail ? `, ${serie.detail}` : ''}`} style={{ alignItems: 'center', gap: 10 }}>
               <Outlined size={17} w={1.5} dy={2}>{serie.legende}</Outlined>
@@ -330,7 +335,7 @@ export function Fin({ record, titre, sousTitre, label, mot, voisins = [], serie,
               </View>
             ))}
           </View>
-        </View>
+        </ScrollView>
 
         <View style={{ paddingHorizontal: 4, paddingBottom: 6, flexDirection: 'row', gap: 10 }}>
           <LButton label="Menu" mix height={58} fontSize={18} padding={16} onPress={quitter} icon={<Icon name="home" size={20} color={INK} width={2.8} />} />

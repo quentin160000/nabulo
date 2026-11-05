@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { known, rng, temperature } from '../src/game/lexicon';
 import {
-  CHRONO_SEUIL, ECART_MIN, GROUPE_MIN, INTRUS_MAX, cibleChrono, cleanNeighbors, couleurPastille, essaiChrono, mancheIntrus,
+  CHRONO_SEUIL, ECART_MIN, GROUPE_MIN, INTRUS_MAX, cibleChrono, cleanNeighbors, couleurPastille, essaiChrono, etatReponse, INTRUS_DUREE, PLUS_CHAUD_DUREE, mancheIntrus,
   manchePlusChaud, motsTrouves, noms, sameFamily,
 } from '../src/game/libres-manches';
 
@@ -68,5 +68,25 @@ describe('jeux libres : mots', () => {
     expect(sameFamily('piano', 'pianiste')).toBe(true);
     expect(sameFamily('mer', 'marin')).toBe(false);
     expect(sameFamily('lait', 'laine')).toBe(false);
+  });
+});
+
+describe('jeux libres : correction des manches', () => {
+  it('Plus chaud : au temps écoulé, le bon mot est vert et l’autre rose', () => {
+    expect(etatReponse(0, 0, null, true)).toBe('bon');
+    expect(etatReponse(1, 0, null, true)).toBe('faux');
+  });
+  it('L’intrus : au temps écoulé, l’intrus est vert et les autres neutres', () => {
+    expect(etatReponse(2, 2, null)).toBe('bon');
+    expect(etatReponse(0, 2, null)).toBe('neutre');
+  });
+  it('en attente tout est neutre ; une erreur colore le mot touché en rose', () => {
+    expect(etatReponse(0, 0, undefined, true)).toBe('neutre');
+    expect(etatReponse(1, 0, 1)).toBe('faux');
+    expect(etatReponse(3, 0, 1)).toBe('neutre');
+  });
+  it('garde les durées par manche', () => {
+    expect(PLUS_CHAUD_DUREE).toBe(5);
+    expect(INTRUS_DUREE).toBe(12);
   });
 });

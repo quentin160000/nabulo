@@ -2,7 +2,7 @@ import * as Haptics from 'expo-haptics';
 import { useEffect, useRef, useState } from 'react';
 import { Platform, Pressable, View } from 'react-native';
 import { rng } from '@/game/lexicon';
-import { manchePlusChaud, type ManchePlusChaud } from '@/game/libres-manches';
+import { etatReponse, manchePlusChaud, PLUS_CHAUD_DUREE, type ManchePlusChaud } from '@/game/libres-manches';
 import { enregistrerScore, finirEnCours, marquerEnCours } from '@/game/libres-stockage';
 import { Bubble } from '@/ui/Bubble';
 import { GameBg } from '@/ui/game';
@@ -15,12 +15,12 @@ import { T } from '@/ui/Text';
 
 const JEU = 'plus-chaud' as const;
 const TITRE = 'Plus chaud / plus froid';
-const DUREE = 10; // secondes par manche
+const DUREE = PLUS_CHAUD_DUREE; // secondes par manche : la jauge repart pleine à chaque paire
 const REGLES = [
   'Un mot cible s’affiche en haut.',
-  'Deux mots te sont proposés : touche le plus proche du mot cible.',
-  'Chaque bonne réponse allonge ta série.',
-  'Une erreur et la série s’arrête. Bats ton record !',
+  `Deux mots te sont proposés : touche le plus proche du mot cible en moins de ${DUREE} s.`,
+  'Le temps repart à chaque paire : enchaîne autant de bonnes réponses que tu peux.',
+  'Une erreur ou le temps écoulé, et c’est fini. Bats ton record !',
 ];
 
 type Resultat = { serie: number; ancien: number; temps: boolean };
@@ -101,7 +101,8 @@ function EnJeu({ onFin }: { onFin: (r: Resultat) => void }) {
         </View>
         <View style={{ flex: 1, gap: 16, paddingBottom: 8 }}>
           {manche.mots.map((m, i) => {
-            const bg = !revele ? '#FFFFFF' : i === manche.bonne ? VERT : i === choix ? ROSE : '#FFFFFF';
+            const etat = etatReponse(i, manche.bonne, choix, true);
+            const bg = etat === 'bon' ? VERT : etat === 'faux' ? ROSE : '#FFFFFF';
             return (
               <Pressable key={m + i} accessibilityRole="button" accessibilityLabel={revele ? `${m}, ${manche.temps[i]} degrés` : m} disabled={revele}
                 onPress={() => { if (revele) return; if (i === manche.bonne) setSerie(n => n + 1); setChoix(i); }}
