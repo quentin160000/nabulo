@@ -39,7 +39,6 @@ python3 scripts/shots.py /mot-du-jour /boutique      # captures 390×844 dans de
   mots à choisir, « J'ai déjà un compte », boutons d'en-tête, étiquettes, pastille de braises, lignes de classement
   (blanches, la mienne `#FFF3B0`).
 - **Texte** : composant `T` (`src/ui/Text.tsx`) ; hauteur de ligne jamais sous 1,21 em (hauteur réelle de Fredoka) : si un écran demande moins, `T` compense par des marges négatives et ajoute une marge de dessin pour que les accents, les jambages (g, p, j) et l'ombre ne soient jamais coupés. Ne pas forcer de `lineHeight` dans un bouton ou une pastille.
-  texte verticalement sur toutes les plateformes. Ne pas forcer de `lineHeight` dans un bouton ou une pastille.
 - Fonds : violet (jeu, mot du jour, jeux libres), aluminium (accueil, boutique, panneaux), chaud qui glisse + confettis
   (victoire), froid + pluie (défaite), sarcelle `#0E5C6E → #138A8A → #2FB59A` (multi), bleu `#2E5FB8 → #8E7BF2` (coop),
   deux halos (duel).
