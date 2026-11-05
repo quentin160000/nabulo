@@ -335,14 +335,19 @@ export type LigneFin = { label: string; value: string };
 
 /** Bouton jaune du bas des écrans de fin (contour 4 px, reflet blanc en haut). */
 function FinButton({ label, onPress }: { label: string; onPress: () => void }) {
+  // « Carte » est le bouton secondaire : blanc en relief ; l'action principale reste jaune
+  const white = label === 'Carte';
+  const look = white
+    ? { bg: '#FFFFFF', border: '#D9D1F2', diag: '#F6F3FD', relief: '#E4DEF5' }
+    : { bg: '#FFD45C', border: mix('#FFD45C', 55, '#FFFFFF'), diag: '#F7C843', relief: '#E3A91C' };
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={() => { if (Platform.OS !== 'web') Haptics.selectionAsync(); onPress(); }}
       style={({ pressed }) => ({ flex: 1, height: 62, transform: [{ translateY: pressed ? 2 : 0 }] })}>
-      <View style={{ flex: 1, borderRadius: 16, borderWidth: 4, borderColor: mix('#FFD45C', 55, '#FFFFFF'), overflow: 'hidden', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 }}>
-        <Diagonal bg="#FFD45C" diag="#F7C843" />
-        <Relief inset={6} color="#E3A91C" radius={12} />
-        <View style={{ position: 'absolute', left: 8, right: 8, top: 3, height: 10, borderRadius: 6, backgroundColor: 'rgba(255,255,255,0.4)' }} />
-        <T size={16} weight={700} color="#2B2150" align="center" numberOfLines={2} style={{ lineHeight: 18 }}>{label}</T>
+      <View style={{ flex: 1, borderRadius: 16, borderWidth: 4, borderColor: look.border, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 }}>
+        <Diagonal bg={look.bg} diag={look.diag} />
+        <Relief inset={6} color={look.relief} radius={12} />
+        {!white && <View style={{ position: 'absolute', left: 8, right: 8, top: 3, height: 10, borderRadius: 6, backgroundColor: 'rgba(255,255,255,0.4)' }} />}
+        <T size={16} weight={700} color="#2B2150" align="center" numberOfLines={2}>{label}</T>
       </View>
     </Pressable>
   );
