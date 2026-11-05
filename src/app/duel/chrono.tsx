@@ -18,6 +18,7 @@ import {
 } from '@/ui/duel-ui';
 import { T } from '@/ui/Text';
 import { Toast, useToast } from '@/ui/Toast';
+import { keepFocus } from '@/ui/game';
 
 const GAME = 'Contre-la-montre duel';
 type Phase = 'choix' | 'regles' | 'jeu' | 'manche' | 'fin';
@@ -188,7 +189,7 @@ function EnJeu({ round, score, niveau, myName, onEnd }: {
           <View style={{ flexDirection: 'row', gap: 8 }}>
             <TextInput
               ref={input} value={text} onChangeText={setText} onSubmitEditing={send} placeholder={`Un mot à ${CHRONO_SEUIL}°+`} placeholderTextColor="#7C7399"
-              autoFocus autoCapitalize="none" autoCorrect={false} returnKeyType="send" submitBehavior="submit" accessibilityLabel="Ton mot"
+              autoFocus autoCapitalize="none" autoCorrect={false} returnKeyType="send" submitBehavior="submit" {...keepFocus} accessibilityLabel="Ton mot"
               style={{ flex: 1, minWidth: 0, height: 50, borderRadius: 16, backgroundColor: '#FFFFFF', paddingHorizontal: 14, paddingVertical: 0, includeFontPadding: false, textAlignVertical: 'center', fontFamily: 'Fredoka_500Medium', fontSize: 17, color: INK, outlineStyle: 'none' } as object}
             />
             <Pressable accessibilityRole="button" accessibilityLabel="Proposer" onPress={send} disabled={!text.trim()}

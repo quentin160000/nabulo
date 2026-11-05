@@ -15,7 +15,7 @@ import { Bubble } from '@/ui/Bubble';
 import { SlidingGradient } from '@/ui/backgrounds';
 import { Coin, images } from '@/ui/bits';
 import { Confetti } from '@/ui/Confetti';
-import { GameBg, Sheet, useKeyboardVisible } from '@/ui/game';
+import { GameBg, Sheet, useKeyboardVisible, keepFocus } from '@/ui/game';
 import { BigButton, Chain, Header, LierIcon, SHADOW, StepsPill, Towards, WordChip } from '@/ui/lier-bits';
 import { Mascot } from '@/ui/Mascot';
 import { T } from '@/ui/Text';
@@ -276,7 +276,7 @@ function EnJeu({ game, setGame, onFinish, onAbandon }: { game: Game; setGame: (g
             <View style={{ flex: 1, minWidth: 0, height: 50, borderRadius: 16, backgroundColor: '#FFFFFF', overflow: 'hidden' }}>
               <TextInput
                 ref={input} value={text} onChangeText={setText} onSubmitEditing={send} placeholder={placeholder} placeholderTextColor="#7C7399"
-                autoFocus autoCapitalize="none" autoCorrect={false} returnKeyType="send" submitBehavior="submit" accessibilityLabel="Mot suivant"
+                autoFocus autoCapitalize="none" autoCorrect={false} returnKeyType="send" submitBehavior="submit" {...keepFocus} accessibilityLabel="Mot suivant"
                 style={{ flex: 1, paddingHorizontal: 12, paddingVertical: 0, includeFontPadding: false, textAlignVertical: 'center', fontFamily: 'Fredoka_500Medium', fontSize: 17, color: INK, outlineStyle: 'none' } as object}
               />
             </View>

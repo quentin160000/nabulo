@@ -2,6 +2,7 @@ import { router, type Href } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { ink } from '@/theme/colors';
+import { IconeCarte } from '@/ui/aventure-carte';
 import { Bubble } from '@/ui/Bubble';
 import { CARD, GlyphTile, Label, Row, Segmented, TabScreen } from '@/ui/onglets-bits';
 import { T } from '@/ui/Text';
@@ -18,6 +19,8 @@ export default function Jeux() {
   const seul = f !== 'plusieurs', plusieurs = f !== 'seul';
   return (
     <TabScreen title="Jeux" tab="jeux">
+      <Row kind="cours" icon="pad" title="Aventure" sub="5 mondes · 30 niveaux" onPress={() => router.push('/aventure' as Href)}
+        leading={<View style={{ width: 46, height: 46, borderRadius: 15, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><IconeCarte size={27} color={ink} /></View>} />
       <Segmented options={FILTRES} value={f} onChange={setF} />
       {seul && (
         <>

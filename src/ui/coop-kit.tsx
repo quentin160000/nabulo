@@ -12,6 +12,7 @@ import { SlidingGradient } from './backgrounds';
 import { Bubble } from './Bubble';
 import { images } from './bits';
 import { T } from './Text';
+import { keepFocus } from './game';
 
 export const INK = gameInk;
 /** Ombre portée des titres blancs : 0 2px 0 #2B2150. */
@@ -214,7 +215,7 @@ export function WordField({ value, onChange, onSubmit, placeholder, action, disa
   return (
     <View style={{ flexDirection: 'row', gap: 8 }}>
       <TextInput value={value} onChangeText={onChange} onSubmitEditing={onSubmit} placeholder={placeholder} placeholderTextColor="#7C7399"
-        autoFocus autoCapitalize="none" autoCorrect={false} returnKeyType="send" submitBehavior="submit" accessibilityLabel={label} editable={!disabled}
+        autoFocus autoCapitalize="none" autoCorrect={false} returnKeyType="send" submitBehavior="submit" {...keepFocus} accessibilityLabel={label} editable={!disabled}
         style={{
           flex: 1, minWidth: 0, height: 50, borderRadius: 16, backgroundColor: '#FFFFFF', paddingHorizontal: 14, paddingVertical: 0,
           includeFontPadding: false, textAlignVertical: 'center', fontFamily: 'Fredoka_500Medium', fontSize: 17, color: INK, outlineStyle: 'none',

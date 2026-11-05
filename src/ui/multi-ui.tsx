@@ -17,6 +17,7 @@ import { SlidingGradient } from './backgrounds';
 import { images } from './bits';
 import { T } from './Text';
 import { Toast, useToast } from './Toast';
+import { keepFocus } from './game';
 
 /* Briques des écrans multi (maquettes J-multi-18 à 20). Encre des maquettes : hsl(256, 45 %, 16 %) = gameInk. */
 export const INK = gameInk;
@@ -249,7 +250,7 @@ export function InputBar({ value, onChange, onSubmit, placeholder, action, disab
     <View style={{ flexDirection: 'row', gap: 8, opacity: disabled ? 0.6 : 1 }}>
       <TextInput
         value={value} onChangeText={onChange} onSubmitEditing={onSubmit} placeholder={placeholder} placeholderTextColor="#7C7399" editable={!disabled}
-        autoFocus autoCapitalize="none" autoCorrect={false} returnKeyType="send" submitBehavior="submit" accessibilityLabel={placeholder}
+        autoFocus autoCapitalize="none" autoCorrect={false} returnKeyType="send" submitBehavior="submit" {...keepFocus} accessibilityLabel={placeholder}
         style={{
           flex: 1, minWidth: 0, height: 50, borderRadius: 16, backgroundColor: '#FFFFFF', paddingHorizontal: 14, paddingVertical: 0,
           includeFontPadding: false, textAlignVertical: 'center', fontFamily: 'Fredoka_500Medium', fontSize: 17, color: INK, outlineStyle: 'none',

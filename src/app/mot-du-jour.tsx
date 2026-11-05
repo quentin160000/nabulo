@@ -21,7 +21,7 @@ import { Confetti } from '@/ui/Confetti';
 import { Mascot } from '@/ui/Mascot';
 import { T } from '@/ui/Text';
 import { Toast, useToast } from '@/ui/Toast';
-import { GameBg, Section, Sheet, useKeyboardVisible } from '@/ui/game';
+import { GameBg, Section, Sheet, useKeyboardVisible, keepFocus } from '@/ui/game';
 
 const INK = gameInk;
 const SH3 = { textShadowColor: INK, textShadowOffset: { width: 0, height: 3 }, textShadowRadius: 0 } as const;
@@ -188,7 +188,7 @@ function EnJeu({ daily }: { daily: Daily }) {
           <View style={{ flexDirection: 'row', gap: 8 }}>
             <TextInput
               ref={input} value={text} onChangeText={setText} onSubmitEditing={send} placeholder="Tape un mot" placeholderTextColor="#7C7399"
-              autoFocus autoCapitalize="none" autoCorrect={false} returnKeyType="send" submitBehavior="submit" accessibilityLabel="Ton mot"
+              autoFocus autoCapitalize="none" autoCorrect={false} returnKeyType="send" submitBehavior="submit" {...keepFocus} accessibilityLabel="Ton mot"
               style={{
                 flex: 1, minWidth: 0, height: 52, borderRadius: 17, backgroundColor: '#FFFFFF', paddingHorizontal: 16, paddingVertical: 0,
                 includeFontPadding: false, textAlignVertical: 'center',

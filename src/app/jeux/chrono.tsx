@@ -8,7 +8,7 @@ import {
 } from '@/game/libres-manches';
 import { enregistrerScore, finirEnCours, marquerEnCours } from '@/game/libres-stockage';
 import { Bubble } from '@/ui/Bubble';
-import { GameBg } from '@/ui/game';
+import { GameBg, keepFocus } from '@/ui/game';
 import { Fin, Header, INK, Pill, quitter, Regles, Stopwatch, TimerBar, useCadre } from '@/ui/libres-ui';
 import { T } from '@/ui/Text';
 import { Toast, useToast } from '@/ui/Toast';
@@ -122,7 +122,7 @@ function EnJeu({ onFin }: { onFin: (r: Resultat) => void }) {
           <View style={{ flexDirection: 'row', gap: 8 }}>
             <TextInput
               ref={input} value={text} onChangeText={setText} onSubmitEditing={proposer} placeholder={`Un mot à ${CHRONO_SEUIL}°+`} placeholderTextColor="#7C7399"
-              autoFocus autoCapitalize="none" autoCorrect={false} returnKeyType="send" submitBehavior="submit" accessibilityLabel="Ton mot"
+              autoFocus autoCapitalize="none" autoCorrect={false} returnKeyType="send" submitBehavior="submit" {...keepFocus} accessibilityLabel="Ton mot"
               style={{
                 flex: 1, minWidth: 0, height: 50, borderRadius: 16, backgroundColor: '#FFFFFF', paddingHorizontal: 14, paddingVertical: 0,
                 includeFontPadding: false, textAlignVertical: 'center', fontFamily: 'Fredoka_500Medium', fontSize: 17, color: INK, outlineStyle: 'none',

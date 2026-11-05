@@ -53,3 +53,6 @@ export function Sheet({ visible, onClose, children }: { visible: boolean; onClos
     </Modal>
   );
 }
+
+/** À étaler sur les champs de saisie : sur le web, react-native-web retire le focus après « Entrée » sans ça. */
+export const keepFocus = (Platform.OS === 'web' ? { blurOnSubmit: false } : {}) as object;

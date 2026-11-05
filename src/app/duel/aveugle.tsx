@@ -23,7 +23,7 @@ import { BigTitle, DuelBg, DuelEnd, DuelHeader, DuelScreen, INK, NiveauPicker, O
 import { Mascot } from '@/ui/Mascot';
 import { T } from '@/ui/Text';
 import { Toast, useToast } from '@/ui/Toast';
-import { useKeyboardVisible } from '@/ui/game';
+import { useKeyboardVisible, keepFocus } from '@/ui/game';
 
 const GAME = 'Duel à l’aveugle';
 const SH = '#2B2150';
@@ -124,7 +124,7 @@ function Secret({ onValid }: { onValid: (w: string) => void }) {
           <View style={{ flexDirection: 'row', gap: 8 }}>
             <TextInput
               value={text} onChangeText={setText} onSubmitEditing={ok} placeholder="lion" placeholderTextColor="#7C7399" autoFocus autoCapitalize="none" autoCorrect={false}
-              returnKeyType="done" submitBehavior="submit" accessibilityLabel="Ton mot secret" secureTextEntry={false}
+              returnKeyType="done" submitBehavior="submit" {...keepFocus} accessibilityLabel="Ton mot secret" secureTextEntry={false}
               style={{ flex: 1, minWidth: 0, height: 50, borderRadius: 16, backgroundColor: '#FFFFFF', paddingHorizontal: 14, paddingVertical: 0, includeFontPadding: false, textAlignVertical: 'center', fontFamily: 'Fredoka_500Medium', fontSize: 17, color: INK, outlineStyle: 'none' } as object}
             />
             <Pressable accessibilityRole="button" accessibilityLabel="Valider" onPress={ok} disabled={!text.trim()}
@@ -278,7 +278,7 @@ function EnJeu({ match, niveau, onEnd }: { match: Match; niveau: Niveau; onEnd: 
           <View style={{ flexDirection: 'row', gap: 8 }}>
             <TextInput
               ref={input} value={text} onChangeText={setText} onSubmitEditing={send} placeholder="Tape un mot" placeholderTextColor="#7C7399"
-              autoFocus autoCapitalize="none" autoCorrect={false} returnKeyType="send" submitBehavior="submit" accessibilityLabel="Ton mot"
+              autoFocus autoCapitalize="none" autoCorrect={false} returnKeyType="send" submitBehavior="submit" {...keepFocus} accessibilityLabel="Ton mot"
               style={{ flex: 1, minWidth: 0, height: 52, borderRadius: 17, backgroundColor: '#FFFFFF', paddingHorizontal: 16, paddingVertical: 0, includeFontPadding: false, textAlignVertical: 'center', fontFamily: 'Fredoka_500Medium', fontSize: 20, color: SH, outlineStyle: 'none' } as object}
             />
             <Pressable accessibilityRole="button" accessibilityLabel="Proposer" onPress={send} disabled={!text.trim()}
