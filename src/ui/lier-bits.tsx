@@ -1,8 +1,9 @@
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useState } from 'react';
-import { Platform, Pressable, View, type StyleProp, type ViewStyle } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Animated, Easing, Platform, Pressable, View, type StyleProp, type ViewStyle } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
+import { animationsReduites } from '@/game/reglages';
 import { tempColor } from '@/game/temperature';
 import { bubble, gameInk } from '@/theme/colors';
 import { Bubble } from './Bubble';
@@ -16,7 +17,7 @@ const INK = gameInk;
 export const SHADOW = { textShadowColor: '#2B2150', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 0 } as const;
 const L = { strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, strokeWidth: 2.8, fill: 'none' };
 
-type IconName = 'arrow' | 'home' | 'refresh' | 'share' | 'bulb';
+type IconName = 'arrow' | 'home' | 'refresh' | 'share' | 'bulb' | 'undo' | 'check';
 export function LierIcon({ name, size = 20, color = INK }: { name: IconName; size?: number; color?: string }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -24,6 +25,8 @@ export function LierIcon({ name, size = 20, color = INK }: { name: IconName; siz
       {name === 'home' && <Path d="M4 11 L12 4 L20 11 V20 H14 V14 H10 V20 H4 Z" stroke={color} {...L} />}
       {name === 'refresh' && <><Path d="M20 12 A8 8 0 1 1 17.7 6.3" stroke={color} {...L} /><Path d="M20 4 V9 H15" stroke={color} {...L} /></>}
       {name === 'share' && <><Path d="M12 15 V4" stroke={color} {...L} /><Path d="M7 9 L12 4 L17 9" stroke={color} {...L} /><Path d="M5 14 V20 H19 V14" stroke={color} {...L} /></>}
+      {name === 'undo' && <><Path d="M9 14 L4 9 L9 4" stroke={color} {...L} /><Path d="M4 9 H14 A6 6 0 0 1 14 21 H10" stroke={color} {...L} /></>}
+      {name === 'check' && <Path d="M5 12.5 L10 17.5 L19 7" stroke={color} {...L} />}
       {name === 'bulb' && <><Path d="M12 2.5a6.5 6.5 0 0 0-3.9 11.7c.7.5 1.1 1.3 1.1 2.1V17h5.6v-.7c0-.8.4-1.6 1.1-2.1A6.5 6.5 0 0 0 12 2.5z" fill="#FFD45C" stroke={color} strokeWidth={2.2} strokeLinejoin="round" /><Path d="M9.5 20h5M10.5 22.5h3" stroke={color} strokeWidth={2.2} strokeLinecap="round" /></>}
     </Svg>
   );
@@ -105,6 +108,25 @@ export function LinkTag({ t }: { t: number }) {
 }
 
 export type NodeLook = 'start' | 'mid' | 'target' | 'reached' | 'ring' | 'pink';
+
+/** Durée du contour jaune qui signale un mot qui vient d'être accepté. */
+export const RING_MS = 500;
+
+/** Contour jaune de 2 px autour d'un mot qui vient d'être ajouté : apparaît puis s'efface en RING_MS (coupé si « réduire les animations »). */
+function FlashRing({ radius }: { radius: number }) {
+  const [o] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    let alive = true;
+    animationsReduites().then(reduce => {
+      if (!alive || reduce) return;
+      o.setValue(1);
+      Animated.timing(o, { toValue: 0, duration: RING_MS, easing: Easing.in(Easing.quad), useNativeDriver: true }).start();
+    });
+    return () => { alive = false; o.stopAnimation(); };
+  }, [o]);
+  return <Animated.View pointerEvents="none" style={{ position: 'absolute', left: -4, right: -4, top: -4, bottom: -4, borderRadius: radius + 4, borderWidth: 2, borderColor: '#FFD45C', opacity: o }} />;
+}
+
 /** Un mot de la chaîne : 170 px de large au minimum, 36 px de haut. */
 export function ChainNode({ word, look, t }: { word: string; look: NodeLook; t?: number }) {
   // largeur réelle du mot : l'étiquette de température se cale à sa droite sans jamais le chevaucher
@@ -115,16 +137,10 @@ export function ChainNode({ word, look, t }: { word: string; look: NodeLook; t?:
   if (look === 'start' || look === 'reached' || look === 'pink') {
     const bg = look === 'start' ? '#FFD45C' : look === 'reached' ? '#FFD23F' : '#FFD6E0';
     node = <Bubble bg={bg} radius={18} border={2} inset={5} style={base}>{label}</Bubble>;
-  } else if (look === 'mid') {
-    node = <View style={[base, { backgroundColor: '#FFFFFF' }]}>{label}</View>;
-  } else if (look === 'target') {
-    node = <View style={[base, { borderWidth: 2, borderStyle: 'dashed', borderColor: INK, backgroundColor: 'rgba(255,255,255,0.55)' }]}>{label}</View>;
+  } else if (look === 'mid' || look === 'ring') {
+    node = <View style={[base, { backgroundColor: '#FFFFFF' }]}>{label}{look === 'ring' && <FlashRing radius={18} />}</View>;
   } else {
-    node = (
-      <Bubble bg="#FFD45C" radius={23} border={2} inset={5} style={{ minWidth: 184, maxWidth: 244, height: 46, padding: 4 }}>
-        <Bubble bg="#FFFFFF" radius={16} border={2} inset={5} style={{ flex: 1, paddingHorizontal: 16, alignItems: 'center', justifyContent: 'center' }}>{label}</Bubble>
-      </Bubble>
-    );
+    node = <View style={[base, { borderWidth: 2, borderStyle: 'dashed', borderColor: INK, backgroundColor: 'rgba(255,255,255,0.55)' }]}>{label}</View>;
   }
   return (
     <View style={{ zIndex: 1, alignSelf: 'stretch', alignItems: 'center' }}>
@@ -151,10 +167,11 @@ export function Link({ t, h = 24 }: { t?: number; h?: number }) {
 
 /**
  * Chaîne verticale. `words` = départ + mots posés (+ arrivée si `complete`).
- * `last` : style du dernier mot posé (anneau jaune quand il vient d'être accepté, rose s'il éloigne de l'arrivée).
+ * `last` : style du dernier mot posé (contour jaune bref quand il vient d'être accepté, rose s'il éloigne de l'arrivée).
+ * `closing` : température du dernier mot vers l'arrivée quand la chaîne peut se refermer (lien coloré au lieu des pointillés).
  */
-export function Chain({ words, target, complete, temps, last, compact }: {
-  words: string[]; target: string; complete: boolean; temps: number[]; last?: 'ring' | 'pink' | null; compact?: boolean;
+export function Chain({ words, target, complete, temps, last, compact, closing }: {
+  words: string[]; target: string; complete: boolean; temps: number[]; last?: 'ring' | 'pink' | null; compact?: boolean; closing?: number;
 }) {
   const h = compact ? 20 : 24;
   return (
@@ -169,7 +186,7 @@ export function Chain({ words, target, complete, temps, last, compact }: {
           </View>
         );
       })}
-      {!complete && <><Link /><ChainNode word={target} look="target" /></>}
+      {!complete && <><Link t={closing} h={h} /><ChainNode word={target} look="target" t={closing} /></>}
     </View>
   );
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { known, temperature } from '../src/game/lexicon';
-import { closeWords, hintAfter, judge, links, MAX_LINK, MIN_LINK, shareSquares, shareText, solve, validLink, variant } from '../src/game/lier';
+import { canClose, closeWords, hintAfter, judge, links, MAX_LINK, MIN_LINK, shareSquares, shareText, solve, validLink, variant } from '../src/game/lier';
 import { DIFFICILE, DIFFICILE_MAX, FACILE, MOYEN, dailyPair, pairsFor } from '../src/game/lier-paires';
 
 const isChain = (c: string[]) => c.slice(1, -1).every((w, i) => validLink(c[i], w)) && temperature(c[c.length - 2], c[c.length - 1])! >= MIN_LINK;
@@ -39,6 +39,27 @@ describe('Lier : solveur', () => {
     const h = hintAfter(['plage', 'soleil'], 'ordinateur');
     expect(h).not.toBeNull();
     expect(validLink('soleil', h!)).toBe(true);
+  });
+  it('l’indice rapproche de l’arrivée sans reprendre un mot de la chaîne', () => {
+    for (const chain of [['plage', 'soleil'], ['violon'], ['violon', 'conservatoire'], ['église']]) {
+      const target = chain[0] === 'plage' ? 'ordinateur' : chain[0] === 'église' ? 'armée' : 'île';
+      const h = hintAfter(chain, target)!;
+      expect(h, chain.join('>')).toBeTruthy();
+      const last = chain[chain.length - 1];
+      expect(validLink(last, h)).toBe(true);
+      expect(temperature(h, target)!).toBeGreaterThan(temperature(last, target)!);
+      expect(chain.some(c => variant(c, h))).toBe(false);
+    }
+  });
+  it('pas d’indice quand la chaîne peut se refermer', () => {
+    expect(canClose(['violon', 'conservatoire', 'littoral'], 'île')).toBe(true);
+    expect(hintAfter(['violon', 'conservatoire', 'littoral'], 'île')).toBeNull();
+    expect(canClose(['violon'], 'île')).toBe(false);
+  });
+  it('les voisins de l’arrivée ignorent les variantes sans accent', () => {
+    const v = closeWords('île');
+    expect(v).not.toContain('ile');
+    expect(v.some((a, i) => v.some((b, j) => i !== j && variant(a, b)))).toBe(false);
   });
   it('liste les voisins de l’arrivée sans variantes', () => {
     const v = closeWords('ordinateur');

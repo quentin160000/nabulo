@@ -2,22 +2,23 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Share, TextInput, View, type ScrollViewInstance, type TextInputInstance } from 'react-native';
+import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, Share, TextInput, View, useWindowDimensions, type ScrollViewInstance, type TextInputInstance } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { dayNumberFrom } from '@/game/engine/types';
-import { MIN_LINK, closeWords, hintAfter, judge, links, pairKey, shareSquares, shareText, shortDate, solve, towards, type Verdict } from '@/game/lier';
+import { MIN_LINK, canClose, closeWords, hintAfter, judge, links, pairKey, shareSquares, shareText, shortDate, solve, towards, type Verdict } from '@/game/lier';
 import { dailyPair, pairsFor, type Level, type Pair } from '@/game/lier-paires';
 import { HINT_COST } from '@/game/rules';
 import { load, save } from '@/game/storage';
+import { normalizeWord } from '@/game/temperature';
 import { useWallet } from '@/game/wallet';
 import { gameInk, gameInkSoft, warmGradient, warmStops } from '@/theme/colors';
 import { Bubble } from '@/ui/Bubble';
 import { SlidingGradient } from '@/ui/backgrounds';
-import { Coin, images } from '@/ui/bits';
+import { Coin, Icon, images } from '@/ui/bits';
 import { Confetti } from '@/ui/Confetti';
 import { GameBg, Sheet, keepFocus } from '@/ui/game';
 import { KAV_BEHAVIOR, useMargeBasse } from '@/ui/retours-jeux-clavier';
-import { BigButton, Chain, Header, LierIcon, SHADOW, StepsPill, Towards, WordChip } from '@/ui/lier-bits';
+import { BigButton, Chain, Header, LierIcon, SHADOW, StepsPill, Towards } from '@/ui/lier-bits';
 import { Mascot } from '@/ui/Mascot';
 import { T } from '@/ui/Text';
 import { Toast, useToast } from '@/ui/Toast';
@@ -111,7 +112,9 @@ export default function Lier() {
   if (phase === 'choix') return <Choix day={day} round={round} records={records} onClose={leave} onPick={startGame} />;
   if (phase === 'jeu' && game) return <EnJeu game={game} setGame={setGame} onFinish={finish} onAbandon={abandon} />;
   if (phase === 'fini' && done) return <Terminee done={done} onClose={leave} onNext={showResult} computing={done.best === undefined} />;
-  if (phase === 'resultat' && done) return <Resultat done={done} onMenu={leave} onNew={() => { setRound(r => r + 1); setPhase('choix'); }} />;
+  if (phase === 'resultat' && done) {
+    return <Resultat done={done} onMenu={leave} onNew={() => { setRound(r => r + 1); setPhase('choix'); }} onShare={() => { setShareFrom('resultat'); setPhase('partage'); }} />;
+  }
   if (phase === 'comparaison' && done) {
     return <Comparaison done={done} onClose={leave} onShare={() => { setShareFrom('comparaison'); setPhase('partage'); }}
       onReplay={() => startGame([done.chain[0], done.chain[done.chain.length - 1]], done.defi)} />;
@@ -219,6 +222,7 @@ function EnJeu({ game, setGame, onFinish, onAbandon }: { game: Game; setGame: (g
   const [text, setText] = useState('');
   const [fb, setFb] = useState<Feedback>(null);
   const [menu, setMenu] = useState(false);
+  const [hintSheet, setHintSheet] = useState<'confirm' | 'manque' | null>(null);
   const input = useRef<TextInputInstance>(null);
   const scroll = useRef<ScrollViewInstance>(null);
   const chain = useMemo(() => [game.start, ...game.mids], [game]);
@@ -227,38 +231,47 @@ function EnJeu({ game, setGame, onFinish, onAbandon }: { game: Game; setGame: (g
   const heat = towards(last, game.target);
   const prevHeat = chain.length > 1 ? towards(chain[chain.length - 2], game.target) : heat;
   const recul = game.mids.length > 0 && heat < prevHeat;
+  // le dernier mot touche l'arrivée : le joueur choisit de terminer ou de retirer ce mot
+  const closable = canClose(chain, game.target);
+  const closing = closable ? links([last, game.target])[0] : undefined;
 
-  // « accepté » s'efface après un instant pour laisser la place à « Retirer le dernier mot »
+  // « accepté » s'efface après un instant
   useEffect(() => {
     if (fb?.kind !== 'ok') return;
     const id = setTimeout(() => setFb(f => (f === fb ? null : f)), 2600);
     return () => clearTimeout(id);
   }, [fb]);
-  useEffect(() => { setTimeout(() => scroll.current?.scrollToEnd({ animated: true }), 30); }, [game.mids.length, fb]);
+  useEffect(() => { setTimeout(() => scroll.current?.scrollToEnd({ animated: true }), 30); }, [game.mids.length, fb, closable]);
 
   const send = () => {
     const v = judge(chain, game.target, text);
     if (v.kind === 'vide') return;
     setText('');
-    input.current?.focus();
-    if (v.kind !== 'ok') { setFb(v); return; }
-    const next = { ...game, mids: v.word === game.target ? game.mids : [...game.mids, v.word] };
-    setGame(next);
-    if (v.done) { onFinish(next); return; }
+    if (v.kind !== 'ok') { setFb(v); input.current?.focus(); return; }
+    if (v.word === normalizeWord(game.target)) { onFinish(game); return; }
+    setGame({ ...game, mids: [...game.mids, v.word] });
     setFb(v);
+    if (v.done) Keyboard.dismiss(); else input.current?.focus();
   };
-  const undo = () => { setGame({ ...game, mids: game.mids.slice(0, -1) }); setFb(null); };
-  const hint = () => {
-    if (fb?.kind === 'indice') return;
-    if (braises < HINT_COST) { toast.show(`Il te manque ${HINT_COST - braises} brez pour un indice`); return; }
+  const undo = () => {
+    setGame({ ...game, mids: game.mids.slice(0, -1) }); setFb(null);
+    setTimeout(() => input.current?.focus(), 60);
+  };
+  const openHint = () => {
+    toast.hide();
+    if (fb?.kind === 'indice') { setText(fb.word); input.current?.focus(); return; }
+    setHintSheet(braises < HINT_COST ? 'manque' : 'confirm');
+  };
+  const takeHint = () => {
     const h = hintAfter(chain, game.target);
-    if (!h) { toast.show('Pas d’étape possible d’ici : retire le dernier mot'); return; }
-    if (!spend(HINT_COST)) return;
+    if (!h) { setHintSheet(null); toast.show('Pas d’étape possible d’ici : retire le dernier mot'); return; }
+    if (!spend(HINT_COST)) { setHintSheet('manque'); return; }
+    setHintSheet(null);
     setFb({ kind: 'indice', word: h });
   };
 
   const placeholder = fb?.kind === 'loin' ? `Essaie un mot plus proche de « ${fb.prev} »` : fb?.kind === 'proche' ? 'Choisis un mot vraiment différent' : `Mot suivant (≥ ${MIN_LINK}°)`;
-  const lastLook = fb?.kind === 'ok' || fb?.kind === 'indice' ? 'ring' : recul ? 'pink' : null;
+  const lastLook = fb?.kind === 'ok' ? 'ring' : recul && !closable ? 'pink' : null;
   return (
     <View style={{ flex: 1 }}>
       <GameBg />
@@ -267,26 +280,36 @@ function EnJeu({ game, setGame, onFinish, onAbandon }: { game: Game; setGame: (g
           <Header title="Lier" onClose={() => setMenu(true)} closeLabel="Quitter ou abandonner" right={<StepsPill n={game.mids.length} />} />
           <Towards target={game.target} t={heat} />
           <ScrollView ref={scroll} style={{ flex: 1, marginHorizontal: -16 }} contentContainerStyle={{ paddingHorizontal: 16, gap: 10, paddingBottom: 4 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-            <Chain words={chain} target={game.target} complete={false} temps={temps} last={game.mids.length ? lastLook : null} />
-            <FeedbackView fb={fb} recul={recul} canUndo={game.mids.length > 0} onUndo={undo} onUseHint={w => { setText(w); input.current?.focus(); }} />
+            <Chain words={chain} target={game.target} complete={false} temps={temps} last={game.mids.length ? lastLook : null} closing={closing} />
+            {closable && closing !== undefined
+              ? <ClosingNote word={last} target={game.target} t={closing} />
+              : <FeedbackView fb={fb} onUseHint={w => { setText(w); input.current?.focus(); }} />}
+            {!closable && game.mids.length > 0 && <UndoPill recul={recul} onPress={undo} />}
           </ScrollView>
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <View style={{ flex: 1, minWidth: 0, height: 50, borderRadius: 16, backgroundColor: '#FFFFFF', overflow: 'hidden' }}>
-              <TextInput
-                ref={input} value={text} onChangeText={setText} onSubmitEditing={send} placeholder={placeholder} placeholderTextColor="#7C7399"
-                autoFocus autoCapitalize="none" autoCorrect={false} returnKeyType="send" submitBehavior="submit" {...keepFocus} accessibilityLabel="Mot suivant"
-                style={{ flex: 1, paddingHorizontal: 12, paddingVertical: 0, includeFontPadding: false, textAlignVertical: 'center', fontFamily: 'Fredoka_500Medium', fontSize: 17, color: INK, outlineStyle: 'none' } as object}
-              />
+          {closable ? (
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              <BigButton label="Retirer" icon="undo" mix grow={false} height={56} hint={`retire « ${last} » pour tenter une chaîne plus courte`} onPress={undo} />
+              <BigButton label="Terminer" icon="check" height={56} hint={`relie « ${last} » à « ${game.target} »`} onPress={() => onFinish(game)} />
             </View>
-            <Pressable accessibilityRole="button" accessibilityLabel={`Indice, ${HINT_COST} brez`} onPress={hint}
-              style={{ width: 50, height: 50, borderRadius: 16, backgroundColor: '#FFF4D6', alignItems: 'center', justifyContent: 'center' }}>
-              <LierIcon name="bulb" size={26} />
-            </Pressable>
-            <Pressable accessibilityRole="button" accessibilityLabel="Proposer" onPress={send} disabled={!text.trim()}
-              style={{ height: 50, paddingHorizontal: 14, borderRadius: 16, borderWidth: 2, borderColor: 'transparent', backgroundColor: '#FFD45C', justifyContent: 'center' }}>
-              <T size={17} weight={700} color={INK}>Proposer</T>
-            </Pressable>
-          </View>
+          ) : (
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <View style={{ flex: 1, minWidth: 0, height: 50, borderRadius: 16, backgroundColor: '#FFFFFF', overflow: 'hidden' }}>
+                <TextInput
+                  ref={input} value={text} onChangeText={setText} onSubmitEditing={send} placeholder={placeholder} placeholderTextColor="#7C7399"
+                  autoFocus autoCapitalize="none" autoCorrect={false} returnKeyType="send" submitBehavior="submit" {...keepFocus} accessibilityLabel="Mot suivant"
+                  style={{ flex: 1, paddingHorizontal: 12, paddingVertical: 0, includeFontPadding: false, textAlignVertical: 'center', fontFamily: 'Fredoka_500Medium', fontSize: 17, color: INK, outlineStyle: 'none' } as object}
+                />
+              </View>
+              <Pressable accessibilityRole="button" accessibilityLabel={`Indice, ${HINT_COST} brez`} onPress={openHint}
+                style={{ width: 50, height: 50, borderRadius: 16, backgroundColor: '#FFF4D6', alignItems: 'center', justifyContent: 'center' }}>
+                <Icon name="bulb" size={26} color={INK} />
+              </Pressable>
+              <Pressable accessibilityRole="button" accessibilityLabel="Proposer" onPress={send} disabled={!text.trim()}
+                style={{ height: 50, paddingHorizontal: 14, borderRadius: 16, backgroundColor: '#FFD45C', justifyContent: 'center' }}>
+                <T size={17} weight={700} color={INK}>Proposer</T>
+              </Pressable>
+            </View>
+          )}
         </View>
         <Toast msg={toast.msg} check={false} style={{ bottom: 84 + inset.bottom }} />
       </KeyboardAvoidingView>
@@ -297,9 +320,40 @@ function EnJeu({ game, setGame, onFinish, onAbandon }: { game: Game; setGame: (g
           <T size={14} weight={600} color={gameInkSoft}>{game.start} → {game.target} · {plural(game.mids.length, 'étape')}</T>
         </View>
         <SheetRow title="Quitter" sub="ta chaîne est gardée, tu la reprendras plus tard" onPress={() => { setMenu(false); leave(); }} />
-        <SheetRow title="Abandonner" sub="Nabulo te montre une chaîne possible" onPress={() => { setMenu(false); onAbandon(game); }} />
+        <SheetRow title="Abandonner" sub="Nabulo te dit en combien d’étapes c’était possible" onPress={() => { setMenu(false); onAbandon(game); }} />
         <Pressable accessibilityRole="button" accessibilityLabel="Continuer la partie" onPress={() => setMenu(false)} style={{ paddingTop: 4, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}>
           <T size={16} weight={700} color={gameInkSoft}>Continuer</T>
+        </Pressable>
+      </Sheet>
+
+      <Sheet visible={hintSheet !== null} onClose={() => setHintSheet(null)}>
+        {hintSheet === 'confirm' ? (
+          <>
+            <View>
+              <T size={22} weight={700} color={INK} style={{ lineHeight: 24 }}>Utiliser un indice</T>
+              <T size={14} weight={600} color={gameInkSoft}>Nabulo te souffle un mot proche de « {last} » qui rapproche de « {game.target} »</T>
+            </View>
+            <Pressable accessibilityRole="button" accessibilityLabel={`Payer ${HINT_COST} brez`} onPress={takeHint}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 18, backgroundColor: '#FFFFFF', boxShadow: 'inset 0 -5px 0 #E4DEF5' }}>
+              <Coin size={44} />
+              <View style={{ flex: 1 }}>
+                <T size={18} weight={700} color={INK}>Payer {HINT_COST} brez</T>
+                <T size={13} weight={600} color={gameInkSoft}>il t’en restera {Math.max(0, braises - HINT_COST)}</T>
+              </View>
+              <View style={{ paddingVertical: 6, paddingHorizontal: 12, borderRadius: 12, backgroundColor: '#FF5A36' }}><T size={15} weight={700} color="#FFFFFF">Utiliser</T></View>
+            </Pressable>
+          </>
+        ) : (
+          <>
+            <View>
+              <T size={22} weight={700} color={INK} style={{ lineHeight: 24 }}>Il te manque {Math.max(0, HINT_COST - braises)} brez</T>
+              <T size={14} weight={600} color={gameInkSoft}>ta chaîne reste en pause, tu ne perds rien</T>
+            </View>
+            <SheetRow title="Voir la boutique" sub="des brez pour tes prochains indices" onPress={() => { setHintSheet(null); router.push('/boutique'); }} />
+          </>
+        )}
+        <Pressable accessibilityRole="button" accessibilityLabel="Annuler" onPress={() => setHintSheet(null)} style={{ paddingTop: 4, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}>
+          <T size={16} weight={700} color={gameInkSoft}>Annuler</T>
         </Pressable>
       </Sheet>
     </View>
@@ -316,8 +370,29 @@ function SheetRow({ title, sub, onPress }: { title: string; sub: string; onPress
   );
 }
 
+/** « Retirer le dernier mot » : toujours disponible dès qu'un mot est posé. */
+function UndoPill({ recul, onPress }: { recul: boolean; onPress: () => void }) {
+  return (
+    <Pressable accessibilityRole="button" accessibilityLabel="Retirer le dernier mot" accessibilityHint={recul ? 'ce mot t’éloigne de l’arrivée' : undefined} onPress={onPress} hitSlop={6} style={{ alignSelf: 'flex-end' }}>
+      <Bubble bg="#FFFFFF" radius={14} border={2} inset={5} style={{ paddingVertical: 6, paddingHorizontal: 12 }}>
+        <T size={14} weight={700} color={INK}>↶ Retirer le dernier mot</T>
+      </Bubble>
+    </Pressable>
+  );
+}
+
+/** La chaîne peut se refermer : on l'annonce, le joueur choisit en bas (Terminer / Retirer). */
+function ClosingNote({ word, target, t }: { word: string; target: string; t: number }) {
+  return (
+    <View style={{ gap: 2 }} accessibilityLiveRegion="polite">
+      <T size={17} weight={700} color="#FFFFFF" align="center" style={SHADOW}>« {word} » touche « {target} » à {Math.round(t)}°</T>
+      <T size={14} weight={600} color="#FFFFFF" align="center" style={SHADOW}>Termine ta chaîne, ou retire ce mot pour en tenter une plus courte.</T>
+    </View>
+  );
+}
+
 const BANNER: Record<'loin' | 'proche' | 'deja' | 'inconnu', string> = { loin: '#FF5A8A', proche: '#FF9A3C', deja: '#9C6BFF', inconnu: '#9C6BFF' };
-function FeedbackView({ fb, recul, canUndo, onUndo, onUseHint }: { fb: Feedback; recul: boolean; canUndo: boolean; onUndo: () => void; onUseHint: (w: string) => void }) {
+function FeedbackView({ fb, onUseHint }: { fb: Feedback; onUseHint: (w: string) => void }) {
   if (fb?.kind === 'ok') {
     return <T size={15} weight={700} color="#FFFFFF" align="center" style={SHADOW} accessibilityLiveRegion="polite">« {fb.word} » est à {Math.round(fb.temperature)}° de « {fb.prev} » : accepté</T>;
   }
@@ -355,14 +430,7 @@ function FeedbackView({ fb, recul, canUndo, onUndo, onUseHint }: { fb: Feedback;
       </View>
     );
   }
-  if (!canUndo) return null;
-  return (
-    <Pressable accessibilityRole="button" accessibilityLabel="Retirer le dernier mot" accessibilityHint={recul ? 'ce mot t’éloigne de l’arrivée' : undefined} onPress={onUndo} hitSlop={6} style={{ alignSelf: 'flex-end' }}>
-      <Bubble bg="#FFFFFF" radius={14} border={2} inset={5} style={{ paddingVertical: 6, paddingHorizontal: 12 }}>
-        <T size={14} weight={700} color={INK}>↶ Retirer le dernier mot</T>
-      </Bubble>
-    </Pressable>
-  );
+  return null;
 }
 
 /* ---------- 3 · Chaîne terminée ---------- */
@@ -384,25 +452,48 @@ function Terminee({ done, onClose, onNext, computing }: { done: Done; onClose: (
 
 /* ---------- 4 · Fin · résultat ---------- */
 const NEIGHBOR_COLORS = ['#FF5A36', '#FF7240', '#FF9A3C', '#FFB35C', '#FFD45C'];
-function Resultat({ done, onMenu, onNew }: { done: Done; onMenu: () => void; onNew: () => void }) {
+/** Contour encre du texte blanc de la victoire (text-shadow 0 3px + 2 px de chaque côté dans la maquette). */
+const OUTLINE = { textShadowColor: INK, textShadowOffset: { width: 0, height: 3 }, textShadowRadius: 0 } as const;
+const OUTLINE_SM = { textShadowColor: INK, textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 0 } as const;
+
+/**
+ * Tailles de l'écran de victoire selon la hauteur disponible : les valeurs de la maquette (772 px entre la barre d'état
+ * et la marge du bas), puis deux crans plus serrés pour les téléphones plus petits ou à grandes encoches.
+ */
+function winSizes(avail: number) {
+  if (avail >= 760) return { pad: 40, nabulo: 160, title: 38, word: 46, gap: 14, stats: 22, sub: 18 };
+  if (avail >= 660) return { pad: 16, nabulo: 124, title: 34, word: 42, gap: 12, stats: 14, sub: 17 };
+  return { pad: 6, nabulo: 96, title: 30, word: 38, gap: 10, stats: 10, sub: 16 };
+}
+
+function Resultat({ done, onMenu, onNew, onShare }: { done: Done; onMenu: () => void; onNew: () => void; onShare: () => void }) {
+  const inset = useSafeAreaInsets();
+  const { height } = useWindowDimensions();
   const target = done.chain[done.chain.length - 1];
   const steps = done.chain.length - 1;
   const near = useMemo(() => closeWords(target), [target]);
   const weakest = Math.round(Math.min(...links(done.chain)));
-  const outline = { textShadowColor: INK, textShadowOffset: { width: 0, height: 3 }, textShadowRadius: 0 };
+  const z = winSizes(height - (Math.max(inset.top, 44) + 4) - (24 + inset.bottom));
+  const img = z.nabulo * 1.6;
   return (
     <Frame bg={<><SlidingGradient colors={warmGradient} stops={warmStops} duration={10000} /><Confetti /></>}>
-      <View style={{ paddingTop: 40, paddingHorizontal: 4, paddingBottom: 10, alignItems: 'center', gap: 4 }}>
-        <View style={{ width: 160, height: 160, marginBottom: 10 }}>
-          <Image source={images.nabuloSaut} autoplay style={{ position: 'absolute', left: -48, top: -90, width: 256, height: 256 }} contentFit="contain" accessibilityLabel="Nabulo saute de joie, le poing en l’air" />
+      {/* haut : Nabulo qui saute (l'image déborde de sa boîte comme dans la maquette), titre, record */}
+      <View style={{ paddingTop: z.pad, paddingHorizontal: 4, paddingBottom: 10, alignItems: 'center', gap: 4 }}>
+        <View style={{ width: z.nabulo, height: z.nabulo, marginBottom: 10 }}>
+          <Image source={images.nabuloSaut} autoplay style={{ position: 'absolute', left: -z.nabulo * 0.3, top: -z.nabulo * 0.5625, width: img, height: img }} contentFit="contain" accessibilityLabel="Nabulo saute de joie, le poing en l’air" />
         </View>
-        <T size={38} weight={700} color="#FFFFFF" align="center" style={[{ lineHeight: 40 }, outline]}>Chaîne de {plural(steps, 'étape')}</T>
-        <T size={18} weight={600} color="#FFFFFF" align="center" style={outline}>ton record : {plural(done.prevRecord ?? steps, 'étape')}</T>
+        <T size={z.title} weight={700} color="#FFFFFF" align="center" style={[{ lineHeight: Math.round(z.title * 1.05) }, OUTLINE]}>Chaîne de {plural(steps, 'étape')}</T>
+        <T size={z.sub} weight={600} color="#FFFFFF" align="center" style={OUTLINE}>ton record : {plural(done.prevRecord ?? steps, 'étape')}</T>
+        <Pressable accessibilityRole="button" accessibilityLabel="Partager ma chaîne" onPress={onShare} hitSlop={4}
+          style={{ position: 'absolute', right: 0, top: 0, width: 44, height: 44, borderRadius: 13, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' }}>
+          <LierIcon name="share" size={22} />
+        </Pressable>
       </View>
-      <View style={{ flex: 1, paddingVertical: 14, paddingHorizontal: 4, justifyContent: 'center', gap: 14 }}>
-        <T size={17} weight={700} color="#FFFFFF" align="center" style={SHADOW}>Mot trouvé · ses voisins</T>
+      {/* milieu : défile au lieu de passer sous les boutons quand l'écran est trop court */}
+      <ScrollView style={{ flex: 1, marginHorizontal: -16 }} contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingVertical: 14, paddingHorizontal: 20, gap: z.gap }} showsVerticalScrollIndicator={false}>
+        <T size={17} weight={700} color="#FFFFFF" align="center" style={OUTLINE_SM}>Mot trouvé · ses voisins</T>
         <View style={{ alignSelf: 'center', maxWidth: '100%', paddingVertical: 4, paddingHorizontal: 16, borderRadius: 16, borderWidth: 2, borderColor: 'transparent', backgroundColor: '#FFFFFF' }}>
-          <T size={46} weight={700} color={INK} numberOfLines={1} adjustsFontSizeToFit style={{ lineHeight: 51 }}>{target}</T>
+          <T size={z.word} weight={700} color={INK} numberOfLines={1} adjustsFontSizeToFit style={{ lineHeight: Math.round(z.word * 1.1) }}>{target}</T>
         </View>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 }}>
           {near.map((w, i) => (
@@ -411,11 +502,11 @@ function Resultat({ done, onMenu, onNew }: { done: Done; onMenu: () => void; onN
             </Bubble>
           ))}
         </View>
-        <View style={{ marginTop: 22, gap: 10 }}>
+        <View style={{ marginTop: z.stats, gap: 10 }}>
           <Stat label="Étapes" value={String(steps)} />
           <Stat label="Lien le plus faible" value={`${weakest}°`} />
         </View>
-      </View>
+      </ScrollView>
       <View style={{ paddingHorizontal: 4, paddingBottom: 6, flexDirection: 'row', gap: 10 }}>
         <BigButton label="Menu" icon="home" mix grow={false} onPress={onMenu} />
         <BigButton label="Nouvelle chaîne" icon="refresh" onPress={onNew} />
@@ -425,28 +516,26 @@ function Resultat({ done, onMenu, onNew }: { done: Done; onMenu: () => void; onN
 }
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 10, paddingVertical: 11, paddingHorizontal: 14, borderRadius: 15, borderWidth: 2, borderColor: 'rgba(255,255,255,0.55)', backgroundColor: 'rgba(255,255,255,0.92)', boxShadow: 'inset 0 -5px 0 rgba(20,10,60,0.18)' }}>
+    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10, paddingVertical: 11, paddingHorizontal: 14, borderRadius: 15, borderWidth: 2, borderColor: 'rgba(255,255,255,0.55)', backgroundColor: 'rgba(255,255,255,0.92)', boxShadow: 'inset 0 -5px 0 rgba(20,10,60,0.18)' }}>
       <T size={17} weight={600} color={INK} numberOfLines={1}>{label}</T>
       <T size={17} weight={700} color={INK} numberOfLines={1} adjustsFontSizeToFit style={{ flexShrink: 1 }}>{value}</T>
     </View>
   );
 }
 
-/* ---------- 12 · Comparaison avec la meilleure chaîne ---------- */
+/* ---------- 12 · Comparaison : la chaîne du joueur et la longueur du plus court chemin (sans le dévoiler) ---------- */
 function Comparaison({ done, onClose, onShare, onReplay }: { done: Done; onClose: () => void; onShare: () => void; onReplay: () => void }) {
   const best = done.best ?? done.chain;
-  const label = (c: string) => <T size={15} weight={700} color="#FFFFFF" align="center" style={SHADOW}>{c}</T>;
   return (
     <Frame>
       <Header title="Résultat" onClose={onClose} closeLabel="Retour au menu" />
       <Title title={`Ta chaîne : ${plural(done.chain.length - 1, 'étape')}`} sub={`le plus court possible : ${plural(best.length - 1, 'étape')}`} />
-      <ScrollView style={{ flex: 1, marginHorizontal: -16 }} contentContainerStyle={{ paddingHorizontal: 16, gap: 10 }} showsVerticalScrollIndicator={false}>
-        {label('Ta chaîne')}
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 6 }}>
-          {done.chain.map((w, i) => <WordChip key={w + i} word={w} bg={i === 0 ? '#FFD45C' : i === done.chain.length - 1 ? '#FFD23F' : '#FFFFFF'} />)}
-        </View>
-        {label('La meilleure chaîne')}
-        <Chain words={best} target={best[best.length - 1]} complete temps={links(best)} compact />
+      <ScrollView style={{ flex: 1, marginHorizontal: -16 }} contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 16, gap: 12 }} showsVerticalScrollIndicator={false}>
+        <T size={15} weight={700} color="#FFFFFF" align="center" style={SHADOW}>Ta chaîne</T>
+        <Chain words={done.chain} target={done.chain[done.chain.length - 1]} complete temps={links(done.chain)} compact />
+        <T size={15} weight={600} color="#FFFFFF" align="center" style={[SHADOW, { marginTop: 4 }]}>
+          Nabulo connaît une chaîne {plural(done.chain.length - best.length, 'étape')} plus courte. Rejoue pour la trouver !
+        </T>
       </ScrollView>
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <BigButton label="Partager" icon="share" mix height={56} onPress={onShare} />
@@ -456,15 +545,17 @@ function Comparaison({ done, onClose, onShare, onReplay }: { done: Done; onClose
   );
 }
 
-/* ---------- 13 · Abandon · une solution ---------- */
+/* ---------- 13 · Abandon : la longueur d'une chaîne possible, sans ses mots ---------- */
 function Abandon({ solution, onMenu, onNew }: { solution: string[] | null; onMenu: () => void; onNew: () => void }) {
+  const sub = solution === null ? 'Nabulo cherche une chaîne…'
+    : solution.length ? `Nabulo connaît une chaîne en ${plural(solution.length - 1, 'étape')} : à toi de la trouver une prochaine fois`
+      : 'Nabulo n’a pas trouvé de chaîne cette fois';
   return (
     <Frame>
       <Header title="Lier" onClose={onMenu} closeLabel="Retour au menu" />
       <View style={{ flex: 1 }} />
       <View style={{ alignSelf: 'center' }}><Mascot mood="froid" size={110} /></View>
-      <Title title="Pas de souci !" sub={solution === null ? 'Nabulo cherche une chaîne…' : solution.length ? 'voici une chaîne possible' : 'Nabulo n’a pas trouvé de chaîne cette fois'} />
-      {solution && solution.length > 0 && <Chain words={solution} target={solution[solution.length - 1]} complete temps={links(solution)} compact />}
+      <Title title="Pas de souci !" sub={sub} />
       <View style={{ flex: 1 }} />
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <BigButton label="Menu" icon="home" mix grow={false} height={56} onPress={onMenu} />
@@ -477,8 +568,13 @@ function Abandon({ solution, onMenu, onNew }: { solution: string[] | null; onMen
 /* ---------- 14 · Partage ---------- */
 function Partage({ chain, onClose }: { chain: string[]; onClose: () => void }) {
   const toast = useToast();
+  const { width } = useWindowDimensions();
   const [date] = useState(() => new Date());
   const message = shareText(chain, date);
+  const squares = shareSquares(chain);
+  // carrés de 44 px (40 + contour 2 px) sur une ligne ; plus petits si la chaîne est longue
+  const room = Math.min(width, 430) - 32 - 4 - 28;
+  const side = Math.max(26, Math.min(44, Math.floor((room - 6 * (squares.length - 1)) / squares.length)));
   const send = () => { Share.share({ message }).catch(() => {}); };
   const copy = async () => {
     const clip = Platform.OS === 'web' ? (globalThis as { navigator?: { clipboard?: { writeText(s: string): Promise<void> } } }).navigator?.clipboard : undefined;
@@ -492,8 +588,8 @@ function Partage({ chain, onClose }: { chain: string[]; onClose: () => void }) {
       <Bubble bg="#FFFFFF" radius={18} border={2} inset={6} style={{ paddingVertical: 12, paddingHorizontal: 14 }}>
         <T size={15} weight={700} color={INK} align="center">Nabulo · Lier · {shortDate(date)}</T>
         <T size={26} weight={700} color={INK} align="center" style={{ marginTop: 4, marginBottom: 8 }}>{plural(chain.length - 1, 'étape')}</T>
-        <View style={{ flexDirection: 'row', justifyContent: 'center', flexWrap: 'wrap', gap: 6 }} accessibilityLabel="Force de chaque lien">
-          {shareSquares(chain).map((c, i) => <View key={i} style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: c }} />)}
+        <View style={{ flexDirection: 'row', justifyContent: 'center', flexWrap: 'wrap', gap: 6 }} accessibilityRole="image" accessibilityLabel={`${squares.length} cases : la force de chaque lien`}>
+          {squares.map((c, i) => <View key={i} style={{ width: side, height: side, borderRadius: 10, backgroundColor: c }} />)}
         </View>
         <T size={13} weight={600} color={INK} align="center" style={{ marginTop: 8 }}>les couleurs montrent la force de chaque lien, sans dévoiler les mots</T>
       </Bubble>

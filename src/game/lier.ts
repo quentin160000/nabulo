@@ -139,17 +139,39 @@ export function solve(start: string, target: string, avoid: string[] = [], maxSt
   return null;
 }
 
-/** Indice : une bonne étape suivante après la chaîne en cours (premier mot d'une chaîne la plus courte). */
+/**
+ * Indice : un mot intermédiaire valable après la chaîne en cours — lien valide avec le dernier mot et plus chaud
+ * vers l'arrivée que lui. De préférence le premier mot d'une chaîne la plus courte ; sinon le voisin valide le plus
+ * tourné vers l'arrivée. null si la chaîne peut déjà se refermer ou si aucun mot ne convient.
+ */
 export function hintAfter(chain: string[], target: string): string | null {
   const last = chain[chain.length - 1];
-  const s = solve(last, target, chain.slice(0, -1));
-  if (!s || s.length < 2) return null;
-  return s[1] === normalizeWord(target) ? null : s[1];
+  const goal = normalizeWord(target);
+  if (t(last, goal) >= MIN_LINK) return null;
+  const here = t(last, goal);
+  const fresh = (w: string) => w !== goal && !chain.some(c => variant(c, w)) && validLink(last, w);
+  const s = solve(last, goal, chain.slice(0, -1));
+  const first = s && s.length > 2 && fresh(s[1]) ? s[1] : null;
+  if (first && t(first, goal) > here) return first;
+  const better = band(last, [...chain, goal]).filter(w => fresh(w) && t(w, goal) > here).sort((x, y) => t(y, goal) - t(x, goal));
+  return better[0] ?? first;
+}
+
+/** Peut-on refermer la chaîne (le dernier mot posé touche l'arrivée) ? */
+export function canClose(chain: string[], target: string): boolean {
+  return chain.length > 1 && t(chain[chain.length - 1], target) >= MIN_LINK;
 }
 
 /** Les plus proches voisins de l'arrivée, sans ses variantes (écran de fin). */
 export function closeWords(target: string, n = 5): string[] {
-  return neighbors(target, 40).map(x => x.word).filter(w => usable(w) && !variant(w, target)).slice(0, n);
+  const plain = (w: string) => normalizeWord(w).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const out: string[] = [];
+  for (const { word: w } of neighbors(target, 40)) {
+    if (out.length >= n) break;
+    // ni variante de l'arrivée ni d'un voisin déjà retenu (« plage » / « plages »), accents compris (« île » / « ile »)
+    if (usable(w) && ![target, ...out].some(o => variant(w, o) || variant(plain(w), plain(o)))) out.push(w);
+  }
+  return out;
 }
 
 export const pairKey = (a: string, b: string) => `${normalizeWord(a)}>${normalizeWord(b)}`;
