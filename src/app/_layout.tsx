@@ -2,16 +2,19 @@ import { Fredoka_500Medium, Fredoka_600SemiBold, Fredoka_700Bold, useFonts } fro
 import { Inter_500Medium, Inter_700Bold } from '@expo-google-fonts/inter';
 import { DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import * as SystemUI from 'expo-system-ui';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
+import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { engine } from '@/game/engine';
 import { known } from '@/game/lexicon';
 import { WalletProvider } from '@/game/wallet';
 import { Loading } from '@/ui/Loading';
 
+const VIOLET = '#4B33B8';
 /** Thème de navigation : fond violet partout, pour qu'aucune transition ne laisse voir de blanc. */
-const THEME = { ...DefaultTheme, colors: { ...DefaultTheme.colors, background: '#4B33B8', card: '#4B33B8' } };
+const THEME = { ...DefaultTheme, colors: { ...DefaultTheme.colors, background: VIOLET, card: VIOLET } };
 
 const pause = (ms: number) => new Promise(r => setTimeout(r, ms));
 
@@ -28,6 +31,8 @@ async function warmUp() {
 }
 
 SplashScreen.preventAutoHideAsync();
+// fond de la fenêtre native : c'est lui qu'on voit (en blanc par défaut) pendant les transitions et avant le premier rendu d'un écran
+SystemUI.setBackgroundColorAsync(VIOLET).catch(() => {});
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({ Fredoka_500Medium, Fredoka_600SemiBold, Fredoka_700Bold, Inter_500Medium, Inter_700Bold });
@@ -42,14 +47,14 @@ export default function RootLayout() {
   }, [loaded, error]);
   // la préparation des mots ne commence qu'une fois l'écran de chargement visible, et il reste au moins 1,2 s
   useEffect(() => { if (shown) warmUp().finally(() => setReady(true)); }, [shown]);
-  if (!loaded && !error) return null;
-  if (!ready) return <SafeAreaProvider><StatusBar style="light" /><Loading onReady={reveal} /></SafeAreaProvider>;
+  if (!loaded && !error) return <View style={{ flex: 1, backgroundColor: VIOLET }} />;
+  if (!ready) return <SafeAreaProvider style={{ backgroundColor: VIOLET }}><StatusBar style="light" /><Loading onReady={reveal} /></SafeAreaProvider>;
   return (
-    <SafeAreaProvider>
+    <SafeAreaProvider style={{ backgroundColor: VIOLET }}>
       <ThemeProvider value={THEME}>
       <WalletProvider>
         <StatusBar style="auto" />
-        <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right', contentStyle: { backgroundColor: '#4B33B8' } }}>
+        <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right', contentStyle: { backgroundColor: VIOLET } }}>
           <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
           <Stack.Screen name="onboarding" options={{ animation: 'fade', gestureEnabled: false }} />
         </Stack>
