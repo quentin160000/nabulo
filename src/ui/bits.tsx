@@ -14,6 +14,10 @@ export const images = {
   nabuloJoie: require('../../assets/images/nabulo/joie.webp'),
   nabuloEmbete: require('../../assets/images/nabulo/embete.webp'),
   nabuloTete: require('../../assets/images/nabulo/tete.webp'),
+  /* introduction : animations en boucle */
+  nabuloCoucou: require('../../assets/images/nabulo/coucou.webp'),
+  nabuloRegard: require('../../assets/images/nabulo/regard.webp'),
+  nabuloPluie: require('../../assets/images/nabulo/pluie.webp'),
 };
 
 /** Pièce de braise. */

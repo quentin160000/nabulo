@@ -12,6 +12,7 @@ import { Button } from '@/ui/Button';
 import { RisingBits, SlidingGradient } from '@/ui/backgrounds';
 import { Coin, Icon, images } from '@/ui/bits';
 import { T } from '@/ui/Text';
+import { useReduceMotion } from '@/ui/duel-ui';
 
 const LAST = 4;
 
@@ -86,8 +87,10 @@ function Title({ title, sub }: { title: string; sub: string }) {
     </View>
   );
 }
+/** Illustration de Nabulo ; les webp animés tournent en boucle, figés sur la première image si « réduire les animations ». */
 function Pic({ src, size, label }: { src: number; size: number; label: string }) {
-  return <Image source={src} style={{ width: size, height: size, alignSelf: 'center' }} contentFit="contain" accessibilityLabel={label} />;
+  const reduce = useReduceMotion();
+  return <Image source={src} autoplay={!reduce} style={{ width: size, height: size, alignSelf: 'center' }} contentFit="contain" accessibilityLabel={label} />;
 }
 function Card({ children, bg = '#FFFFFF' }: { children: React.ReactNode; bg?: string }) {
   return <Bubble bg={bg} radius={18} border={2} style={{ paddingTop: 10, paddingHorizontal: 14, paddingBottom: 14, flexDirection: 'row', alignItems: 'center', gap: 12 }}>{children}</Bubble>;
@@ -97,7 +100,7 @@ function Card({ children, bg = '#FFFFFF' }: { children: React.ReactNode; bg?: st
 function Rencontre({ k }: { k: number }) {
   return (
     <View style={{ gap: 16 }}>
-      <Pic src={images.nabuloJoie} size={250 * k} label="Nabulo sourit" />
+      <Pic src={images.nabuloCoucou} size={250 * k} label="Nabulo sautille et te fait coucou" />
       <Say>Salut ! Moi, c’est <B>Nabulo</B>.</Say>
       <Title title="Un singe de feu" sub="qui a la tête pleine de mots… peut-être un peu trop." />
     </View>
@@ -111,7 +114,7 @@ const TANGLE: [string, number, number, number, number, number][] = [
 function Probleme({ k }: { k: number }) {
   return (
     <View style={{ gap: 16 }}>
-      <Pic src={images.nabuloEmbete} size={180 * k} label="Nabulo embêté" />
+      <Pic src={images.nabuloPluie} size={180 * k} label="Nabulo embêté sous la pluie" />
       <Say>Oups… je m’emmêle encore les pinceaux !</Say>
       <View accessibilityLabel="Des mots qui se mélangent : pinceau, pingouin, piano, pain, sapin, pinson" style={{ height: 170 * k }}>
         {TANGLE.map(([w, x, y, r, a, fs]) => (
@@ -190,7 +193,7 @@ function But({ k }: { k: number }) {
 function CoupDePouce({ k }: { k: number }) {
   return (
     <View style={{ gap: 16 }}>
-      <Pic src={images.nabulo} size={230 * k} label="Nabulo" />
+      <Pic src={images.nabuloRegard} size={230 * k} label="Nabulo te regarde" />
       <Say>Tu es coincé ? Je peux te <B>souffler un indice</B>.</Say>
       <Card>
         <View style={{ width: 46, height: 46, borderRadius: 15, backgroundColor: '#F1EEFA', alignItems: 'center', justifyContent: 'center' }}><Icon name="bulb" size={26} /></View>
