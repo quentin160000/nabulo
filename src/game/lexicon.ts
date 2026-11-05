@@ -1,6 +1,6 @@
 /**
  * Lexique des mini-jeux : similarité entre deux mots quelconques, voisins d'un mot, tirage de mots.
- * Hors ligne, à partir de assets/data/fr-vec.json (scripts/build_dev_vectors.py) : vecteurs fastText compacts
+ * Hors ligne, à partir de assets/data/fr-vec.json (scripts/build_offline_data.py) : vecteurs word2vec frWac compacts
  * dans le même ordre que fr-dev.json, c'est-à-dire du mot le plus fréquent au moins fréquent.
  */
 import { decodeBase64 } from './engine/local';

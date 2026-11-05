@@ -306,8 +306,8 @@ export function PlusChauds({ lignes, dernier }: { lignes: Ligne[]; dernier: stri
   );
 }
 
-/** Pastille de degrés des listes « seuil » (53° orange…). */
-export const couleurDegres = (t: number) => (t >= 60 ? '#FF5A36' : t >= 35 ? '#FF9A3C' : t >= 25 ? '#FFB35C' : t >= 10 ? '#7CCDEF' : '#A9C6F2');
+/** Pastille de degrés des listes « seuil » (paliers de la maquette ramenés à l’échelle frWac). */
+export const couleurDegres = (t: number) => (t >= 44 ? '#FF5A36' : t >= 15 ? '#FF9A3C' : t >= 8 ? '#FFB35C' : t >= 0 ? '#7CCDEF' : '#A9C6F2');
 
 /** Carte blanche en relief qu'on touche (Plus chaud ?, L'intrus). `etat` colore la réponse. */
 export function Choix({ label, onPress, etat, radius = 22, border = 4, inset = 8, size = 30, style, center = true, sub }: {

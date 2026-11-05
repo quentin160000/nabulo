@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { known, temperature } from '../src/game/lexicon';
 import { closeWords, hintAfter, judge, links, MAX_LINK, MIN_LINK, shareSquares, shareText, solve, validLink, variant } from '../src/game/lier';
-import { DIFFICILE, FACILE, MOYEN, dailyPair, pairsFor } from '../src/game/lier-paires';
+import { DIFFICILE, DIFFICILE_MAX, FACILE, MOYEN, dailyPair, pairsFor } from '../src/game/lier-paires';
 
 const isChain = (c: string[]) => c.slice(1, -1).every((w, i) => validLink(c[i], w)) && temperature(c[c.length - 2], c[c.length - 1])! >= MIN_LINK;
 
@@ -56,7 +56,7 @@ describe('Lier : paires', () => {
       const c = solve(a, b, [], 4);
       expect(c, `${a}>${b}`).not.toBeNull(); expect(isChain(c!)).toBe(true);
     }
-    for (const [a, b] of DIFFICILE) expect(temperature(a, b)!).toBeLessThan(5);
+    for (const [a, b] of DIFFICILE) expect(temperature(a, b)!, `${a}>${b}`).toBeLessThan(DIFFICILE_MAX);
   }, 60000);
   it('le défi du jour est le même pour tous et change selon le jour', () => {
     expect(dailyPair(309)).toEqual(dailyPair(309));

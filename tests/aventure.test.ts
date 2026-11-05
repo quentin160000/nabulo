@@ -8,8 +8,13 @@ import { mancheIntrus, manchePlusChaud } from '../src/game/libres-manches';
 import { solve, variant } from '../src/game/lier';
 
 const t = (a: string, b: string) => temperature(a, b) ?? -100;
-/** Voisins utilisables (pas une simple variante du mot) à `min`° ou plus. */
-const chauds = (mot: string, min: number) => neighbors(mot, 200).filter(v => v.temperature >= min && !variant(v.word, mot));
+/**
+ * Voisins utilisables (pas une simple variante du mot) à `min`° ou plus, parmi les 15 000 mots les plus fréquents
+ * (la taille de l'ancien lexique : frWac range « cratère » ou « lave » au-delà des 8 000 premiers).
+ */
+const chauds = (mot: string, min: number) => neighbors(mot, 200, 15000).filter(v => v.temperature >= min && !variant(v.word, mot));
+/** « Mot chaud » pour s'approcher d'un mot secret (55° sur l'ancienne échelle fastText). */
+const CHAUD = 37;
 
 describe('aventure : structure', () => {
   it('30 niveaux, 5 mondes de 6, le 6e est la fin de monde', () => {
@@ -31,7 +36,7 @@ describe('aventure : chaque niveau est jouable avec le lexique', () => {
         case 'secret': case 'points': {
           expect(known(nv.mot)).toBe(true);
           // il existe des mots chauds pour s'approcher, et l'écran de fin a 5 voisins
-          expect(chauds(nv.mot, 55).length).toBeGreaterThanOrEqual(3);
+          expect(chauds(nv.mot, CHAUD).length).toBeGreaterThanOrEqual(3);
           expect(voisinsDe(nv.mot)).toHaveLength(5);
           expect(rang(nv.mot, nv.mot)).toBe(1);
           if (nv.type === 'points') expect(Math.floor((nv.depart - nv.minimum) / nv.cout)).toBeGreaterThanOrEqual(10);

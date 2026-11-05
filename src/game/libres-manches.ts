@@ -71,29 +71,34 @@ export function cleanNeighbors(word: string, k = 5, scan = 60): { word: string; 
 
 /* ---------- Plus chaud / plus froid ---------- */
 export type ManchePlusChaud = { cible: string; mots: [string, string]; temps: [number, number]; bonne: 0 | 1 };
-export const ECART_MIN = 15;
+/** Écart de départ et écart minimal (°C) entre le mot proche et le mot lointain. */
+export const ECART_DEBUT = 28, ECART_MIN = 14;
+/** Le mot proche est à PROCHE_MIN °C ou plus de la cible ; le mot lointain à LOIN_MAX °C au plus. */
+export const PROCHE_MIN = 24, LOIN_MAX = 22;
+/** À partir de 8 bonnes réponses, le mot lointain est pris dans le 1/LOIN_PART le plus chaud des candidats. */
+export const LOIN_PART = 5;
 
 /**
  * Un mot cible, un voisin proche et un mot lointain, avec au moins `ECART_MIN` °C d'écart.
- * Plus la série est longue, plus l'écart se resserre (30 °C au début, 15 °C à partir de 15 bonnes réponses).
+ * Plus la série est longue, plus l'écart se resserre (`ECART_DEBUT` °C au début, `ECART_MIN` °C après 15 bonnes réponses).
  */
 export function manchePlusChaud(rand: () => number, serie = 0, deja: ReadonlySet<string> = new Set()): ManchePlusChaud {
-  const ecart = Math.max(ECART_MIN, 30 - serie);
+  const ecart = Math.max(ECART_MIN, ECART_DEBUT - serie);
   for (let essai = 0; ; essai++) {
     const cible = pick(rand, noms());
     if (deja.has(cible) && essai < 50) continue;
-    const proches = cleanNeighbors(cible, 12).filter(n => n.temperature >= 45);
+    const proches = cleanNeighbors(cible, 12).filter(n => n.temperature >= PROCHE_MIN);
     if (proches.length < 3) continue;
     // au début on prend les tout proches, ensuite des voisins un peu plus loin
     const fen = proches.slice(0, Math.min(proches.length, 4 + Math.floor(serie / 3)));
     const proche = pick(rand, fen);
     const loins = noms().filter(w => !sameFamily(w, cible) && !sameFamily(w, proche.word))
       .map(w => ({ word: w, temperature: t(cible, w) }))
-      .filter(n => n.temperature <= proche.temperature - ecart && n.temperature <= 42);
+      .filter(n => n.temperature <= proche.temperature - ecart && n.temperature <= LOIN_MAX);
     if (!loins.length) continue;
     // les lointains les plus « chauds » rendent le choix moins évident quand la série grandit
     loins.sort((a, b) => b.temperature - a.temperature);
-    const loin = serie >= 8 ? pick(rand, loins.slice(0, Math.max(3, Math.ceil(loins.length / 3)))) : pick(rand, loins);
+    const loin = serie >= 8 ? pick(rand, loins.slice(0, Math.max(3, Math.ceil(loins.length / LOIN_PART)))) : pick(rand, loins);
     const r1 = Math.round(proche.temperature), r2 = Math.round(loin.temperature);
     return rand() < 0.5
       ? { cible, mots: [proche.word, loin.word], temps: [r1, r2], bonne: 0 }
@@ -103,15 +108,15 @@ export function manchePlusChaud(rand: () => number, serie = 0, deja: ReadonlySet
 
 /* ---------- L'intrus ---------- */
 export type MancheIntrus = { mots: string[]; intrus: number; theme: string };
-/** Température minimale entre deux mots du groupe, maximale entre l'intrus et le groupe. */
-export const GROUPE_MIN = 50, INTRUS_MAX = 33;
+/** Température minimale d'un candidat avec le thème, minimale entre deux mots du groupe, maximale entre l'intrus et le groupe. */
+export const THEME_MIN = 33, GROUPE_MIN = 30, INTRUS_MAX = 13;
 
 /** 4 mots proches entre eux (un thème et ses voisins) et 1 mot lointain, mélangés. */
 export function mancheIntrus(rand: () => number, deja: ReadonlySet<string> = new Set()): MancheIntrus {
   for (let essai = 0; ; essai++) {
     const theme = pick(rand, noms());
     if (deja.has(theme) && essai < 50) continue;
-    const cands = shuffle(rand, cleanNeighbors(theme, 10).filter(n => n.temperature >= 52).map(n => n.word));
+    const cands = shuffle(rand, cleanNeighbors(theme, 10).filter(n => n.temperature >= THEME_MIN).map(n => n.word));
     const groupe = [theme];
     for (const c of cands) {
       if (groupe.length === 4) break;
@@ -126,11 +131,11 @@ export function mancheIntrus(rand: () => number, deja: ReadonlySet<string> = new
 }
 
 /* ---------- Contre-la-montre ---------- */
-export const CHRONO_DUREE = 60, CHRONO_SEUIL = 50, CHRONO_ALERTE = 10;
+export const CHRONO_DUREE = 60, CHRONO_SEUIL = 30, CHRONO_ALERTE = 10;
 export type Essai = { word: string; temperature: number };
 export type Verdict = { ok: true; essai: Essai } | { ok: false; raison: 'vide' | 'inconnu' | 'cible' | 'deja' };
 
-/** Un mot cible courant qui a assez de voisins à 50 °C ou plus pour que la partie soit jouable. */
+/** Un mot cible courant qui a assez de voisins à `CHRONO_SEUIL` °C ou plus pour que la partie soit jouable. */
 export function cibleChrono(rand: () => number): string {
   for (;;) {
     const c = pick(rand, noms());
@@ -150,12 +155,15 @@ export function essaiChrono(cible: string, saisie: string, essais: readonly Essa
 
 export const motsTrouves = (essais: readonly Essai[]) => essais.filter(e => e.temperature >= CHRONO_SEUIL).length;
 
-/** Couleur des pastilles du contre-la-montre (maquette : 81° #FF7240, 78° #FF9A3C, 63° #FFB35C, 52° #FFD45C, 31° #A9C6F2). */
+/**
+ * Couleur des pastilles du contre-la-montre. Paliers de la maquette (90/80/70/60/50° sur l'ancienne échelle fastText)
+ * ramenés à l'échelle frWac par rang de voisin : 85/72/58/44° puis `CHRONO_SEUIL`.
+ */
 export function couleurPastille(temp: number): string {
-  if (temp >= 90) return '#FF5A36';
-  if (temp >= 80) return '#FF7240';
-  if (temp >= 70) return '#FF9A3C';
-  if (temp >= 60) return '#FFB35C';
+  if (temp >= 85) return '#FF5A36';
+  if (temp >= 72) return '#FF7240';
+  if (temp >= 58) return '#FF9A3C';
+  if (temp >= 44) return '#FFB35C';
   if (temp >= CHRONO_SEUIL) return '#FFD45C';
   return '#A9C6F2';
 }

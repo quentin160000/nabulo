@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-  AVEUGLE_DUREE, GAIN_DEFAITE, GAIN_VICTOIRE, aiDelay, aiSecret, bestGuess, blindAiPick, blindTimeoutWinner, checkBlindGuess, clock, deg,
+  AVEUGLE_ALERTE, AVEUGLE_DUREE, GAIN_DEFAITE, GAIN_VICTOIRE, aiDelay, aiSecret, bestGuess, blindAiPick, blindTimeoutWinner, checkBlindGuess, clock, deg,
   endChipColor, fmt1, secretOk, type BlindGuess, type Niveau,
 } from '@/game/duel';
 import { useDuelHistory, useNiveau, usePlayerName } from '@/game/duel-store';
@@ -181,7 +181,7 @@ function EnJeu({ match, niveau, onEnd }: { match: Match; niveau: Niveau; onEnd: 
         const g = { word: w, temperature: temperature(match.aiTarget, w) ?? -50, order: ref.current.theirs.length };
         ref.current.theirs = [...ref.current.theirs, g];
         if (w === match.aiTarget) { finishRef.current('opp', false); return; }
-        if (g.temperature >= 60 && !ref.current.warned) { ref.current.warned = true; toast.show('Attention, l’IA brûle !'); }
+        if (g.temperature >= AVEUGLE_ALERTE && !ref.current.warned) { ref.current.warned = true; toast.show('Attention, l’IA brûle !'); }
         play();
       }, aiDelay(niveau, rand, 'aveugle'));
     };

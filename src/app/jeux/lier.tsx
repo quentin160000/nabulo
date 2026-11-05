@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Share, TextInput, View, type ScrollViewInstance, type TextInputInstance } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { dayNumberFrom } from '@/game/engine/types';
-import { closeWords, hintAfter, judge, links, pairKey, shareSquares, shareText, shortDate, solve, towards, type Verdict } from '@/game/lier';
+import { MIN_LINK, closeWords, hintAfter, judge, links, pairKey, shareSquares, shareText, shortDate, solve, towards, type Verdict } from '@/game/lier';
 import { dailyPair, pairsFor, type Level, type Pair } from '@/game/lier-paires';
 import { HINT_COST } from '@/game/rules';
 import { load, save } from '@/game/storage';
@@ -143,7 +143,7 @@ const Title = ({ title, sub }: { title: string; sub?: string }) => (
 /* ---------- 1 · Règles ---------- */
 const RULES = [
   'Un mot de départ et un mot d’arrivée.',
-  'Ajoute des mots un par un : chacun doit être à 40° ou plus du précédent.',
+  `Ajoute des mots un par un : chacun doit être à ${MIN_LINK}° ou plus du précédent.`,
   'La chaîne est finie quand tu touches le mot d’arrivée.',
   'Le moins d’étapes possible = la meilleure chaîne.',
 ];
@@ -259,7 +259,7 @@ function EnJeu({ game, setGame, onFinish, onAbandon }: { game: Game; setGame: (g
     setFb({ kind: 'indice', word: h });
   };
 
-  const placeholder = fb?.kind === 'loin' ? `Essaie un mot plus proche de « ${fb.prev} »` : fb?.kind === 'proche' ? 'Choisis un mot vraiment différent' : 'Mot suivant (≥ 40°)';
+  const placeholder = fb?.kind === 'loin' ? `Essaie un mot plus proche de « ${fb.prev} »` : fb?.kind === 'proche' ? 'Choisis un mot vraiment différent' : `Mot suivant (≥ ${MIN_LINK}°)`;
   const lastLook = fb?.kind === 'ok' || fb?.kind === 'indice' ? 'ring' : recul ? 'pink' : null;
   return (
     <View style={{ flex: 1 }}>

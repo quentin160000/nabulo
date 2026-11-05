@@ -20,7 +20,7 @@ const TITRE = 'Contre-la-montre';
 const ALERTE = '#FF5A8A';
 const REGLES = [
   'Un mot cible et 60 secondes.',
-  'Propose un maximum de mots à 50° ou plus du mot cible.',
+  `Propose un maximum de mots à ${CHRONO_SEUIL}° ou plus du mot cible.`,
   'Les mots trop froids ne comptent pas.',
   'Bats ton record de mots trouvés.',
 ];

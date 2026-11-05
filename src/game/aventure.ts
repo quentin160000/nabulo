@@ -4,7 +4,8 @@
  * Tout ce qui est ici est pur (sauf les fonctions de stockage) pour être testé avec vitest.
  */
 import { neighbors, temperature } from './lexicon';
-import { cleanNeighbors } from './libres-manches';
+import { CHRONO_SEUIL, cleanNeighbors } from './libres-manches';
+import { MIN_LINK } from './lier';
 import { load, save } from './storage';
 import type { Mood } from './temperature';
 
@@ -34,41 +35,45 @@ export const NOMS_TYPES: Record<TypeNiveau, string> = {
 };
 
 /** Seuil d'un mot au contre-la-montre et lien minimal de Lier (mêmes valeurs que les mini-jeux). */
-export const CHRONO_MIN = 50, LIEN_MIN = 40;
+export const CHRONO_MIN = CHRONO_SEUIL, LIEN_MIN = MIN_LINK;
 
+/**
+ * Seuils des niveaux « Seuil » choisis mot par mot (échelle frWac) pour garder le même nombre de mots qui
+ * l'atteignent qu'avec l'ancien lexique ; « max » des niveaux Lier = chaîne la plus courte + la même marge qu'avant.
+ */
 export const NIVEAUX: readonly Niveau[] = [
   // Monde 1 · Banquise
   { n: 1, type: 'secret', mot: 'neige', essais: 30 },
-  { n: 2, type: 'seuil', mot: 'hiver', seuil: 72, essais: 20 },
+  { n: 2, type: 'seuil', mot: 'hiver', seuil: 66, essais: 20 },
   { n: 3, type: 'secret', mot: 'lune', essais: 30 },
   { n: 4, type: 'plus-chaud', bonnes: 8, erreurs: 3, serie: 0 },
-  { n: 5, type: 'seuil', mot: 'lac', seuil: 74, essais: 18 },
+  { n: 5, type: 'seuil', mot: 'lac', seuil: 57, essais: 18 },
   { n: 6, type: 'secret', mot: 'ours', essais: 25 },
   // Monde 2 · Toundra
   { n: 7, type: 'intrus', series: 4, erreurs: 2 },
-  { n: 8, type: 'seuil', mot: 'loup', seuil: 72, essais: 18 },
+  { n: 8, type: 'seuil', mot: 'loup', seuil: 48, essais: 18 },
   { n: 9, type: 'intrus', series: 5, erreurs: 2 },
   { n: 10, type: 'secret', mot: 'renard', essais: 28 },
   { n: 11, type: 'plus-chaud', bonnes: 10, erreurs: 3, serie: 4 },
-  { n: 12, type: 'seuil', mot: 'montagne', seuil: 74, essais: 15 },
+  { n: 12, type: 'seuil', mot: 'montagne', seuil: 56, essais: 15 },
   // Monde 3 · Forêt tiède
   { n: 13, type: 'secret', mot: 'fleur', essais: 28 },
-  { n: 14, type: 'lier', depart: 'plage', arrivee: 'ordinateur', max: 5 },
+  { n: 14, type: 'lier', depart: 'plage', arrivee: 'ordinateur', max: 6 },
   { n: 15, type: 'plus-chaud', bonnes: 10, erreurs: 2, serie: 8 },
   { n: 16, type: 'chrono', mot: 'cuisine', mots: 6, duree: 60 },
   { n: 17, type: 'intrus', series: 6, erreurs: 2 },
   { n: 18, type: 'lier', depart: 'forêt', arrivee: 'téléphone', max: 5 },
   // Monde 4 · Désert
   { n: 19, type: 'chrono', mot: 'chaleur', mots: 7, duree: 60 },
-  { n: 20, type: 'seuil', mot: 'sable', seuil: 72, essais: 15 },
+  { n: 20, type: 'seuil', mot: 'sable', seuil: 59, essais: 15 },
   { n: 21, type: 'secret', mot: 'pyramide', essais: 25 },
-  { n: 22, type: 'lier', depart: 'sable', arrivee: 'horloge', max: 4 },
+  { n: 22, type: 'lier', depart: 'sable', arrivee: 'horloge', max: 5 },
   { n: 23, type: 'points', mot: 'soleil', depart: 1000, cout: 40, minimum: 500 },
   { n: 24, type: 'points', mot: 'désert', depart: 1000, cout: 40, minimum: 500 },
   // Monde 5 · Volcan
   { n: 25, type: 'chrono', mot: 'dragon', mots: 8, duree: 60 },
   { n: 26, type: 'intrus', series: 7, erreurs: 1 },
-  { n: 27, type: 'lier', depart: 'feu', arrivee: 'poème', max: 5 },
+  { n: 27, type: 'lier', depart: 'feu', arrivee: 'poème', max: 4 },
   { n: 28, type: 'plus-chaud', bonnes: 12, erreurs: 2, serie: 12 },
   { n: 29, type: 'points', mot: 'fumée', depart: 1000, cout: 50, minimum: 500 },
   { n: 30, type: 'secret', mot: 'volcan', essais: 25 },

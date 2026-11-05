@@ -21,15 +21,15 @@ type RoundResult = { secret: string; order: string[]; out: string[]; best: Recor
 
 const ROUNDS = brRoundCount(BR_PLAYERS);
 const deg = (t: number | undefined) => (t === undefined ? '—' : `${Math.round(t)}°`);
-/** Couleur de la pastille de température (échelle de la maquette : 81° orange vif … 33° bleu). */
+/** Couleur de la pastille de température (paliers de la maquette 75/65/58/40° ramenés à l'échelle frWac). */
 function heat(t: number | undefined): string {
   if (t === undefined) return '#E2DEEE';
   t = Math.round(t);
   if (t >= 100) return '#FFD23F';
-  if (t >= 75) return '#FF7240';
-  if (t >= 65) return '#FF9A3C';
-  if (t >= 58) return '#FFB35C';
-  if (t >= 40) return '#FFD45C';
+  if (t >= 66) return '#FF7240';
+  if (t >= 51) return '#FF9A3C';
+  if (t >= 41) return '#FFB35C';
+  if (t >= 19) return '#FFD45C';
   return '#9DD8FF';
 }
 const nth = (n: number) => (n === 1 ? '1er' : `${n}e`);

@@ -36,5 +36,6 @@ export function formatTemp(t: number): string {
 
 /** Mise en forme d'une saisie : minuscules, espaces retirés, apostrophes droites. */
 export function normalizeWord(raw: string): string {
-  return raw.trim().toLowerCase().replace(/[’']/g, "'").replace(/\s+/g, ' ');
+  // frWac écrit « coeur », « oeuf » : on ramène les ligatures à deux lettres
+  return raw.trim().toLowerCase().replace(/[’']/g, "'").replace(/œ/g, 'oe').replace(/æ/g, 'ae').replace(/\s+/g, ' ');
 }

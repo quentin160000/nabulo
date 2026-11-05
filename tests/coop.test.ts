@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { rng, temperature } from '../src/game/lexicon';
 import {
-  aiAssociate, aiGuess, aiHint, checkAssociate, checkHint, closeWords, commonSeed, makeSeries, nounish, synchroLabel, synchroScore, variant,
+  SERIE_PLANCHER, SYNCHRO_PAS_MAL, aiAssociate, aiGuess, aiHint, checkAssociate, checkHint, closeWords, commonSeed, makeSeries, nounish, synchroLabel, synchroScore, variant,
 } from '../src/game/coop';
 
 describe('coop · 4 mots + mot-indice', () => {
@@ -13,7 +13,7 @@ describe('coop · 4 mots + mot-indice', () => {
       expect(s.words).toContain(s.secret);
       for (const a of s.words) for (const b of s.words) if (a !== b) {
         expect(variant(a, b)).toBe(false);
-        expect(temperature(a, b)!).toBeGreaterThanOrEqual(25);
+        expect(temperature(a, b)!).toBeGreaterThanOrEqual(SERIE_PLANCHER);
       }
     }
   });
@@ -56,12 +56,13 @@ describe('coop · synchro', () => {
     const w = aiAssociate('montagne', null, ['montagne', 'neige'], r);
     expect(variant(w, 'montagne')).toBe(false);
     expect(variant(w, 'neige')).toBe(false);
-    expect(temperature(w, 'montagne')!).toBeGreaterThan(40);
+    expect(temperature(w, 'montagne')!).toBeGreaterThan(SYNCHRO_PAS_MAL);
   });
   it('le mot suivant est un voisin commun des deux mots joués', () => {
     const n = commonSeed('neige', 'ski', ['montagne']);
     expect(n).not.toBe('montagne');
-    expect(Math.min(temperature(n, 'neige')!, temperature(n, 'ski')!)).toBeGreaterThan(20);
+    // 20° sur l'ancienne échelle fastText
+    expect(Math.min(temperature(n, 'neige')!, temperature(n, 'ski')!)).toBeGreaterThan(5);
   });
   it('refuse le mot affiché ou une de ses formes', () => {
     expect(checkAssociate('Montagnes', 'montagne')).toMatchObject({ ok: false, reason: 'interdit' });

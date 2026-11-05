@@ -8,8 +8,10 @@
 import { known, neighbors, temperature } from './lexicon';
 import { normalizeWord } from './temperature';
 
-export const MIN_LINK = 40;
-export const MAX_LINK = 80;
+export const MIN_LINK = 20;
+export const MAX_LINK = 74;
+/** Lien « chaud » (case rouge du partage). */
+export const HOT_LINK = 44;
 /** Taille du voisinage exploré par le solveur (parmi les mots courants du lexique). */
 const K = 500;
 
@@ -155,11 +157,11 @@ export const pairKey = (a: string, b: string) => `${normalizeWord(a)}>${normaliz
 /** Résultat de partage : couleurs des liens sans dévoiler les mots. */
 export function shareSquares(chain: string[]): string[] {
   const l = links(chain);
-  return chain.map((_, i) => (i === 0 ? '#FFD45C' : i === chain.length - 1 ? '#FFD23F' : l[i - 1] >= 60 ? '#FF9A3C' : '#FFB35C'));
+  return chain.map((_, i) => (i === 0 ? '#FFD45C' : i === chain.length - 1 ? '#FFD23F' : l[i - 1] >= HOT_LINK ? '#FF9A3C' : '#FFB35C'));
 }
 export function shareText(chain: string[], date: Date): string {
   const l = links(chain);
-  const emo = chain.map((_, i) => (i === 0 || i === chain.length - 1 ? '🟨' : l[i - 1] >= 60 ? '🟥' : '🟧')).join('');
+  const emo = chain.map((_, i) => (i === 0 || i === chain.length - 1 ? '🟨' : l[i - 1] >= HOT_LINK ? '🟥' : '🟧')).join('');
   return `Nabulo · Lier · ${shortDate(date)}\n${chain.length - 1} étapes\n${emo}`;
 }
 export function shortDate(d: Date): string {

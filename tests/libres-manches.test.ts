@@ -51,8 +51,8 @@ describe('jeux libres : Contre-la-montre', () => {
     expect(v.ok).toBe(true);
     if (v.ok) expect(essaiChrono('cuisine', 'recette', [v.essai])).toEqual({ ok: false, raison: 'deja' });
   });
-  it('ne compte que les mots à 50 °C ou plus', () => {
-    expect(motsTrouves([{ word: 'a', temperature: 50 }, { word: 'b', temperature: 49 }, { word: 'c', temperature: 78 }])).toBe(2);
+  it('ne compte que les mots au seuil ou plus', () => {
+    expect(motsTrouves([{ word: 'a', temperature: CHRONO_SEUIL }, { word: 'b', temperature: CHRONO_SEUIL - 1 }, { word: 'c', temperature: 78 }])).toBe(2);
     expect(couleurPastille(CHRONO_SEUIL - 1)).toBe('#A9C6F2');
     expect(couleurPastille(81)).toBe('#FF7240');
   });

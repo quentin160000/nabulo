@@ -15,7 +15,8 @@ type Phase = 'salon' | 'regles' | 'jeu' | 'fin';
 const AI_COUNT = 3;
 const RECORD_KEY = 'nabulo:record:relais';
 const deg = (t: number) => `${Math.round(t)}°`;
-const heat = (t: number) => (t >= 75 ? '#FF7240' : t >= 40 ? '#FFB35C' : t >= RELAIS_MIN ? '#FFD45C' : '#9DD8FF');
+/** Couleur d'un lien : paliers de la maquette (75° et 40° sur l'ancienne échelle fastText) ramenés à frWac. */
+const heat = (t: number) => (t >= 66 ? '#FF7240' : t >= 19 ? '#FFB35C' : t >= RELAIS_MIN ? '#FFD45C' : '#9DD8FF');
 
 export default function Relais() {
   const players = useMemo(() => makePlayers(AI_COUNT), []);

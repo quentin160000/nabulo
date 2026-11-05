@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  addRecord, blindAiPick, blindTimeoutWinner, checkBlindGuess, checkChronoWord, chronoAiPick, clock, gaugeSplit, matchOver,
+  CHRONO_SEUIL, addRecord, blindAiPick, blindTimeoutWinner, checkBlindGuess, checkChronoWord, chronoAiPick, clock, gaugeSplit, matchOver,
   pickTarget, roundWinner, sameFamily, secretOk, tally, targets, type BlindGuess,
 } from '../src/game/duel';
 import { rng, temperature } from '../src/game/lexicon';
@@ -29,7 +29,7 @@ describe('duels contre l’IA', () => {
     expect(checkChronoWord('cuisine', 'cuisiner', [{ word: 'cuisiner', temperature: 72 }]).kind).toBe('deja');
   });
 
-  it('manche : plus de mots à 50°+, puis meilleure température', () => {
+  it('manche : plus de mots au seuil, puis meilleure température', () => {
     const w = (t: number, i = 0) => ({ word: 'm' + t + i, temperature: t });
     expect(roundWinner([w(60), w(55)], [w(90)])).toBe('me');
     expect(roundWinner([w(60)], [w(70)])).toBe('opp');
@@ -43,7 +43,7 @@ describe('duels contre l’IA', () => {
       const r = rng(4); let hits = 0;
       for (const t of targets().slice(0, 10)) {
         const used: string[] = [];
-        for (let i = 0; i < 8; i++) { const p = chronoAiPick(t, n, used, r); if (!p) break; used.push(p.word); if (p.temperature >= 50) hits++; }
+        for (let i = 0; i < 8; i++) { const p = chronoAiPick(t, n, used, r); if (!p) break; used.push(p.word); if (p.temperature >= CHRONO_SEUIL) hits++; }
       }
       return hits;
     };

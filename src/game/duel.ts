@@ -18,9 +18,13 @@ export const MANCHES_GAGNANTES = 3;
 /** Durée d'une manche du contre-la-montre, en secondes. */
 export const CHRONO_DUREE = 60;
 /** Seuil de température d'un mot qui compte au contre-la-montre. */
-export const CHRONO_SEUIL = 50;
+export const CHRONO_SEUIL = 32;
 /** Durée d'un duel à l'aveugle, en secondes. */
 export const AVEUGLE_DUREE = 180;
+/** À l'aveugle, sous cette température l'IA change souvent de piste. */
+export const AVEUGLE_FROID = 8;
+/** À l'aveugle, au-dessus de cette température on prévient que l'IA brûle. */
+export const AVEUGLE_ALERTE = 44;
 /** Braises : victoire / partie jouée. */
 export const GAIN_VICTOIRE = 20;
 export const GAIN_DEFAITE = 5;
@@ -91,7 +95,7 @@ export function checkChronoWord(target: string, raw: string, mine: ChronoWord[])
 
 /** Réglages de l'IA : fenêtre de voisins dans laquelle elle pioche, et délai entre deux essais (ms). */
 export const IA = {
-  facile: { from: 5, to: 110, delay: [7000, 11000] as const, blindDelay: [12000, 16000] as const },
+  facile: { from: 5, to: 85, delay: [7000, 11000] as const, blindDelay: [12000, 16000] as const },
   normal: { from: 0, to: 60, delay: [5500, 8500] as const, blindDelay: [8500, 12500] as const },
 } satisfies Record<Niveau, { from: number; to: number; delay: readonly [number, number]; blindDelay: readonly [number, number] }>;
 
@@ -123,7 +127,7 @@ export function chronoAiPick(target: string, niveau: Niveau, used: string[], ran
 
 export const validWords = (ws: ChronoWord[]) => ws.filter(w => w.temperature >= CHRONO_SEUIL);
 
-/** Vainqueur d'une manche : plus de mots à 50°+, puis meilleure température ; null = égalité. */
+/** Vainqueur d'une manche : plus de mots à `CHRONO_SEUIL`°+, puis meilleure température ; null = égalité. */
 export function roundWinner(mine: ChronoWord[], theirs: ChronoWord[]): 'me' | 'opp' | null {
   const a = validWords(mine), b = validWords(theirs);
   if (a.length !== b.length) return a.length > b.length ? 'me' : 'opp';
@@ -170,9 +174,9 @@ export const bestGuess = best;
 export function blindAiPick(secret: string, niveau: Niveau, guesses: BlindGuess[], rand: () => number): string {
   const used = new Set(guesses.map(g => g.word));
   const b = best(guesses);
-  const skill = niveau === 'normal' ? 0.72 : 0.42;
+  const skill = niveau === 'normal' ? 0.72 : 0.3;
   // trop froid : l'IA tente un autre mot courant
-  if (!b || (b.temperature < 25 && rand() < 0.6)) {
+  if (!b || (b.temperature < AVEUGLE_FROID && rand() < 0.6)) {
     for (let i = 0; i < 20; i++) { const w = pickTarget(rand); if (!used.has(w) && w !== secret) return w; }
   }
   const from = b ? b.word : pickTarget(rand);
@@ -216,14 +220,14 @@ export function tally(list: DuelRecord[], jeu?: Jeu): { victoires: number; defai
 
 /** Couleur des pastilles de mots en fin de partie (planches 14 et 16). */
 export function endChipColor(t: number): string {
-  if (t >= 60) return '#FF7A3C';
-  if (t >= 40) return '#FFB35C';
+  if (t >= 44) return '#FF7A3C';
+  if (t >= 19) return '#FFB35C';
   return '#A9C6F2';
 }
 /** Couleur des pastilles de fin de manche (four, frigo, chef…). */
 export function roundChipColor(t: number): string {
-  if (t >= 70) return '#FF9A3C';
-  if (t >= 60) return '#FFB35C';
+  if (t >= 58) return '#FF9A3C';
+  if (t >= 44) return '#FFB35C';
   return '#FFD45C';
 }
 

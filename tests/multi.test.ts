@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { rng, temperature } from '../src/game/lexicon';
 import {
-  bestLink, bluffAiClue, bluffAiVote, bluffOutcome, bluffWordOf, brAiGuess, brEliminate, brRoundCount, brSimulateRest,
+  BLUFF_FAUX_MIN, bestLink, bluffAiClue, bluffAiVote, bluffOutcome, bluffWordOf, brAiGuess, brEliminate, brRoundCount, brSimulateRest,
   checkBluffClue, checkRelais, clueCandidates, makePlayers, newBluffRound, rankByScore, relaisAiWord, sameRoot, secretWords,
 } from '../src/game/multi';
 
@@ -28,7 +28,7 @@ describe('le bluff', () => {
   it('donne un mot proche à l’imposteur et le même mot aux autres', () => {
     const r = newBluffRound(players, rng(1), 0);
     expect(r.fake).not.toBe(r.secret);
-    expect(temperature(r.secret, r.fake)!).toBeGreaterThan(40);
+    expect(temperature(r.secret, r.fake)!).toBeGreaterThanOrEqual(BLUFF_FAUX_MIN);
     expect(players.map(p => p.id)).toContain(r.imposter);
     const others = players.filter(p => p.id !== r.imposter);
     expect(new Set(others.map(p => bluffWordOf(r, p.id)))).toEqual(new Set([r.secret]));
@@ -43,7 +43,8 @@ describe('le bluff', () => {
     for (const p of players.slice(1)) {
       const c = bluffAiClue(r, p.id, rand);
       expect(sameRoot(c, bluffWordOf(r, p.id))).toBe(false);
-      expect(temperature(c, bluffWordOf(r, p.id))!).toBeGreaterThan(30);
+      // 30° sur l'ancienne échelle fastText
+      expect(temperature(c, bluffWordOf(r, p.id))!).toBeGreaterThan(12);
       r.clues[p.id] = c;
     }
   });

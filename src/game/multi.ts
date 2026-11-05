@@ -69,6 +69,10 @@ export function clueCandidates(word: string, k = 40, avoid: readonly string[] = 
 /* =========================== Le bluff · l'imposteur =========================== */
 
 export const BLUFF_ROUNDS = 6;
+/** Le mot de l'imposteur est à BLUFF_FAUX_MIN…BLUFF_FAUX_MAX °C du mot secret. */
+export const BLUFF_FAUX_MIN = 24, BLUFF_FAUX_MAX = 77;
+/** Hasard ajouté au score de chaque joueur quand une IA vote (en °C). */
+export const BLUFF_HASARD = 14;
 export type BluffRound = {
   secret: string; fake: string; imposter: string; order: string[];
   clues: Record<string, string>; votes: Record<string, string>;
@@ -80,7 +84,7 @@ export const bluffWordOf = (r: BluffRound, id: string) => (id === r.imposter ? r
 export function newBluffRound(players: Player[], rand: Rand, index: number, used: readonly string[] = []): BluffRound {
   for (let tries = 0; ; tries++) {
     const secret = pickWord(rand, used);
-    const close = clueCandidates(secret, 30).filter(n => n.temperature >= 45 && n.temperature <= 82).slice(0, 6);
+    const close = clueCandidates(secret, 30).filter(n => n.temperature >= BLUFF_FAUX_MIN && n.temperature <= BLUFF_FAUX_MAX).slice(0, 6);
     if (!close.length && tries < 20) continue;
     const fake = close.length ? pickIn(rand, close).word : pickWord(rand, [secret]);
     // toi (en tête de liste) parles en dernier à la première manche, puis l'ordre tourne
@@ -124,7 +128,7 @@ export function bluffAiVote(r: BluffRound, players: Player[], voter: string, ran
     if (!clue) continue;
     const rest = players.filter(q => q.id !== p.id && r.clues[q.id]).map(q => temp0(clue, r.clues[q.id]));
     const mean = rest.length ? rest.reduce((s, t) => s + t, 0) / rest.length : 0;
-    const score = temp0(clue, own) + mean + rand() * 14;
+    const score = temp0(clue, own) + mean + rand() * BLUFF_HASARD;
     if (score < bestScore) { bestScore = score; best = p.id; }
   }
   return best;
@@ -196,13 +200,13 @@ export function brSimulateRest(alive: readonly { id: string; skill: number }[], 
 
 /* =========================== Le relais =========================== */
 
-export const RELAIS_MIN = 30;
+export const RELAIS_MIN = 12;
 export const RELAIS_HEARTS = 3;
 export type Link = { by: string; word: string; temperature: number | null };
 
 export type RelaisCheck = { ok: true; word: string; temperature: number } | { ok: false; reason: 'vide' | 'inconnu' | 'deja' } | { ok: false; reason: 'froid'; word: string; temperature: number };
 
-/** Un maillon est valable s'il est connu, nouveau et à 30° ou plus du dernier mot (sinon : un cœur perdu). */
+/** Un maillon est valable s'il est connu, nouveau et à `RELAIS_MIN`° ou plus du dernier mot (sinon : un cœur perdu). */
 export function checkRelais(chain: readonly Link[], raw: string): RelaisCheck {
   const w = normalizeWord(raw);
   if (!w) return { ok: false, reason: 'vide' };

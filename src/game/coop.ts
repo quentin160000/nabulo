@@ -66,14 +66,17 @@ const shuffle = <T,>(xs: T[], rand: () => number) => {
 
 export type Series = { words: string[]; secret: string };
 
+/** Température minimale entre deux des 4 mots, et plancher si la série tarde à se former. */
+export const SERIE_MIN = 15, SERIE_PLANCHER = 8;
+
 /** Tire 4 mots très proches les uns des autres (aucun n'est une variante d'un autre) et le mot visé. */
-export function makeSeries(rand: () => number, minTemp = 35): Series {
+export function makeSeries(rand: () => number, minTemp = SERIE_MIN): Series {
   for (let attempt = 0; ; attempt++) {
     const seed = seedWord(rand);
     const group = [seed];
     for (const n of neighbors(seed, 40)) {
       if (!nounish(n.word, /[sx]$/.test(seed)) || group.some(g => variant(g, n.word))) continue;
-      if (group.every(g => (temperature(g, n.word) ?? 0) >= (attempt > 30 ? minTemp - 10 : minTemp))) group.push(n.word);
+      if (group.every(g => (temperature(g, n.word) ?? 0) >= (attempt > 30 ? Math.min(minTemp, SERIE_PLANCHER) : minTemp))) group.push(n.word);
       if (group.length === 4) break;
     }
     if (group.length < 4) continue;
@@ -139,11 +142,14 @@ export function synchroScore(a: string, b: string): number {
   return Math.max(0, Math.round(temperature(a, b) ?? 0));
 }
 
+/** Paliers des messages de Synchro (°C entre les deux mots). */
+export const SYNCHRO_BIEN = 44, SYNCHRO_PAS_MAL = 19, SYNCHRO_LOIN = 5;
+
 export function synchroLabel(score: number): string {
   if (score >= 100) return 'Même mot !';
-  if (score >= 60) return 'Bien synchro !';
-  if (score >= 40) return 'Pas mal !';
-  if (score >= 20) return 'Un peu loin…';
+  if (score >= SYNCHRO_BIEN) return 'Bien synchro !';
+  if (score >= SYNCHRO_PAS_MAL) return 'Pas mal !';
+  if (score >= SYNCHRO_LOIN) return 'Un peu loin…';
   return 'Pas synchro…';
 }
 
