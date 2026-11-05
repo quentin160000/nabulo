@@ -15,7 +15,7 @@ import { Button } from '@/ui/Button';
 import { AluBackground } from '@/ui/backgrounds';
 import { Icon, IconTile, images } from '@/ui/bits';
 import { Mascot } from '@/ui/Mascot';
-import { goTab } from '@/ui/onglets-bits';
+import { Glyph, goTab } from '@/ui/onglets-bits';
 import { TAB_BAR_SPACE } from '@/ui/TabBar';
 import { T } from '@/ui/Text';
 
@@ -90,14 +90,20 @@ function Home() {
                 </View>
                 {solved ? <Mascot mood="trouve" size={86} /> : <Image source={images.nabulo} style={{ width: 86, height: 86 }} contentFit="contain" accessibilityLabel="Nabulo" />}
               </View>
-              <View style={{ flexDirection: 'row', marginTop: 12 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 }}>
                 {solved ? (
-                  <View style={{ paddingHorizontal: 12, paddingVertical: 5, borderRadius: 13, borderWidth: 2, borderColor: '#D9D1F2', backgroundColor: '#FFFFFF' }}>
-                    <T size={14} weight={700} color={ink}>Prochain mot dans {untilMidnight()}</T>
+                  <View style={{ flexShrink: 1, paddingHorizontal: 12, paddingVertical: 5, borderRadius: 13, borderWidth: 2, borderColor: '#D9D1F2', backgroundColor: '#FFFFFF' }}>
+                    <T size={14} weight={700} color={ink} numberOfLines={1}>Prochain mot dans {untilMidnight()}</T>
                   </View>
                 ) : (
                   <Button label={playing ? 'Reprendre' : 'Jouer'} height={54} color={ink} style={{ flex: 1 }} onPress={() => router.push('/mot-du-jour')} icon={<Icon name="play" size={22} />} />
                 )}
+                {/* lien discret vers le calendrier des jours trouvés */}
+                <Pressable accessibilityRole="button" accessibilityLabel="Calendrier du Jeu du jour" onPress={() => router.push('/calendrier')} hitSlop={4}
+                  style={{ marginLeft: solved ? 'auto' : 0, height: 44, paddingHorizontal: 10, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.16)', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <Glyph name="calendar" size={20} />
+                  {solved && <T size={14} weight={700} color="#FFFFFF">Calendrier</T>}
+                </Pressable>
               </View>
             </Bubble>
           </Pressable>

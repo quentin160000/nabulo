@@ -23,6 +23,8 @@ import { T } from '@/ui/Text';
 import { Toast, useToast } from '@/ui/Toast';
 import { GameBg, Section, Sheet, useKeyboardVisible, keepFocus } from '@/ui/game';
 import { animationsReduites } from '@/game/reglages';
+import { apercuPaliers, paliersAPayer, payeAujourdhui, type Paiement } from '@/game/serie';
+import { CalendrierBouton } from '@/ui/calendrier-bits';
 
 const INK = gameInk;
 const SH3 = { textShadowColor: INK, textShadowOffset: { width: 0, height: 3 }, textShadowRadius: 0 } as const;
@@ -60,6 +62,7 @@ function Regles({ day, onStart }: { day: number; onStart: () => void }) {
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           <HeaderButton kind="close" label="Retour à l’accueil" onPress={() => router.back()} />
           <T size={24} weight={700} outline color="#FFFFFF" style={{ flex: 1, textShadowColor: INK }}>Nabulo</T>
+          <CalendrierBouton />
         </View>
         <ScrollView style={{ flex: 1, marginHorizontal: -16 }} contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }} showsVerticalScrollIndicator={false}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, marginTop: 6 }}>
@@ -141,6 +144,7 @@ function EnJeu({ daily }: { daily: Daily }) {
               <T size={24} weight={700} outline style={{ lineHeight: 25, textShadowColor: INK }}>Nabulo</T>
               <T size={14} weight={600} outline style={{ textShadowColor: INK }}>{state.guesses.length} essai{state.guesses.length > 1 ? 's' : ''}</T>
             </View>
+            <CalendrierBouton />
             <CoinPill value={braises} flash={flash} onPress={() => router.push('/boutique')} />
           </View>
 
@@ -354,9 +358,19 @@ function Victoire({ daily }: { daily: Daily }) {
   const [a] = useState(() => ({
     pop: new Animated.Value(fresh ? 0 : 1), rise: new Animated.Value(fresh ? 0 : 1), gain: new Animated.Value(fresh ? 0 : 1),
     count: new Animated.Value(0), solde: new Animated.Value(0), list: new Animated.Value(fresh ? 0 : 1), bump: new Animated.Value(0),
-    fly: Array.from({ length: 8 }, () => new Animated.Value(0)), scroll: new Animated.Value(0),
+    fly: Array.from({ length: 8 }, () => new Animated.Value(0)), scroll: new Animated.Value(0), serie: new Animated.Value(fresh ? 0 : 1),
   }));
   const [listH, setListH] = useState(0);
+  // bonus de série (tous les 3 jours d'affilée) : annoncé pendant l'animation, versé et enregistré à la fin
+  const [serie, setSerie] = useState<Paiement | null>(null);
+  const bonusRef = useRef(0);
+  useEffect(() => {
+    let alive = true;
+    (fresh ? apercuPaliers(state.day) : payeAujourdhui(state.day))
+      .then(p => { if (alive) { bonusRef.current = fresh ? p.bonus : 0; setSerie(p); } }).catch(() => {});
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => { engine.closest(state.lang, state.day, 24, state.secret ?? undefined).then(setClosest).catch(() => {}); }, [state.lang, state.day, state.secret]);
   useEffect(() => {
@@ -365,7 +379,7 @@ function Victoire({ daily }: { daily: Daily }) {
     const dur = Math.min(2600, Math.max(800, gain * 50));
     const start = 1300;
     const idC = a.count.addListener(({ value }) => setShownGain(Math.round(value * gain)));
-    const idS = a.solde.addListener(({ value }) => setShownCoins(Math.round(oldCoins + value * gain)));
+    const idS = a.solde.addListener(({ value }) => setShownCoins(Math.round(oldCoins + value * (gain + bonusRef.current))));
     const springy = Easing.out(Easing.back(1.6));
     Animated.parallel([
       Animated.timing(a.pop, { toValue: 1, duration: 600, delay: 100, easing: springy, useNativeDriver: true }),
@@ -375,8 +389,12 @@ function Victoire({ daily }: { daily: Daily }) {
       Animated.timing(a.solde, { toValue: 1, duration: dur, delay: start + 500, easing: Easing.linear, useNativeDriver: false }),
       ...a.fly.map((f, i) => Animated.timing(f, { toValue: 1, duration: 900, delay: start + (i * dur) / 8, easing: Easing.bezier(0.3, 0.6, 0.4, 1), useNativeDriver: true })),
       Animated.sequence([Animated.delay(start + 500 + dur), Animated.timing(a.bump, { toValue: 1, duration: 175, useNativeDriver: true }), Animated.timing(a.bump, { toValue: 0, duration: 175, useNativeDriver: true })]),
+      Animated.timing(a.serie, { toValue: 1, duration: 500, delay: start + dur, easing: springy, useNativeDriver: true }),
       Animated.timing(a.list, { toValue: 1, duration: 500, delay: start + dur + 600, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-    ]).start(() => { earn(gain); claimReward(); });
+    ]).start(() => {
+      paliersAPayer(state.day).catch(() => ({ bonus: 0 }) as Paiement)
+        .then(p => { earn(gain + p.bonus); claimReward(); });
+    });
     return () => { a.count.removeListener(idC); a.solde.removeListener(idS); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -457,6 +475,13 @@ function Victoire({ daily }: { daily: Daily }) {
             <T size={18} weight={700} color="#FFFFFF" style={{ marginTop: 4, lineHeight: 18 }}>brez gagnées</T>
           </View>
         </Animated.View>
+
+        {serie && serie.bonus > 0 && (
+          <Animated.View accessibilityRole="text" accessibilityLabel={`plus ${serie.bonus} brez, série de ${serie.serie} jours`}
+            style={[{ alignSelf: 'center', marginTop: -4, paddingVertical: 5, paddingHorizontal: 14, borderRadius: 16, backgroundColor: '#FFD45C' }, rise(a.serie)]}>
+            <T size={17} weight={700} color="#2B2150">+ {serie.bonus} brez · série de {serie.serie} jours !</T>
+          </Animated.View>
+        )}
 
         <Animated.View style={[{ flex: 1, minHeight: 0, gap: 6 }, rise(a.list)]}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 4 }}>
