@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { known, temperature } from '../src/game/lexicon';
-import { canClose, closeWords, hintAfter, judge, links, MAX_LINK, MIN_LINK, shareSquares, shareText, solve, validLink, variant } from '../src/game/lier';
+import { known, rng, temperature } from '../src/game/lexicon';
+import { canClose, closeWords, hasLevel, hintAfter, judge, LEVEL_MIN, links, maillons, maillonsLabel, MAX_LINK, MIN_LINK, pairKey, randomPair, shareSquares, shareText, solve, validLink, variant } from '../src/game/lier';
 import { DIFFICILE, DIFFICILE_MAX, FACILE, MOYEN, dailyPair, pairsFor } from '../src/game/lier-paires';
 
 const isChain = (c: string[]) => c.slice(1, -1).every((w, i) => validLink(c[i], w)) && temperature(c[c.length - 2], c[c.length - 1])! >= MIN_LINK;
@@ -89,7 +89,34 @@ describe('Lier : paires', () => {
     const c = ['plage', 'soleil', 'écran', 'clavier', 'ordinateur'];
     expect(shareSquares(c)).toHaveLength(5);
     const s = shareText(c, new Date(2026, 9, 31));
-    expect(s).toContain('31 oct.'); expect(s).toContain('4 étapes'); expect(s).not.toContain('soleil');
+    expect(s).toContain('31 oct.'); expect(s).toContain('J’ai relié « plage » à « ordinateur » en 3 maillons sur Nabulo 🔗 Tu fais mieux ?');
+    expect(s).not.toContain('soleil'); expect(s).not.toContain('écran'); expect(s).not.toContain('clavier');
+    expect(shareText(c, new Date(2026, 9, 31), 'difficile')).toContain('Lier · Difficile');
+    expect(shareText(['plage', 'soleil', 'ordinateur'], new Date())).toContain('en 1 maillon sur');
     expect(links(c)).toHaveLength(4);
   });
+  it('un maillon = un mot ajouté entre le départ et l’arrivée', () => {
+    expect(maillons(['a', 'b'])).toBe(0);
+    expect(maillons(['plage', 'soleil', 'écran', 'ordinateur'])).toBe(2);
+    expect(maillonsLabel(1)).toBe('1 maillon'); expect(maillonsLabel(2)).toBe('2 maillons');
+  });
+});
+
+describe('Lier : paires tirées au hasard', () => {
+  for (const level of ['facile', 'moyen', 'difficile'] as const) {
+    it(`${level} : paires différentes à chaque partie, du bon niveau et solubles`, () => {
+      const r = rng(level.length * 31 + 7), recents: string[] = [], seen = new Set<string>();
+      for (let i = 0; i < 6; i++) {
+        const [a, b] = randomPair(level, r, recents);
+        const key = pairKey(a, b);
+        expect(seen.has(key), key).toBe(false); seen.add(key); recents.unshift(key);
+        expect(hasLevel(a, b, level), key).toBe(true);
+        expect(temperature(a, b)!, key).toBeLessThan(MIN_LINK);
+        const c = solve(a, b, [], LEVEL_MIN[level] + 1)!;
+        expect(isChain(c), key).toBe(true);
+        expect(maillons(c), key).toBe(LEVEL_MIN[level]);
+        if (LEVEL_MIN[level] > 1) expect(solve(a, b, [], LEVEL_MIN[level]), key).toBeNull();
+      }
+    }, 60000);
+  }
 });

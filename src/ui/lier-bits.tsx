@@ -15,17 +15,19 @@ import type { ReactNode } from 'react';
 
 const INK = gameInk;
 export const SHADOW = { textShadowColor: '#2B2150', textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 0 } as const;
-const L = { strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, strokeWidth: 2.8, fill: 'none' };
+const LINE = { strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, strokeWidth: 2.8, fill: 'none' };
 
 type IconName = 'arrow' | 'home' | 'refresh' | 'share' | 'bulb' | 'undo' | 'check';
-export function LierIcon({ name, size = 20, color = INK }: { name: IconName; size?: number; color?: string }) {
+export function LierIcon({ name, size = 20, color = INK, strokeWidth }: { name: IconName; size?: number; color?: string; strokeWidth?: number }) {
+  // flèche retour un peu plus épaisse par défaut : elle doit se lire d'un coup d'œil
+  const L = { ...LINE, strokeWidth: strokeWidth ?? (name === 'undo' ? 3.2 : LINE.strokeWidth) };
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       {name === 'arrow' && <><Path d="M5 12 H19" stroke={color} {...L} /><Path d="M13 6 L19 12 L13 18" stroke={color} {...L} /></>}
       {name === 'home' && <Path d="M4 11 L12 4 L20 11 V20 H14 V14 H10 V20 H4 Z" stroke={color} {...L} />}
       {name === 'refresh' && <><Path d="M20 12 A8 8 0 1 1 17.7 6.3" stroke={color} {...L} /><Path d="M20 4 V9 H15" stroke={color} {...L} /></>}
       {name === 'share' && <><Path d="M12 15 V4" stroke={color} {...L} /><Path d="M7 9 L12 4 L17 9" stroke={color} {...L} /><Path d="M5 14 V20 H19 V14" stroke={color} {...L} /></>}
-      {name === 'undo' && <><Path d="M9 14 L4 9 L9 4" stroke={color} {...L} /><Path d="M4 9 H14 A6 6 0 0 1 14 21 H10" stroke={color} {...L} /></>}
+      {name === 'undo' && <><Path d="M9 14.5 L3.5 9 L9 3.5" stroke={color} {...L} /><Path d="M4 9 H14 A6 6 0 0 1 14 21 H9" stroke={color} {...L} /></>}
       {name === 'check' && <Path d="M5 12.5 L10 17.5 L19 7" stroke={color} {...L} />}
       {name === 'bulb' && <><Path d="M12 2.5a6.5 6.5 0 0 0-3.9 11.7c.7.5 1.1 1.3 1.1 2.1V17h5.6v-.7c0-.8.4-1.6 1.1-2.1A6.5 6.5 0 0 0 12 2.5z" fill="#FFD45C" stroke={color} strokeWidth={2.2} strokeLinejoin="round" /><Path d="M9.5 20h5M10.5 22.5h3" stroke={color} strokeWidth={2.2} strokeLinecap="round" /></>}
     </Svg>
@@ -69,11 +71,11 @@ export function Header({ title, onClose, right, closeLabel = 'Fermer' }: { title
   );
 }
 
-/** Pastille jaune « Étapes 2 ». */
+/** Pastille jaune « Maillons 2 » : mots ajoutés entre le départ et l'arrivée. */
 export function StepsPill({ n }: { n: number }) {
   return (
     <Bubble bg="#FFD45C" radius={15} border={2} inset={5} style={{ height: 30, paddingHorizontal: 10, justifyContent: 'center' }}>
-      <T size={14} weight={700} color={INK}>Étapes {n}</T>
+      <T size={14} weight={700} color={INK}>Maillons {n}</T>
     </Bubble>
   );
 }
@@ -154,13 +156,18 @@ export function ChainNode({ word, look, t }: { word: string; look: NodeLook; t?:
   );
 }
 
-/** Lien entre deux mots : barre de 10 px à la couleur de la température, ou pointillés vers l'arrivée. */
+/**
+ * Lien entre deux mots : barre de 10 px à la couleur de la température, ou pointillés vers l'arrivée.
+ * Le lien occupe exactement l'espace entre les deux bulles (h − 6 px) : il s'arrête pile à leur bord, sans passer
+ * dessous (sinon on le verrait à travers la bulle translucide de l'arrivée).
+ */
 export function Link({ t, h = 24 }: { t?: number; h?: number }) {
+  const gap = h - 6;
   return (
-    <View style={{ alignSelf: 'stretch', height: h, marginVertical: -3, alignItems: 'center', justifyContent: 'center' }}>
+    <View style={{ alignSelf: 'stretch', height: gap, alignItems: 'center' }}>
       {t === undefined
-        ? <View style={{ width: 0, height: 24, borderLeftWidth: 2, borderStyle: 'dotted', borderColor: 'rgba(255,255,255,0.85)' }} />
-        : <View style={{ width: 10, height: h + 6, backgroundColor: tempColor(t) }} />}
+        ? <View style={{ width: 0, height: gap, borderLeftWidth: 2, borderStyle: 'dotted', borderColor: 'rgba(255,255,255,0.85)' }} />
+        : <View style={{ width: 10, height: gap, backgroundColor: tempColor(t) }} />}
     </View>
   );
 }

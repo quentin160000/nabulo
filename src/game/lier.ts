@@ -3,9 +3,11 @@
  * Chaque mot doit être à MIN_LINK° ou plus du précédent (sinon « trop loin ») mais pas un quasi-doublon
  * (MAX_LINK° ou plus, ou simple variante comme un pluriel : « trop proche »).
  * La chaîne est finie dès que le dernier mot est à MIN_LINK° ou plus du mot d'arrivée.
- * Étapes = nombre de liens (départ → … → arrivée) ; moins il y en a, mieux c'est.
+ * Score = nombre de **maillons** : les mots que le joueur a ajoutés entre le départ et l'arrivée (ce que montre la
+ * pastille en jeu) ; moins il y en a, mieux c'est. Une chaîne de n maillons a n + 1 liens.
  */
 import { known, neighbors, temperature } from './lexicon';
+import { DIFFICILE, DIFFICILE_MAX, FACILE, MOYEN, type Level, type Pair } from './lier-paires';
 import { normalizeWord } from './temperature';
 
 export const MIN_LINK = 20;
@@ -181,12 +183,97 @@ export function shareSquares(chain: string[]): string[] {
   const l = links(chain);
   return chain.map((_, i) => (i === 0 ? '#FFD45C' : i === chain.length - 1 ? '#FFD23F' : l[i - 1] >= HOT_LINK ? '#FF9A3C' : '#FFB35C'));
 }
-export function shareText(chain: string[], date: Date): string {
+/** « 3 maillons », « 1 maillon ». */
+export const maillonsLabel = (n: number) => `${n} maillon${n > 1 ? 's' : ''}`;
+/** Maillons d'une chaîne complète (départ … arrivée) : les mots posés entre les deux. */
+export const maillons = (chain: string[]) => Math.max(0, chain.length - 2);
+
+export const LEVEL_LABEL: Record<Level, string> = { facile: 'Facile', moyen: 'Moyen', difficile: 'Difficile' };
+
+/**
+ * Texte partagé : la performance et une invitation, sans dévoiler les mots de la chaîne (seulement les couleurs des
+ * liens). Le départ et l'arrivée sont donnés : c'est le défi lui-même.
+ */
+export function shareText(chain: string[], date: Date, level: Level | 'defi' = 'defi'): string {
   const l = links(chain);
   const emo = chain.map((_, i) => (i === 0 || i === chain.length - 1 ? '🟨' : l[i - 1] >= HOT_LINK ? '🟥' : '🟧')).join('');
-  return `Nabulo · Lier · ${shortDate(date)}\n${chain.length - 1} étapes\n${emo}`;
+  const where = level === 'defi' ? `Défi du jour · ${shortDate(date)}` : `Lier · ${LEVEL_LABEL[level]}`;
+  return `J’ai relié « ${chain[0]} » à « ${chain[chain.length - 1]} » en ${maillonsLabel(maillons(chain))} sur Nabulo 🔗 Tu fais mieux ?\n${where}\n${emo}`;
 }
 export function shortDate(d: Date): string {
   const m = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'][d.getMonth()];
   return `${d.getDate()} ${m}`;
+}
+
+/* ---------- Paires tirées au hasard selon la difficulté ---------- */
+
+/**
+ * Noms courants et concrets dont on tire les paires (complétés par les mots des paires de lier-paires.ts).
+ * Les mots inconnus du lexique ou non jouables sont écartés.
+ */
+const POOL = `chat chien cheval vache loup lion ours oiseau poisson serpent abeille souris lapin cochon mouton singe tigre éléphant
+baleine requin aigle pomme poire citron orange tomate fraise banane carotte pain fromage beurre lait sucre sel miel chocolat
+gâteau café thé vin bière soupe riz maison école église château prison hôpital musée gare usine ferme marché boulangerie
+cuisine chambre jardin garage pont tour mur porte fenêtre toit escalier voiture vélo moto bus train avion bateau camion métro
+fusée taxi tracteur soleil lune étoile nuage pluie neige vent orage mer plage montagne forêt rivière lac île désert volcan
+océan ciel terre sable glace feu livre journal lettre crayon stylo papier cahier piano guitare violon tambour trompette
+chanson film théâtre danse peinture photo radio télévision téléphone ordinateur écran internet clavier robot roi reine prince
+princesse soldat médecin docteur juge police pompier boulanger professeur enfant mère père bébé ami voisin épée bouclier
+couronne clé miroir horloge bougie lampe chaise table lit armoire couteau fourchette assiette verre bouteille sac chapeau
+chaussure robe manteau bijou bague football tennis sport ballon jeu course vacances voyage fête anniversaire mariage guerre
+paix argent loi travail hiver été printemps automne nuit matin arbre fleur rose herbe feuille racine graine bois pierre fer
+or diamant charbon`;
+
+let pool: string[] | null = null;
+export function pairPool(): string[] {
+  if (pool) return pool;
+  const set = new Set(POOL.split(/\s+/).filter(Boolean));
+  for (const [a, b] of [...FACILE, ...MOYEN, ...DIFFICILE]) { set.add(a); set.add(b); }
+  pool = [...set].filter(w => known(w) && usable(normalizeWord(w)));
+  return pool;
+}
+
+/**
+ * Difficulté d'une paire, d'après le plus court chemin trouvé par le solveur et la distance entre les deux mots.
+ * Sur ce lexique, deux noms courants se relient presque toujours en 1 ou 2 maillons : la longueur seule ne suffit pas,
+ * on la croise avec la température départ → arrivée (mêmes critères que les paires de lier-paires.ts) :
+ * - facile : 1 maillon suffit, mots assez proches (de 6° à MIN_LINK°) ;
+ * - moyen : 2 maillons au minimum, mots éloignés (de DIFFICILE_MAX à 10°) ;
+ * - difficile : 2 maillons au minimum, mots très éloignés (sous DIFFICILE_MAX).
+ * Le minimum de maillons est le même pour toutes les paires d'un niveau : les records par niveau restent comparables.
+ */
+export const LEVEL_MIN: Record<Level, number> = { facile: 1, moyen: 2, difficile: 2 };
+const TEMP_BAND: Record<Level, [number, number]> = { facile: [6, MIN_LINK], moyen: [DIFFICILE_MAX, 10], difficile: [-100, DIFFICILE_MAX] };
+/** Nombre maximal d'appels au solveur par tirage (≈ 10 à 50 ms chacun). */
+const SOLVE_BUDGET = 40;
+
+/** La paire a-t-elle exactement ce niveau ? */
+export function hasLevel(a: string, b: string, level: Level): boolean {
+  const [lo, hi] = TEMP_BAND[level], x = t(a, b);
+  if (x < lo || x >= hi || variant(a, b)) return false;
+  const n = LEVEL_MIN[level];
+  const c = solve(a, b, [], n + 1);
+  return !!c && c.length === n + 2;
+}
+
+/**
+ * Nouvelle paire aléatoire du niveau demandé, différente de celles de `recent` (clés pairKey).
+ * Préfiltre par température (les mots proches se lient vite, les mots éloignés demandent plus de maillons)
+ * pour limiter les appels au solveur ; `fallback` sert si rien n'est trouvé dans le budget d'essais.
+ */
+export function randomPair(level: Level, rand: () => number, recent: readonly string[] = [], fallback: readonly Pair[] = [], tries = 400): Pair {
+  const words = pairPool();
+  const [lo, hi] = TEMP_BAND[level];
+  let solved = 0;
+  for (let i = 0; i < tries && solved < SOLVE_BUDGET; i++) {
+    const a = words[Math.floor(rand() * words.length)], b = words[Math.floor(rand() * words.length)];
+    if (a === b || recent.includes(pairKey(a, b))) continue;
+    const x = t(a, b);
+    if (x < lo || x >= hi) continue;
+    solved++;
+    if (hasLevel(a, b, level)) return [a, b];
+  }
+  const fresh = fallback.filter(p => !recent.includes(pairKey(p[0], p[1])));
+  const list = fresh.length ? fresh : fallback;
+  return list[Math.floor(rand() * list.length)] ?? ['violon', 'île'];
 }

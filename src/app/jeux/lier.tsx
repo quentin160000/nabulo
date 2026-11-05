@@ -5,8 +5,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, Share, TextInput, View, useWindowDimensions, type ScrollViewInstance, type TextInputInstance } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { dayNumberFrom } from '@/game/engine/types';
-import { MIN_LINK, canClose, hintAfter, judge, links, pairKey, shareSquares, shareText, shortDate, solve, towards, type Verdict } from '@/game/lier';
-import { dailyPair, pairsFor, type Level, type Pair } from '@/game/lier-paires';
+import { LEVEL_LABEL, MIN_LINK, canClose, hintAfter, judge, links, maillons, maillonsLabel, pairKey, randomPair, shareSquares, shareText, shortDate, solve, towards, type Verdict } from '@/game/lier';
+import { DIFFICILE, FACILE, MOYEN, dailyPair, type Level, type Pair } from '@/game/lier-paires';
 import { HINT_COST } from '@/game/rules';
 import { load, save } from '@/game/storage';
 import { normalizeWord } from '@/game/temperature';
@@ -18,23 +18,45 @@ import { Coin, Icon, images } from '@/ui/bits';
 import { Confetti } from '@/ui/Confetti';
 import { GameBg, Sheet, keepFocus } from '@/ui/game';
 import { KAV_BEHAVIOR, useMargeBasse } from '@/ui/retours-jeux-clavier';
-import { BigButton, Chain, Header, SHADOW, StepsPill, Towards } from '@/ui/lier-bits';
+import { BigButton, Chain, Header, LierIcon, SHADOW, StepsPill, Towards } from '@/ui/lier-bits';
 import { Mascot } from '@/ui/Mascot';
 import { T } from '@/ui/Text';
 import { Toast, useToast } from '@/ui/Toast';
 
 const INK = gameInk;
-const K_RECORD = 'nabulo:record:lier';
+/** Anciens records (par paire, en liens), repris une fois dans K_RECORDS. */
+const K_RECORD_V1 = 'nabulo:record:lier';
+/**
+ * Records en maillons : `defi:<départ>><arrivée>` pour le défi du jour (même paire pour tous ce jour-là),
+ * `facile` / `moyen` / `difficile` pour les paires tirées au hasard (qui ne reviennent presque jamais : un record par
+ * paire serait toujours « premier record » ; toutes les paires d'un niveau ont le même minimum de maillons).
+ */
+const K_RECORDS = 'nabulo:lier:records';
+const K_RECENTS = 'nabulo:lier:recents';
 const K_ENCOURS = 'nabulo:encours:lier';
 const K_PARTIE = 'nabulo:lier:partie';
 
-type Game = { start: string; target: string; mids: string[]; defi: boolean; day: number };
-type Done = { chain: string[]; prevRecord: number | null; defi: boolean; best: string[] | null | undefined };
-type Phase = 'charge' | 'regles' | 'choix' | 'jeu' | 'fini' | 'resultat' | 'comparaison' | 'partage' | 'abandon';
+type Mode = Level | 'defi';
+type Game = { start: string; target: string; mids: string[]; level: Mode; day: number };
+type Done = { chain: string[]; prevRecord: number | null; level: Mode; best: string[] | null | undefined };
+type Phase = 'charge' | 'regles' | 'choix' | 'tirage' | 'jeu' | 'fini' | 'resultat' | 'comparaison' | 'partage' | 'abandon';
 type Records = Record<string, number>;
 type Feedback = Verdict | { kind: 'indice'; word: string } | null;
 
 const plural = (n: number, w: string) => `${n} ${w}${n > 1 ? 's' : ''}`;
+const recordKey = (level: Mode, start: string, target: string) => (level === 'defi' ? `defi:${pairKey(start, target)}` : level);
+const FALLBACK: Record<Level, Pair[]> = { facile: FACILE, moyen: MOYEN, difficile: DIFFICILE };
+
+/** Records : reprend une fois les anciens (par paire, comptés en liens = maillons + 1). */
+async function loadRecords(): Promise<Records> {
+  const cur = await load<Records | null>(K_RECORDS, null);
+  if (cur) return cur;
+  const old = await load<Records>(K_RECORD_V1, {});
+  const next: Records = {};
+  for (const [k, v] of Object.entries(old)) if (typeof v === 'number' && k.includes('>')) next[`defi:${k}`] = Math.max(0, v - 1);
+  save(K_RECORDS, next);
+  return next;
+}
 const leave = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
 export default function Lier() {
@@ -46,49 +68,63 @@ export default function Lier() {
   const [done, setDone] = useState<Done | null>(null);
   const [solution, setSolution] = useState<string[] | null>(null);
   const [records, setRecords] = useState<Records>({});
-  const [round, setRound] = useState(0);
+  const [recents, setRecents] = useState<string[]>([]);
   const [shareFrom, setShareFrom] = useState<Phase>('comparaison');
 
   useEffect(() => {
     let alive = true;
-    Promise.all([load<Records>(K_RECORD, {}), load<Game | null>(K_PARTIE, null)]).then(([r, g]) => {
+    type Saved = Partial<Game> & { defi?: boolean };
+    Promise.all([loadRecords(), load<string[]>(K_RECENTS, []), load<Saved | null>(K_PARTIE, null)]).then(([r, rec, g]) => {
       if (!alive) return;
-      setRecords(r);
-      // reprise d'une partie en cours (le défi n'est repris que le jour même)
-      const resumable = g && g.start && g.target && Array.isArray(g.mids) && (!g.defi || g.day === day) && (!defiParam || g.defi);
-      if (resumable) { setGame(g); setPhase('jeu'); } else setPhase('regles');
+      setRecords(r); setRecents(Array.isArray(rec) ? rec : []);
+      // reprise d'une partie en cours (le défi n'est repris que le jour même) ; ancien format : `defi` booléen
+      const level: Mode = g?.level ?? (g?.defi ? 'defi' : 'moyen');
+      const resumable = g && g.start && g.target && Array.isArray(g.mids) && (level !== 'defi' || g.day === day) && (!defiParam || level === 'defi');
+      if (resumable) { setGame({ start: g.start!, target: g.target!, mids: g.mids!, level, day: g.day ?? day }); setPhase('jeu'); } else setPhase('regles');
     });
     return () => { alive = false; };
   }, [day, defiParam]);
 
-  const startGame = useCallback((pair: Pair, defi: boolean) => {
-    setGame({ start: pair[0], target: pair[1], mids: [], defi, day });
+  const startGame = useCallback((pair: Pair, level: Mode) => {
+    setGame({ start: pair[0], target: pair[1], mids: [], level, day });
     setDone(null); setSolution(null); setPhase('jeu');
   }, [day]);
+
+  /** Facile / Moyen / Difficile : nouvelle paire tirée au hasard (jamais une des 30 dernières), sans la montrer avant. */
+  const pick = (level: Mode) => {
+    if (level === 'defi') { startGame(dailyPair(day), 'defi'); return; }
+    setPhase('tirage');
+    setTimeout(() => {
+      const pair = randomPair(level, Math.random, recents, FALLBACK[level]);
+      const next = [pairKey(pair[0], pair[1]), ...recents].slice(0, 30);
+      setRecents(next); save(K_RECENTS, next);
+      startGame(pair, level);
+    }, 40);
+  };
 
   // partie en cours : sauvegardée à chaque coup, avec la carte « Reprendre » de l'accueil
   useEffect(() => {
     if (phase !== 'jeu' || !game) return;
     save(K_PARTIE, game);
     save(K_ENCOURS, {
-      titre: game.defi ? 'Lier · défi du jour' : 'Lier',
-      sousTitre: `${game.start} → ${game.target} · ${plural(game.mids.length, 'étape')}`,
-      route: game.defi ? '/jeux/lier?defi=jour' : '/jeux/lier',
+      titre: game.level === 'defi' ? 'Lier · défi du jour' : `Lier · ${LEVEL_LABEL[game.level]}`,
+      sousTitre: `${game.start} → ${game.target} · ${plural(game.mids.length, 'maillon')}`,
+      route: game.level === 'defi' ? '/jeux/lier?defi=jour' : '/jeux/lier',
     });
   }, [phase, game]);
   const clearSaved = () => { AsyncStorage.multiRemove([K_PARTIE, K_ENCOURS]).catch(() => {}); };
 
   const finish = (g: Game) => {
     const chain = [g.start, ...g.mids, g.target];
-    const key = pairKey(g.start, g.target);
+    const key = recordKey(g.level, g.start, g.target);
     const prev = records[key] ?? null;
-    const steps = chain.length - 1;
+    const steps = maillons(chain);
     if (prev === null || steps < prev) {
       const next = { ...records, [key]: steps };
-      setRecords(next); save(K_RECORD, next);
+      setRecords(next); save(K_RECORDS, next);
     }
     clearSaved();
-    setDone({ chain, prevRecord: prev, defi: g.defi, best: undefined });
+    setDone({ chain, prevRecord: prev, level: g.level, best: undefined });
     setPhase('fini');
     // la meilleure chaîne se calcule après l'affichage de « Chaîne terminée ! »
     setTimeout(() => setDone(d => (d && d.chain === chain ? { ...d, best: solve(g.start, g.target) } : d)), 50);
@@ -108,19 +144,20 @@ export default function Lier() {
   };
 
   if (phase === 'charge') return <GameBg />;
-  if (phase === 'regles') return <Regles onClose={leave} onPlay={() => (defiParam ? startGame(dailyPair(day), true) : setPhase('choix'))} />;
-  if (phase === 'choix') return <Choix day={day} round={round} records={records} onClose={leave} onPick={startGame} />;
+  if (phase === 'regles') return <Regles onClose={leave} onPlay={() => (defiParam ? pick('defi') : setPhase('choix'))} />;
+  if (phase === 'choix') return <Choix day={day} records={records} onClose={leave} onPick={pick} />;
+  if (phase === 'tirage') return <Tirage />;
   if (phase === 'jeu' && game) return <EnJeu game={game} setGame={setGame} onFinish={finish} onAbandon={abandon} />;
   if (phase === 'fini' && done) return <Terminee done={done} onClose={leave} onNext={showResult} computing={done.best === undefined} />;
   if (phase === 'resultat' && done) {
-    return <Resultat done={done} onMenu={leave} onNew={() => { setRound(r => r + 1); setPhase('choix'); }} onShare={() => { setShareFrom('resultat'); setPhase('partage'); }} />;
+    return <Resultat done={done} onMenu={leave} onNew={() => setPhase('choix')} onShare={() => { setShareFrom('resultat'); setPhase('partage'); }} />;
   }
   if (phase === 'comparaison' && done) {
     return <Comparaison done={done} onClose={leave} onShare={() => { setShareFrom('comparaison'); setPhase('partage'); }}
-      onReplay={() => startGame([done.chain[0], done.chain[done.chain.length - 1]], done.defi)} />;
+      onReplay={() => startGame([done.chain[0], done.chain[done.chain.length - 1]], done.level)} />;
   }
-  if (phase === 'partage' && done) return <Partage chain={done.chain} onClose={() => setPhase(shareFrom)} />;
-  if (phase === 'abandon') return <Abandon solution={solution} onMenu={leave} onNew={() => { setRound(r => r + 1); setPhase('choix'); }} />;
+  if (phase === 'partage' && done) return <Partage chain={done.chain} level={done.level} onClose={() => setPhase(shareFrom)} />;
+  if (phase === 'abandon') return <Abandon solution={solution} onMenu={leave} onNew={() => setPhase('choix')} />;
   return <GameBg />;
 }
 
@@ -149,7 +186,7 @@ const RULES = [
   'Un mot de départ et un mot d’arrivée.',
   `Ajoute des mots un par un : chacun doit être à ${MIN_LINK}° ou plus du précédent.`,
   'La chaîne est finie quand tu touches le mot d’arrivée.',
-  'Le moins d’étapes possible = la meilleure chaîne.',
+  'Chaque mot ajouté est un maillon : le moins de maillons possible = la meilleure chaîne.',
 ];
 function Regles({ onClose, onPlay }: { onClose: () => void; onPlay: () => void }) {
   return (
@@ -175,40 +212,51 @@ function Regles({ onClose, onPlay }: { onClose: () => void; onPlay: () => void }
   );
 }
 
-/* ---------- 5 · Choix des mots à lier ---------- */
-const LEVELS: { level: Level; label: string; sub?: string; color: string }[] = [
-  { level: 'facile', label: 'Facile', sub: 'mots proches', color: '#7CE0B5' },
-  { level: 'moyen', label: 'Moyen', color: '#9DD8FF' },
-  { level: 'difficile', label: 'Difficile', sub: 'mots très éloignés', color: '#FF86C8' },
+/* ---------- 5 · Choix de la difficulté (les mots ne sont dévoilés qu'en jeu) ---------- */
+const LEVELS: { level: Mode; label: string; sub: string; color: string; bg: string }[] = [
+  { level: 'defi', label: 'Défi du jour', sub: 'les mêmes mots pour tous, chaque jour', color: '#FFD45C', bg: '#FFF3B0' },
+  { level: 'facile', label: 'Facile', sub: 'mots proches · un maillon suffit', color: '#7CE0B5', bg: '#FFFFFF' },
+  { level: 'moyen', label: 'Moyen', sub: 'deux maillons au moins', color: '#9DD8FF', bg: '#FFFFFF' },
+  { level: 'difficile', label: 'Difficile', sub: 'mots très éloignés', color: '#FF86C8', bg: '#FFFFFF' },
 ];
-function Choix({ day, round, records, onClose, onPick }: { day: number; round: number; records: Records; onClose: () => void; onPick: (p: Pair, defi: boolean) => void }) {
+function Choix({ day, records, onClose, onPick }: { day: number; records: Records; onClose: () => void; onPick: (l: Mode) => void }) {
   const defi = dailyPair(day);
-  const pairs = pairsFor(day, round);
-  const card = (key: string, label: string, pair: Pair, sub: string | undefined, color: string, bg: string, isDefi: boolean) => {
-    const rec = records[pairKey(pair[0], pair[1])];
-    return (
-      <Pressable key={key} accessibilityRole="button" accessibilityLabel={`${label} : ${pair[0]} vers ${pair[1]}${rec ? `, record ${rec}` : ''}`} onPress={() => onPick(pair, isDefi)}
-        style={({ pressed }) => ({ borderRadius: 18, borderWidth: 2, borderColor: 'transparent', backgroundColor: bg, paddingVertical: 12, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 10, opacity: pressed ? 0.85 : 1 })}>
-        <View style={{ flex: 1, minWidth: 0 }}>
-          <T size={13} weight={700} color={INK}>{label}</T>
-          <T size={21} weight={700} color={INK} numberOfLines={1} adjustsFontSizeToFit>{pair[0]} → {pair[1]}</T>
-          {sub ? <T size={13} weight={500} color={INK} numberOfLines={1}>{sub}</T> : null}
-        </View>
-        <View style={{ flexShrink: 0, paddingVertical: 5, paddingHorizontal: 12, borderRadius: 13, borderWidth: 2, borderColor: 'transparent', backgroundColor: color }}>
-          <T size={14} weight={700} color={INK}>{rec ? `record ${rec}` : '—'}</T>
-        </View>
-      </Pressable>
-    );
-  };
   return (
     <Frame>
       <Header title="Lier" onClose={onClose} closeLabel="Retour au menu" />
-      <Title title="Quels mots lier ?" sub="relie deux mots par une chaîne de mots proches" />
+      <Title title="Quelle difficulté ?" sub="les deux mots se découvrent en jeu" />
       <View style={{ gap: 10 }}>
-        {card('defi', 'Défi du jour', defi, 'le même pour tous', '#FFD45C', '#FFF3B0', true)}
-        {LEVELS.map(l => card(l.level, l.label, pairs[l.level], l.sub, l.color, '#FFFFFF', false))}
+        {LEVELS.map(l => {
+          const rec = records[recordKey(l.level, defi[0], defi[1])];
+          return (
+            <Pressable key={l.level} accessibilityRole="button" accessibilityLabel={`${l.label} : ${l.sub}${rec !== undefined ? `, record ${maillonsLabel(rec)}` : ''}`} onPress={() => onPick(l.level)}
+              style={({ pressed }) => ({ minHeight: 72, borderRadius: 18, backgroundColor: l.bg, paddingVertical: 12, paddingHorizontal: 16, flexDirection: 'row', alignItems: 'center', gap: 10, opacity: pressed ? 0.85 : 1 })}>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <T size={22} weight={700} color={INK} numberOfLines={1}>{l.label}</T>
+                <T size={13} weight={500} color={INK} numberOfLines={1} adjustsFontSizeToFit>{l.sub}</T>
+              </View>
+              {rec !== undefined && (
+                <View style={{ flexShrink: 0, paddingVertical: 5, paddingHorizontal: 12, borderRadius: 13, backgroundColor: l.color }}>
+                  <T size={14} weight={700} color={INK}>record {rec}</T>
+                </View>
+              )}
+            </Pressable>
+          );
+        })}
       </View>
       <View style={{ flex: 1 }} />
+    </Frame>
+  );
+}
+
+/** Pendant le tirage d'une paire (le solveur vérifie qu'elle a la bonne difficulté). */
+function Tirage() {
+  return (
+    <Frame>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 }} accessibilityLiveRegion="polite">
+        <Image source={images.nabulo} style={{ width: 110, height: 110 }} contentFit="contain" accessibilityLabel="Nabulo" />
+        <T size={18} weight={700} color="#FFFFFF" align="center" style={SHADOW}>Nabulo choisit deux mots…</T>
+      </View>
     </Frame>
   );
 }
@@ -317,10 +365,10 @@ function EnJeu({ game, setGame, onFinish, onAbandon }: { game: Game; setGame: (g
       <Sheet visible={menu} onClose={() => setMenu(false)}>
         <View>
           <T size={22} weight={700} color={INK} style={{ lineHeight: 24 }}>Quitter la partie ?</T>
-          <T size={14} weight={600} color={gameInkSoft}>{game.start} → {game.target} · {plural(game.mids.length, 'étape')}</T>
+          <T size={14} weight={600} color={gameInkSoft}>{game.start} → {game.target} · {plural(game.mids.length, 'maillon')}</T>
         </View>
         <SheetRow title="Quitter" sub="ta chaîne est gardée, tu la reprendras plus tard" onPress={() => { setMenu(false); leave(); }} />
-        <SheetRow title="Abandonner" sub="Nabulo te dit en combien d’étapes c’était possible" onPress={() => { setMenu(false); onAbandon(game); }} />
+        <SheetRow title="Abandonner" sub="Nabulo te dit en combien de maillons c’était possible" onPress={() => { setMenu(false); onAbandon(game); }} />
         <Pressable accessibilityRole="button" accessibilityLabel="Continuer la partie" onPress={() => setMenu(false)} style={{ paddingTop: 4, minHeight: 44, alignItems: 'center', justifyContent: 'center' }}>
           <T size={16} weight={700} color={gameInkSoft}>Continuer</T>
         </Pressable>
@@ -373,9 +421,11 @@ function SheetRow({ title, sub, onPress }: { title: string; sub: string; onPress
 /** « Retirer le dernier mot » : toujours disponible dès qu'un mot est posé. */
 function UndoPill({ recul, onPress }: { recul: boolean; onPress: () => void }) {
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel="Retirer le dernier mot" accessibilityHint={recul ? 'ce mot t’éloigne de l’arrivée' : undefined} onPress={onPress} hitSlop={6} style={{ alignSelf: 'flex-end' }}>
-      <Bubble bg="#FFFFFF" radius={14} border={2} inset={5} style={{ paddingVertical: 6, paddingHorizontal: 12 }}>
-        <T size={14} weight={700} color={INK}>↶ Retirer le dernier mot</T>
+    <Pressable accessibilityRole="button" accessibilityLabel="Retirer le dernier mot" accessibilityHint={recul ? 'ce mot t’éloigne de l’arrivée' : undefined} onPress={onPress}
+      style={({ pressed }) => ({ alignSelf: 'flex-end', transform: [{ translateY: pressed ? 2 : 0 }] })}>
+      <Bubble bg="#FFFFFF" radius={16} border={2} inset={5} style={{ minHeight: 48, paddingLeft: 12, paddingRight: 16, paddingBottom: 3, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+        <View><LierIcon name="undo" size={24} strokeWidth={3.2} /></View>
+        <T size={16} weight={700} color={INK}>Retirer le dernier mot</T>
       </Bubble>
     </Pressable>
   );
@@ -438,7 +488,7 @@ function Terminee({ done, onClose, onNext, computing }: { done: Done; onClose: (
   const temps = links(done.chain);
   return (
     <Frame>
-      <Header title="Lier" onClose={onClose} closeLabel="Retour au menu" right={<StepsPill n={done.chain.length - 1} />} />
+      <Header title="Lier" onClose={onClose} closeLabel="Retour au menu" right={<StepsPill n={maillons(done.chain)} />} />
       <T size={24} weight={700} color="#FFFFFF" align="center" style={SHADOW}>Chaîne terminée !</T>
       <ScrollView style={{ flex: 1, marginHorizontal: -16 }} contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 16 }} showsVerticalScrollIndicator={false}>
         <Chain words={done.chain} target={done.chain[done.chain.length - 1]} complete temps={temps} />
@@ -468,13 +518,15 @@ function winSizes(avail: number) {
 function Resultat({ done, onMenu, onNew, onShare }: { done: Done; onMenu: () => void; onNew: () => void; onShare: () => void }) {
   const inset = useSafeAreaInsets();
   const { height } = useWindowDimensions();
-  const steps = done.chain.length - 1;
+  const steps = maillons(done.chain);
   const z = winSizes(height - (Math.max(inset.top, 44) + 4) - (24 + inset.bottom));
   const img = z.nabulo * 1.6;
   // record = la chaîne la plus courte : moins d'étapes, c'est mieux
   const prev = done.prevRecord;
   const record = prev === null || steps < prev;
   const egal = prev !== null && steps === prev;
+  // records par niveau pour les paires tirées au hasard, par paire pour le défi du jour
+  const scope = done.level === 'defi' ? '' : ` · ${LEVEL_LABEL[done.level]}`;
   const badge = record ? (prev === null ? 'Premier record !' : 'Record battu !') : egal ? 'Record égalé !' : 'Pas de record cette fois';
   return (
     <Frame bg={<><SlidingGradient colors={warmGradient} stops={warmStops} duration={10000} /><Confetti /></>}>
@@ -488,10 +540,11 @@ function Resultat({ done, onMenu, onNew, onShare }: { done: Done; onMenu: () => 
       </View>
       {/* milieu : défile au lieu de passer sous les boutons quand l'écran est trop court */}
       <ScrollView style={{ flex: 1, marginHorizontal: -16 }} contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingVertical: 14, paddingHorizontal: 20, gap: z.gap }} showsVerticalScrollIndicator={false}>
-        <View accessible accessibilityLabel={`Ta chaîne : ${plural(steps, 'étape')}. ${badge}`} style={{ alignItems: 'center', gap: 10 }}>
+        <View accessible accessibilityLabel={`Ta chaîne : ${maillonsLabel(steps)}. ${badge}`} style={{ alignItems: 'center', gap: 10 }}>
           <T size={17} weight={700} color="#FFFFFF" align="center" style={OUTLINE_SM}>Ta chaîne</T>
-          <Bubble bg="#FFFFFF" radius={26} border={3} inset={8} style={{ minWidth: 150, paddingTop: 2, paddingBottom: 10, paddingHorizontal: 24, alignItems: 'center' }}>
+          <Bubble bg="#FFFFFF" radius={26} border={3} inset={8} style={{ minWidth: 150, paddingTop: 2, paddingBottom: 10, paddingHorizontal: 24, flexDirection: 'row', alignItems: 'baseline', justifyContent: 'center', gap: 10 }}>
             <T size={z.word * 1.7} weight={700} color={INK} numberOfLines={1}>{steps}</T>
+            <T size={Math.round(z.word * 0.62)} weight={700} color={INK} numberOfLines={1}>{steps > 1 ? 'maillons' : 'maillon'}</T>
           </Bubble>
           <Bubble bg={record ? '#FFD45C' : '#FFFFFF'} radius={15} border={2} inset={5} style={{ paddingVertical: 6, paddingHorizontal: 14, alignItems: 'center' }}>
             <T size={18} weight={700} color={INK} numberOfLines={1}>{badge}</T>
@@ -499,8 +552,8 @@ function Resultat({ done, onMenu, onNew, onShare }: { done: Done; onMenu: () => 
         </View>
         <View style={{ marginTop: z.stats, gap: 10 }}>
           {record
-            ? <><Stat label="Nouveau record" value={plural(steps, 'étape')} /><Stat label="Ancien record" value={prev === null ? '—' : plural(prev, 'étape')} /></>
-            : <><Stat label="Ton record" value={plural(prev ?? steps, 'étape')} /><Stat label="Pour le battre" value={`${plural(steps - (prev ?? steps) + 1, 'étape')} de moins`} /></>}
+            ? <><Stat label={`Nouveau record${scope}`} value={maillonsLabel(steps)} /><Stat label="Ancien record" value={prev === null ? '—' : maillonsLabel(prev)} /></>
+            : <><Stat label={`Ton record${scope}`} value={maillonsLabel(prev ?? steps)} /><Stat label="Pour le battre" value={`${maillonsLabel(steps - (prev ?? steps) + 1)} de moins`} /></>}
         </View>
       </ScrollView>
       <View style={{ paddingHorizontal: 4, paddingBottom: 6, flexDirection: 'row', gap: 8 }}>
@@ -526,12 +579,12 @@ function Comparaison({ done, onClose, onShare, onReplay }: { done: Done; onClose
   return (
     <Frame>
       <Header title="Résultat" onClose={onClose} closeLabel="Retour au menu" />
-      <Title title={`Ta chaîne : ${plural(done.chain.length - 1, 'étape')}`} sub={`le plus court possible : ${plural(best.length - 1, 'étape')}`} />
+      <Title title={`Ta chaîne : ${maillonsLabel(maillons(done.chain))}`} sub={`le plus court possible : ${maillonsLabel(maillons(best))}`} />
       <ScrollView style={{ flex: 1, marginHorizontal: -16 }} contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 16, gap: 12 }} showsVerticalScrollIndicator={false}>
         <T size={15} weight={700} color="#FFFFFF" align="center" style={SHADOW}>Ta chaîne</T>
         <Chain words={done.chain} target={done.chain[done.chain.length - 1]} complete temps={links(done.chain)} compact />
         <T size={15} weight={600} color="#FFFFFF" align="center" style={[SHADOW, { marginTop: 4 }]}>
-          Nabulo connaît une chaîne {plural(done.chain.length - best.length, 'étape')} plus courte. Rejoue pour la trouver !
+          Nabulo connaît une chaîne plus courte de {maillonsLabel(done.chain.length - best.length)}. Rejoue pour la trouver !
         </T>
       </ScrollView>
       <View style={{ flexDirection: 'row', gap: 10 }}>
@@ -545,7 +598,7 @@ function Comparaison({ done, onClose, onShare, onReplay }: { done: Done; onClose
 /* ---------- 13 · Abandon : la longueur d'une chaîne possible, sans ses mots ---------- */
 function Abandon({ solution, onMenu, onNew }: { solution: string[] | null; onMenu: () => void; onNew: () => void }) {
   const sub = solution === null ? 'Nabulo cherche une chaîne…'
-    : solution.length ? `Nabulo connaît une chaîne en ${plural(solution.length - 1, 'étape')} : à toi de la trouver une prochaine fois`
+    : solution.length ? `Nabulo connaît une chaîne en ${maillonsLabel(maillons(solution))} : à toi de la trouver une prochaine fois`
       : 'Nabulo n’a pas trouvé de chaîne cette fois';
   return (
     <Frame>
@@ -563,11 +616,11 @@ function Abandon({ solution, onMenu, onNew }: { solution: string[] | null; onMen
 }
 
 /* ---------- 14 · Partage ---------- */
-function Partage({ chain, onClose }: { chain: string[]; onClose: () => void }) {
+function Partage({ chain, level, onClose }: { chain: string[]; level: Mode; onClose: () => void }) {
   const toast = useToast();
   const { width } = useWindowDimensions();
   const [date] = useState(() => new Date());
-  const message = shareText(chain, date);
+  const message = shareText(chain, date, level);
   const squares = shareSquares(chain);
   // carrés de 44 px (40 + contour 2 px) sur une ligne ; plus petits si la chaîne est longue
   const room = Math.min(width, 430) - 32 - 4 - 28;
@@ -583,12 +636,14 @@ function Partage({ chain, onClose }: { chain: string[]; onClose: () => void }) {
       <Header title="Partager" onClose={onClose} closeLabel="Retour au résultat" />
       <View style={{ flex: 1 }} />
       <Bubble bg="#FFFFFF" radius={18} border={2} inset={6} style={{ paddingVertical: 12, paddingHorizontal: 14 }}>
-        <T size={15} weight={700} color={INK} align="center">Nabulo · Lier · {shortDate(date)}</T>
-        <T size={26} weight={700} color={INK} align="center" style={{ marginTop: 4, marginBottom: 8 }}>{plural(chain.length - 1, 'étape')}</T>
+        <T size={14} weight={700} color={gameInkSoft} align="center">{level === 'defi' ? `Nabulo · Défi du jour · ${shortDate(date)}` : `Nabulo · Lier · ${LEVEL_LABEL[level]}`}</T>
+        <T size={17} weight={700} color={INK} align="center" style={{ marginTop: 6 }}>J’ai relié « {chain[0]} » à « {chain[chain.length - 1]} »</T>
+        <T size={26} weight={700} color={INK} align="center" style={{ marginBottom: 8 }}>en {maillonsLabel(maillons(chain))} 🔗</T>
         <View style={{ flexDirection: 'row', justifyContent: 'center', flexWrap: 'wrap', gap: 6 }} accessibilityRole="image" accessibilityLabel={`${squares.length} cases : la force de chaque lien`}>
           {squares.map((c, i) => <View key={i} style={{ width: side, height: side, borderRadius: 10, backgroundColor: c }} />)}
         </View>
-        <T size={13} weight={600} color={INK} align="center" style={{ marginTop: 8 }}>les couleurs montrent la force de chaque lien, sans dévoiler les mots</T>
+        <T size={20} weight={700} color={INK} align="center" style={{ marginTop: 10 }}>Tu fais mieux ?</T>
+        <T size={13} weight={600} color={gameInkSoft} align="center" style={{ marginTop: 4 }}>les couleurs montrent la force de chaque lien, sans dévoiler les mots de ta chaîne</T>
       </Bubble>
       <View style={{ flex: 1 }} />
       <View style={{ flexDirection: 'row', gap: 10 }}>
