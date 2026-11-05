@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Keyboard, KeyboardAvoidingView, Platform, Pressable, ScrollView, Share, TextInput, View, useWindowDimensions, type ScrollViewInstance, type TextInputInstance } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { dayNumberFrom } from '@/game/engine/types';
-import { MIN_LINK, canClose, closeWords, hintAfter, judge, links, pairKey, shareSquares, shareText, shortDate, solve, towards, type Verdict } from '@/game/lier';
+import { MIN_LINK, canClose, hintAfter, judge, links, pairKey, shareSquares, shareText, shortDate, solve, towards, type Verdict } from '@/game/lier';
 import { dailyPair, pairsFor, type Level, type Pair } from '@/game/lier-paires';
 import { HINT_COST } from '@/game/rules';
 import { load, save } from '@/game/storage';
@@ -18,7 +18,7 @@ import { Coin, Icon, images } from '@/ui/bits';
 import { Confetti } from '@/ui/Confetti';
 import { GameBg, Sheet, keepFocus } from '@/ui/game';
 import { KAV_BEHAVIOR, useMargeBasse } from '@/ui/retours-jeux-clavier';
-import { BigButton, Chain, Header, LierIcon, SHADOW, StepsPill, Towards } from '@/ui/lier-bits';
+import { BigButton, Chain, Header, SHADOW, StepsPill, Towards } from '@/ui/lier-bits';
 import { Mascot } from '@/ui/Mascot';
 import { T } from '@/ui/Text';
 import { Toast, useToast } from '@/ui/Toast';
@@ -451,7 +451,6 @@ function Terminee({ done, onClose, onNext, computing }: { done: Done; onClose: (
 }
 
 /* ---------- 4 · Fin · résultat ---------- */
-const NEIGHBOR_COLORS = ['#FF5A36', '#FF7240', '#FF9A3C', '#FFB35C', '#FFD45C'];
 /** Contour encre du texte blanc de la victoire (text-shadow 0 3px + 2 px de chaque côté dans la maquette). */
 const OUTLINE = { textShadowColor: INK, textShadowOffset: { width: 0, height: 3 }, textShadowRadius: 0 } as const;
 const OUTLINE_SM = { textShadowColor: INK, textShadowOffset: { width: 0, height: 2 }, textShadowRadius: 0 } as const;
@@ -469,12 +468,14 @@ function winSizes(avail: number) {
 function Resultat({ done, onMenu, onNew, onShare }: { done: Done; onMenu: () => void; onNew: () => void; onShare: () => void }) {
   const inset = useSafeAreaInsets();
   const { height } = useWindowDimensions();
-  const target = done.chain[done.chain.length - 1];
   const steps = done.chain.length - 1;
-  const near = useMemo(() => closeWords(target), [target]);
-  const weakest = Math.round(Math.min(...links(done.chain)));
   const z = winSizes(height - (Math.max(inset.top, 44) + 4) - (24 + inset.bottom));
   const img = z.nabulo * 1.6;
+  // record = la chaîne la plus courte : moins d'étapes, c'est mieux
+  const prev = done.prevRecord;
+  const record = prev === null || steps < prev;
+  const egal = prev !== null && steps === prev;
+  const badge = record ? (prev === null ? 'Premier record !' : 'Record battu !') : egal ? 'Record égalé !' : 'Pas de record cette fois';
   return (
     <Frame bg={<><SlidingGradient colors={warmGradient} stops={warmStops} duration={10000} /><Confetti /></>}>
       {/* haut : Nabulo qui saute (l'image déborde de sa boîte comme dans la maquette), titre, record */}
@@ -482,34 +483,30 @@ function Resultat({ done, onMenu, onNew, onShare }: { done: Done; onMenu: () => 
         <View style={{ width: z.nabulo, height: z.nabulo, marginBottom: 10 }}>
           <Image source={images.nabuloSaut} autoplay style={{ position: 'absolute', left: -z.nabulo * 0.3, top: -z.nabulo * 0.5625, width: img, height: img }} contentFit="contain" accessibilityLabel="Nabulo saute de joie, le poing en l’air" />
         </View>
-        <T size={z.title} weight={700} color="#FFFFFF" align="center" style={[{ lineHeight: Math.round(z.title * 1.05) }, OUTLINE]}>Chaîne de {plural(steps, 'étape')}</T>
-        <T size={z.sub} weight={600} color="#FFFFFF" align="center" style={OUTLINE}>ton record : {plural(done.prevRecord ?? steps, 'étape')}</T>
-        <Pressable accessibilityRole="button" accessibilityLabel="Partager ma chaîne" onPress={onShare} hitSlop={4}
-          style={{ position: 'absolute', right: 0, top: 0, width: 44, height: 44, borderRadius: 13, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center' }}>
-          <LierIcon name="share" size={22} />
-        </Pressable>
+        <T size={z.title} weight={700} color="#FFFFFF" align="center" style={[{ lineHeight: Math.round(z.title * 1.05) }, OUTLINE]}>{record ? 'Nouveau record !' : 'Chaîne terminée'}</T>
+        <T size={z.sub} weight={600} color="#FFFFFF" align="center" style={OUTLINE}>{record ? (prev === null ? 'ton premier record' : 'tu as battu ton record') : 'le plus court gagne'}</T>
       </View>
       {/* milieu : défile au lieu de passer sous les boutons quand l'écran est trop court */}
       <ScrollView style={{ flex: 1, marginHorizontal: -16 }} contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingVertical: 14, paddingHorizontal: 20, gap: z.gap }} showsVerticalScrollIndicator={false}>
-        <T size={17} weight={700} color="#FFFFFF" align="center" style={OUTLINE_SM}>Mot trouvé · ses voisins</T>
-        <View style={{ alignSelf: 'center', maxWidth: '100%', paddingVertical: 4, paddingHorizontal: 16, borderRadius: 16, borderWidth: 2, borderColor: 'transparent', backgroundColor: '#FFFFFF' }}>
-          <T size={z.word} weight={700} color={INK} numberOfLines={1} adjustsFontSizeToFit style={{ lineHeight: Math.round(z.word * 1.1) }}>{target}</T>
-        </View>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 }}>
-          {near.map((w, i) => (
-            <Bubble key={w} bg={NEIGHBOR_COLORS[i]} radius={13} border={2} inset={4} style={{ paddingVertical: 6, paddingHorizontal: 13 }}>
-              <T size={18} weight={700} color={INK}>{w}</T>
-            </Bubble>
-          ))}
+        <View accessible accessibilityLabel={`Ta chaîne : ${plural(steps, 'étape')}. ${badge}`} style={{ alignItems: 'center', gap: 10 }}>
+          <T size={17} weight={700} color="#FFFFFF" align="center" style={OUTLINE_SM}>Ta chaîne</T>
+          <Bubble bg="#FFFFFF" radius={26} border={3} inset={8} style={{ minWidth: 150, paddingTop: 2, paddingBottom: 10, paddingHorizontal: 24, alignItems: 'center' }}>
+            <T size={z.word * 1.7} weight={700} color={INK} numberOfLines={1}>{steps}</T>
+          </Bubble>
+          <Bubble bg={record ? '#FFD45C' : '#FFFFFF'} radius={15} border={2} inset={5} style={{ paddingVertical: 6, paddingHorizontal: 14, alignItems: 'center' }}>
+            <T size={18} weight={700} color={INK} numberOfLines={1}>{badge}</T>
+          </Bubble>
         </View>
         <View style={{ marginTop: z.stats, gap: 10 }}>
-          <Stat label="Étapes" value={String(steps)} />
-          <Stat label="Lien le plus faible" value={`${weakest}°`} />
+          {record
+            ? <><Stat label="Nouveau record" value={plural(steps, 'étape')} /><Stat label="Ancien record" value={prev === null ? '—' : plural(prev, 'étape')} /></>
+            : <><Stat label="Ton record" value={plural(prev ?? steps, 'étape')} /><Stat label="Pour le battre" value={`${plural(steps - (prev ?? steps) + 1, 'étape')} de moins`} /></>}
         </View>
       </ScrollView>
-      <View style={{ paddingHorizontal: 4, paddingBottom: 6, flexDirection: 'row', gap: 10 }}>
-        <BigButton label="Menu" icon="home" mix grow={false} onPress={onMenu} />
-        <BigButton label="Nouvelle chaîne" icon="refresh" onPress={onNew} />
+      <View style={{ paddingHorizontal: 4, paddingBottom: 6, flexDirection: 'row', gap: 8 }}>
+        <BigButton label="Menu" icon="home" mix fontSize={14} onPress={onMenu} />
+        <BigButton label="Partager" icon="share" mix fontSize={14} onPress={onShare} />
+        <BigButton label="Rejouer" icon="refresh" fontSize={14} onPress={onNew} />
       </View>
     </Frame>
   );

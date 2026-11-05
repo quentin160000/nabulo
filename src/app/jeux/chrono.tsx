@@ -4,7 +4,7 @@ import { KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, View,
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { rng } from '@/game/lexicon';
 import {
-  CHRONO_ALERTE, CHRONO_DUREE, CHRONO_SEUIL, cibleChrono, cleanNeighbors, couleurPastille, essaiChrono, motsTrouves, type Essai,
+  CHRONO_ALERTE, CHRONO_DUREE, CHRONO_SEUIL, cibleChrono, couleurPastille, essaiChrono, motsTrouves, type Essai,
 } from '@/game/libres-manches';
 import { vibrationsActives } from '@/game/reglages';
 import { enregistrerScore, finirEnCours, marquerEnCours } from '@/game/libres-stockage';
@@ -147,19 +147,16 @@ function EnJeu({ onFin }: { onFin: (r: Resultat) => void }) {
 /* ---------- 4 · Fin · temps écoulé ---------- */
 function FinChrono({ res, onReplay }: { res: Resultat; onReplay: () => void }) {
   const record = res.trouves > res.ancien;
-  const [voisins] = useState(() => cleanNeighbors(res.cible, 5).map(n => n.word));
+  const egal = !record && res.trouves > 0 && res.trouves === res.ancien;
   return (
     <Fin
       record={record}
       titre="Temps écoulé !"
-      sousTitre={`${mots(res.trouves)} à ${CHRONO_SEUIL}°+ · ${record ? 'nouveau record' : `record ${res.ancien}`}`}
-      label={record ? 'Mot trouvé · ses voisins' : 'Le mot cible était'}
-      mot={res.cible}
-      voisins={voisins}
-      lignes={[
-        { label: 'Mots trouvés', value: String(res.trouves) },
-        { label: 'Record', value: record ? (res.ancien > 0 ? `${res.trouves} (ancien ${res.ancien})` : String(res.trouves)) : String(res.ancien) },
-      ]}
+      sousTitre={record ? (res.ancien > 0 ? 'Tu as battu ton record' : 'Ton premier record') : `mots à ${CHRONO_SEUIL}° ou plus`}
+      serie={{ valeur: res.trouves, legende: 'Mots trouvés', badge: record ? 'Record battu !' : egal ? 'Record égalé !' : 'Pas de record cette fois' }}
+      lignes={record
+        ? [{ label: 'Nouveau record', value: String(res.trouves) }, { label: 'Ancien record', value: res.ancien > 0 ? String(res.ancien) : '—' }]
+        : [{ label: 'Ton record', value: String(res.ancien) }, { label: 'Pour le battre', value: `${res.ancien - res.trouves + 1} de plus` }]}
       onReplay={onReplay}
     />
   );

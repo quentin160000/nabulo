@@ -44,7 +44,7 @@ export function BigButton({ label, onPress, mix, height = 58, fontSize = 18, ico
     <Pressable accessibilityRole="button" accessibilityLabel={label} accessibilityHint={hint}
       onPress={() => { if (Platform.OS !== 'web') Haptics.selectionAsync(); onPress?.(); }}
       style={({ pressed }) => [{ height, transform: [{ translateY: pressed ? 2 : 0 }] }, grow ? { flex: 1, minWidth: 0 } : null, style]}>
-      <View style={{ flex: 1, borderRadius: 18, borderWidth: 2, borderColor: look.border, overflow: 'hidden', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: grow ? 8 : 16 }}>
+      <View style={{ flex: 1, borderRadius: 18, borderWidth: 2, borderColor: look.border, overflow: 'hidden', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: grow ? 4 : 16 }}>
         <Diagonal bg={look.bg} diag={look.diag} />
         <Relief inset={7} color={look.relief} radius={16} />
         {/* la vue (position relative sur le web) garde l'icône au-dessus du fond en position absolue */}
