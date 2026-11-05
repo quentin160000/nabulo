@@ -60,7 +60,7 @@ describe('moteur local', () => {
 
 describe('règles', () => {
   it('braises selon les essais', () => {
-    expect(braisesFor(7)).toBe(100); expect(braisesFor(15)).toBe(80); expect(braisesFor(47)).toBe(40); expect(braisesFor(200)).toBe(25);
+    expect(braisesFor(7)).toBe(50); expect(braisesFor(23)).toBe(30); expect(braisesFor(47)).toBe(20); expect(braisesFor(90)).toBe(10); expect(braisesFor(200)).toBe(5);
   });
   it('tri des essais', () => {
     const s = sortGuesses([{ word: 'a', temperature: 10, rank: null, order: 1 }, { word: 'b', temperature: 50, rank: null, order: 2 }, { word: 'c', temperature: 10, rank: null, order: 3 }]);

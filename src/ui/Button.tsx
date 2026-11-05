@@ -1,26 +1,29 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
 import { Platform, Pressable, View, type StyleProp, type ViewStyle } from 'react-native';
-import { bubble, yellow } from '@/theme/colors';
+import { bubble, gameInk, panel } from '@/theme/colors';
 import { T } from './Text';
 import type { ReactNode } from 'react';
 
-type Variant = 'yellow' | 'white' | 'flat-yellow' | 'flat-white';
-type Props = { label: string; onPress?: () => void; variant?: Variant; height?: number; icon?: ReactNode; disabled?: boolean; style?: StyleProp<ViewStyle>; accessibilityHint?: string };
+type Look = { bg: string; border: string; diag: string; relief: string };
+/** Variantes de la maquette. Les « flat-* » sont à plat : boutons au-dessus du clavier, « J'ai déjà un compte ». */
+const LOOKS: Record<string, Look> = {
+  yellow: { bg: '#FFD45C', border: '#FFE38F', diag: '#F7C843', relief: '#E3A91C' },
+  white: { bg: '#FFFFFF', border: '#FFFFFF', diag: '#F6F3FD', relief: '#E4DEF5' },
+  panel: { bg: panel, ...bubble(panel) },
+  'yellow-mix': { bg: '#FFD45C', ...bubble('#FFD45C') },
+};
+type Variant = 'yellow' | 'white' | 'panel' | 'yellow-mix' | 'flat-yellow' | 'flat-white';
 
-/**
- * Boutons de la maquette.
- * - yellow : bouton principal en relief (contour jaune clair, diagonale, relief enfoncé).
- * - white  : bouton secondaire en relief.
- * - flat-* : à plat — boutons au-dessus du clavier, « J'ai déjà un compte ».
- */
-export function Button({ label, onPress, variant = 'yellow', height = 60, icon, disabled, style, accessibilityHint }: Props) {
+type Props = {
+  label: string; onPress?: () => void; variant?: Variant; height?: number; fontSize?: number; border?: number; radius?: number;
+  icon?: ReactNode; trailing?: ReactNode; disabled?: boolean; style?: StyleProp<ViewStyle>; accessibilityHint?: string; color?: string;
+};
+
+export function Button({ label, onPress, variant = 'yellow', height = 56, fontSize = 19, border = 3, radius = 18, icon, trailing, disabled, style, accessibilityHint, color = gameInk }: Props) {
   const flat = variant.startsWith('flat');
-  const isYellow = variant.includes('yellow');
-  const bg = isYellow ? yellow.fill : '#FFFFFF';
-  const relief = isYellow ? yellow.relief : bubble('#FFFFFF').relief;
-  const border = isYellow ? yellow.border : bubble('#FFFFFF').border;
-  const diag = isYellow ? yellow.fill2 : bubble('#FFFFFF').diag;
+  const look = flat ? null : LOOKS[variant];
+  const flatBg = variant === 'flat-yellow' ? '#FFD45C' : '#FFFFFF';
   return (
     <Pressable
       accessibilityRole="button"
@@ -33,16 +36,17 @@ export function Button({ label, onPress, variant = 'yellow', height = 60, icon, 
     >
       <View
         style={[
-          { flex: 1, borderRadius: 18, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8, paddingHorizontal: 14 },
-          flat ? { backgroundColor: bg } : { borderWidth: 2, borderColor: border, boxShadow: `inset 0 -7px 0 ${relief}`, paddingBottom: 5 },
+          { flex: 1, borderRadius: radius, overflow: 'hidden', alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6, paddingHorizontal: 8 },
+          look ? { borderWidth: border, borderColor: look.border, boxShadow: `inset 0 -6px 0 ${look.relief}` } : { backgroundColor: flatBg },
         ]}
       >
-        {!flat && (
-          <LinearGradient pointerEvents="none" colors={[bg, bg, diag, diag]} locations={[0, 0.5, 0.5, 1]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+        {look && (
+          <LinearGradient pointerEvents="none" colors={[look.bg, look.bg, look.diag, look.diag]} locations={[0, 0.5, 0.5, 1]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
             style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }} />
         )}
-        {icon}
-        <T size={height >= 56 ? 20 : 17} weight={700}>{label}</T>
+        {icon ? <View>{icon}</View> : null}
+        <T size={fontSize} weight={700} color={color} numberOfLines={1} style={{ lineHeight: Math.round(fontSize * 1.1) }}>{label}</T>
+        {trailing ? <View>{trailing}</View> : null}
       </View>
     </Pressable>
   );

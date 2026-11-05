@@ -3,13 +3,13 @@ export const START_BRAISES = 240;
 export const HINT_COST = 60;
 export const FREE_AD_HINTS_PER_DAY = 3;
 
-/** Braises gagnées selon le nombre d'essais. */
+/** Braises gagnées selon le nombre d'essais (barème de l'écran de victoire). */
 export function braisesFor(essais: number): number {
-  if (essais <= 10) return 100;
-  if (essais <= 20) return 80;
-  if (essais <= 40) return 60;
-  if (essais <= 80) return 40;
-  return 25;
+  if (essais <= 10) return 50;
+  if (essais <= 25) return 30;
+  if (essais <= 50) return 20;
+  if (essais <= 100) return 10;
+  return 5;
 }
 
 export type Guess = { word: string; temperature: number; rank: number | null; order: number; hint?: boolean };
