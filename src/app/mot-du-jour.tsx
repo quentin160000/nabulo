@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { engine } from '@/game/engine';
-import { FREE_AD_HINTS_PER_DAY, HINT_COST, bestTemperature, sortGuesses, type Guess } from '@/game/rules';
+import { FREE_AD_HINTS_PER_DAY, HINT_COST, sortGuesses, type Guess } from '@/game/rules';
 import { moodLabel, moodOf, tempColor } from '@/game/temperature';
 import { useDaily } from '@/game/useDaily';
 import { useWallet } from '@/game/wallet';
