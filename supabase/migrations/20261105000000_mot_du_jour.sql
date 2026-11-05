@@ -1,13 +1,14 @@
 -- Nabulo · Mot du jour
 -- Le mot secret ne quitte jamais le serveur : l'appli n'a accès qu'aux fonctions ci-dessous.
 
-create extension if not exists vector;
+create extension if not exists vector with schema extensions;
 
--- Vocabulaire et vecteurs (fastText 300 dimensions, normalisés), une ligne par mot et par langue.
+-- Vocabulaire et vecteurs normalisés (word2vec frWac 200 dimensions ou fastText 300 : dimension libre),
+-- une ligne par mot et par langue.
 create table if not exists public.words (
   lang      text   not null check (lang in ('fr', 'en')),
   word      text   not null,
-  embedding vector(300) not null,
+  embedding extensions.vector not null,
   primary key (lang, word)
 );
 
@@ -39,14 +40,14 @@ alter table public.daily_neighbors enable row level security;
 
 -- Jour courant côté serveur (Europe/Paris) : on n'accepte pas les jours futurs.
 create or replace function public.current_day() returns integer
-language sql stable as $$
+language sql stable set search_path = '' as $$
   select (((now() at time zone 'Europe/Paris')::date - date '2026-01-01') + 1)::integer
 $$;
 
 -- Température d'un essai.
 create or replace function public.guess_word(p_lang text, p_day integer, p_word text)
 returns table (known boolean, temperature numeric, rank integer, found boolean)
-language plpgsql stable security definer set search_path = public as $$
+language plpgsql stable security definer set search_path = public, extensions as $$
 declare
   v_secret text; v_sim real;
 begin
@@ -68,7 +69,7 @@ end $$;
 -- Indice : le voisin le plus froid qui reste au-dessus du meilleur essai.
 create or replace function public.hint_word(p_lang text, p_day integer, p_above numeric, p_exclude text[])
 returns table (word text, temperature numeric)
-language sql stable security definer set search_path = public as $$
+language sql stable security definer set search_path = public, extensions as $$
   select n.word, least(99.9, round((n.similarity * 100)::numeric, 1))
     from daily_neighbors n
    where n.lang = p_lang and n.day = p_day and n.day <= current_day()
@@ -78,24 +79,31 @@ language sql stable security definer set search_path = public as $$
    limit 1
 $$;
 
--- Mots les plus proches et mot secret : seulement pour les jours passés, ou pour celui qui a trouvé
--- (vérification côté appli pour la V1 ; à durcir avec les comptes utilisateurs).
-create or replace function public.closest_words(p_lang text, p_day integer, p_count integer)
+-- Mots les plus proches et mot secret : pour les jours passés, ou pour celui qui prouve qu'il a trouvé
+-- en renvoyant le mot (p_proof). Sans preuve, le jour en cours reste secret.
+create or replace function public.closest_words(p_lang text, p_day integer, p_count integer, p_proof text default null)
 returns table (word text, temperature numeric)
-language sql stable security definer set search_path = public as $$
+language sql stable security definer set search_path = public, extensions as $$
   select n.word, case when n.rank = 1 then 100::numeric else least(99.9, round((n.similarity * 100)::numeric, 1)) end
     from daily_neighbors n
-   where n.lang = p_lang and n.day = p_day and n.day <= current_day()
+    join daily_words d on d.lang = n.lang and d.day = n.day
+   where n.lang = p_lang and n.day = p_day
+     and (n.day < current_day() or (n.day = current_day() and d.word = lower(trim(coalesce(p_proof, '')))))
    order by n.rank
    limit least(greatest(p_count, 1), 100)
 $$;
 
-create or replace function public.reveal_word(p_lang text, p_day integer)
-returns text language sql stable security definer set search_path = public as $$
-  select d.word from daily_words d where d.lang = p_lang and d.day = p_day and d.day <= current_day()
+create or replace function public.reveal_word(p_lang text, p_day integer, p_proof text default null)
+returns text language sql stable security definer set search_path = public, extensions as $$
+  select d.word from daily_words d
+   where d.lang = p_lang and d.day = p_day
+     and (d.day < current_day() or (d.day = current_day() and d.word = lower(trim(coalesce(p_proof, '')))))
 $$;
 
 grant execute on function public.guess_word(text, integer, text) to anon, authenticated;
 grant execute on function public.hint_word(text, integer, numeric, text[]) to anon, authenticated;
-grant execute on function public.closest_words(text, integer, integer) to anon, authenticated;
-grant execute on function public.reveal_word(text, integer) to anon, authenticated;
+grant execute on function public.closest_words(text, integer, integer, text) to anon, authenticated;
+grant execute on function public.reveal_word(text, integer, text) to anon, authenticated;
+-- les fonctions sont exécutables par public par défaut : on le retire pour n'ouvrir que celles ci-dessus
+revoke execute on function public.current_day() from public;
+grant execute on function public.current_day() to anon, authenticated;

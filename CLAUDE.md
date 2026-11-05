@@ -6,7 +6,9 @@ qui s'emmêle les pinceaux ; le joueur l'aide à retrouver le mot auquel il pens
 ## Pile
 - Expo SDK 58, expo-router (`src/app`), React 19, React Native 0.88, TypeScript strict.
 - `expo-linear-gradient`, `react-native-svg`, `expo-image`, `expo-haptics`, AsyncStorage, polices Fredoka (texte) et Inter (onglets).
-- Moteur de température : local (hors ligne) ou Supabase si `EXPO_PUBLIC_SUPABASE_URL` / `EXPO_PUBLIC_SUPABASE_ANON_KEY` sont définies.
+- Moteur de température : local (hors ligne) ou Supabase si `EXPO_PUBLIC_SUPABASE_URL` / `EXPO_PUBLIC_SUPABASE_ANON_KEY` sont définies (`.env`, voir `.env.example`).
+- Supabase : projet « nabulo » (réf. `tkneqhacfmnphfqpjjax`, Paris, offre gratuite). Schéma dans `supabase/migrations/` ; données chargées
+  depuis le PC avec `scripts/seed_supabase.py` (modèle word2vec frWac, 200 dimensions). Le mot du jour ne quitte jamais le serveur.
 - `npx expo install` est parfois bloqué par le proxy : installer avec npm la version listée dans `node_modules/expo/bundledNativeModules.json`.
 
 ## Commandes

@@ -371,7 +371,7 @@ function Victoire({ daily }: { daily: Daily }) {
   }));
   const [listH, setListH] = useState(0);
 
-  useEffect(() => { engine.closest(state.lang, state.day, 24).then(setClosest).catch(() => {}); }, [state.lang, state.day]);
+  useEffect(() => { engine.closest(state.lang, state.day, 24, state.secret ?? undefined).then(setClosest).catch(() => {}); }, [state.lang, state.day, state.secret]);
   useEffect(() => {
     if (!fresh) return;
     // même minutage que la maquette : Nabulo, le titre, le gain, puis les braises qui comptent et volent vers le solde

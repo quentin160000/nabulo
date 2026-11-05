@@ -13,9 +13,10 @@ export interface TemperatureEngine {
   /** Un mot plus chaud que `above` °C, pour un indice (jamais le mot secret). */
   hint(lang: Lang, day: number, above: number, exclude: string[]): Promise<{ word: string; temperature: number } | null>;
   /** Les mots les plus proches du mot secret (montrés seulement une fois le mot trouvé). */
-  closest(lang: Lang, day: number, count: number): Promise<{ word: string; temperature: number }[]>;
+  /** `proof` : le mot trouvé ; le serveur ne révèle le classement du jour qu'à celui qui l'a trouvé. */
+  closest(lang: Lang, day: number, count: number, proof?: string): Promise<{ word: string; temperature: number }[]>;
   /** Le mot secret, révélé uniquement après la victoire. */
-  reveal(lang: Lang, day: number): Promise<string>;
+  reveal(lang: Lang, day: number, proof?: string): Promise<string>;
 }
 
 /** 1er janvier 2026 = mot n°1. Calcul en jours locaux pour que le mot change à minuit. */
