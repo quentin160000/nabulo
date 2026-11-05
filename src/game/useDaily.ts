@@ -61,7 +61,9 @@ export function useDaily(lang: Lang = 'fr', date = new Date()) {
     const s = stateRef.current;
     const h = await engine.hint(s.lang, s.day, bestTemperature(s.guesses), s.guesses.map(g => g.word));
     if (!h) return null;
-    const g: Guess = { word: h.word, temperature: h.temperature, rank: null, order: s.guesses.length + 1, hint: true };
+    // un mot donné en indice garde son vrai rang dans le classement (ex. 10e plus proche → « 10 »)
+    const r = await engine.guess(s.lang, s.day, h.word).catch(() => null);
+    const g: Guess = { word: h.word, temperature: h.temperature, rank: r && r.known ? r.rank : null, order: s.guesses.length + 1, hint: true };
     commit({ ...s, guesses: [...s.guesses, g], hintsUsed: s.hintsUsed + 1, adHintsUsed: s.adHintsUsed + (via === 'pub' ? 1 : 0) });
     setLast(h.word);
     return h;

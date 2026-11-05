@@ -59,7 +59,6 @@ function Regles({ day, onStart }: { day: number; onStart: () => void }) {
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           <HeaderButton kind="close" label="Retour à l’accueil" onPress={() => router.back()} />
           <T size={24} weight={700} outline color="#FFFFFF" style={{ flex: 1, textShadowColor: INK }}>Nabulo</T>
-          <T size={15} weight={600} outline style={{ textShadowColor: INK }}>n°{day}</T>
         </View>
         <ScrollView style={{ flex: 1, marginHorizontal: -16 }} contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }} showsVerticalScrollIndicator={false}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12, marginTop: 6 }}>
@@ -88,7 +87,7 @@ function Regles({ day, onStart }: { day: number; onStart: () => void }) {
             </View>
           </Section>
         </ScrollView>
-        <Button label={`Jouer le mot n°${day}`} variant="yellow-mix" border={4} radius={17} onPress={onStart} />
+        <Button label="Jouer" variant="yellow-mix" border={4} radius={17} onPress={onStart} />
       </View>
     </View>
   );
@@ -142,12 +141,12 @@ function EnJeu({ daily }: { daily: Daily }) {
     <View style={{ flex: 1 }}>
       <GameBg />
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <View style={{ flex: 1, paddingTop: inset.top + 14, paddingBottom: 10 + inset.bottom, paddingHorizontal: 16, gap: 10 }}>
+        <View style={{ flex: 1, paddingTop: inset.top + 14, paddingBottom: kb ? 14 : 10 + inset.bottom, paddingHorizontal: 16, gap: 10 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
             <HeaderButton kind="menu" label="Retour à l’accueil" onPress={() => router.back()} />
             <View style={{ flex: 1, minWidth: 0, gap: 1 }}>
               <T size={24} weight={700} outline style={{ lineHeight: 25, textShadowColor: INK }}>Nabulo</T>
-              <T size={14} weight={600} outline style={{ textShadowColor: INK }}>n°{state.day} · {state.guesses.length} essai{state.guesses.length > 1 ? 's' : ''}</T>
+              <T size={14} weight={600} outline style={{ textShadowColor: INK }}>{state.guesses.length} essai{state.guesses.length > 1 ? 's' : ''}</T>
             </View>
             <CoinPill value={braises} flash={flash} onPress={() => router.push('/boutique')} />
           </View>
@@ -169,14 +168,14 @@ function EnJeu({ daily }: { daily: Daily }) {
               </View>
             </View>
 
-            <Gauge t={lastGuess?.temperature ?? null} record={record} />
+            <Gauge t={lastGuess?.temperature ?? null} record={record} seq={state.guesses.length} />
 
             <Section title="Les plus chauds" right={rows.length > 4 ? 'glisse ↓' : undefined} padding={8} gap={6} style={kb ? { flexShrink: 1, minHeight: 0 } : { flex: 1, minHeight: 0 }}>
               <ScrollView style={kb ? { maxHeight: 202, borderRadius: 14 } : { flex: 1, borderRadius: 14 }} contentContainerStyle={{ gap: 6 }}
                 keyboardDismissMode="on-drag" onTouchStart={() => { if (kb) Keyboard.dismiss(); }} snapToInterval={52} decelerationRate="fast">
                 {rows.length === 0 && (
-                  <View style={{ height: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.12)' }}>
-                    <T size={14} weight={600} color="#FFFFFF">tes essais s’afficheront ici, du plus chaud au plus froid</T>
+                  <View style={{ minHeight: 46, borderRadius: 14, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 14, paddingVertical: 8, backgroundColor: 'rgba(255,255,255,0.12)' }}>
+                    <T size={14} weight={600} color="#FFFFFF" align="center">tes essais s’afficheront ici, du plus chaud au plus froid</T>
                   </View>
                 )}
                 {rows.map(g => <GuessRow key={g.word} g={g} last={g.word === lastGuess?.word} />)}
@@ -278,7 +277,7 @@ function GuessRow({ g, last }: { g: Guess; last: boolean }) {
 }
 
 /** Jauge horizontale : dégradé froid → chaud rempli jusqu'à la température, aiguille blanche, « Record ! » au-dessus. */
-function Gauge({ t, record }: { t: number | null; record: boolean }) {
+function Gauge({ t, record, seq }: { t: number | null; record: boolean; seq: number }) {
   const [w, setW] = useState(0);
   const target = t === null ? 0 : gaugePos(t);
   const [p] = useState(() => new Animated.Value(target));
@@ -288,10 +287,12 @@ function Gauge({ t, record }: { t: number | null; record: boolean }) {
     AccessibilityInfo.isReduceMotionEnabled().then(reduce => {
       if (!alive) return;
       if (reduce) { p.setValue(target); return; }
-      Animated.timing(p, { toValue: target, duration: 1300, easing: Easing.bezier(0.22, 1.1, 0.36, 1), useNativeDriver: false }).start();
+      // à chaque nouveau mot la jauge repart de zéro ; plus le mot est chaud, plus elle va loin et plus elle ralentit en fin de course
+      p.setValue(0);
+      Animated.timing(p, { toValue: target, duration: 700 + 1900 * target, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start();
     });
     return () => { alive = false; };
-  }, [target, p]);
+  }, [target, t, p, seq]);
   useEffect(() => {
     pop.setValue(0);
     if (record) Animated.sequence([Animated.delay(1100), Animated.spring(pop, { toValue: 1, useNativeDriver: false, friction: 5 })]).start();
@@ -418,7 +419,7 @@ function Victoire({ daily }: { daily: Daily }) {
       <T size={15} weight={700} color="#B8381A">{fmt(c.temperature)}</T>
     </View>
   );
-  const share = () => Share.share({ message: `Nabulo · Mot du jour n°${state.day} trouvé en ${state.guesses.length} essais${state.hintsUsed ? ` (${state.hintsUsed} indice${state.hintsUsed > 1 ? 's' : ''})` : ''} 🔥` }).catch(() => {});
+  const share = () => Share.share({ message: `Nabulo · Mot du jour trouvé en ${state.guesses.length} essais${state.hintsUsed ? ` (${state.hintsUsed} indice${state.hintsUsed > 1 ? 's' : ''})` : ''} 🔥` }).catch(() => {});
 
   return (
     <View style={{ flex: 1 }}>
@@ -430,7 +431,7 @@ function Victoire({ daily }: { daily: Daily }) {
             style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.22)', alignItems: 'center', justifyContent: 'center' }}>
             <Icon name="close" size={20} color="#FFFFFF" />
           </Pressable>
-          <T size={22} weight={700} outline style={{ flex: 1 }}>Mot du jour n°{state.day}</T>
+          <T size={22} weight={700} outline style={{ flex: 1 }}>Mot du jour</T>
           <Animated.View accessibilityLabel={`Solde : ${shownCoins} braises`} style={{ height: 38, marginLeft: 16, paddingLeft: 32, paddingRight: 12, borderRadius: 19, backgroundColor: '#FFFFFF', justifyContent: 'center', transform: [{ scale: a.bump.interpolate({ inputRange: [0, 1], outputRange: [1, 1.12] }) }] }}>
             <Coin size={42} style={{ position: 'absolute', left: -12, top: -2 }} />
             <T size={18} weight={700} color="#2B2150" style={{ minWidth: 36, textAlign: 'right', fontVariant: ['tabular-nums'] }}>{shownCoins}</T>

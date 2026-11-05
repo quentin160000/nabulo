@@ -1,8 +1,9 @@
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Pressable, ScrollView, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { AccessibilityInfo, Animated, Easing, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { FREE_AD_HINTS_PER_DAY, HINT_COST } from '@/game/rules';
+import { HINT_COST } from '@/game/rules';
 import { useWallet } from '@/game/wallet';
 import { ink } from '@/theme/colors';
 import { Bubble } from '@/ui/Bubble';
@@ -44,7 +45,7 @@ export default function Boutique() {
 
           <Label>Indices</Label>
           <HintCard icon="bolt" title="Mot proche" sub="révèle un mot brûlant · se paie en partie, au moment de l’utiliser" tag={`${HINT_COST} / indice`} tagBg="#FFD45C" />
-          <HintCard icon="star" title="Indice gratuit avec une pub" sub={`directement en partie, quand il te manque des braises · ${FREE_AD_HINTS_PER_DAY} par jour`} tag="En partie" tagBg="#7CE0B5" />
+          <HintCard icon="star" title="Indice gratuit avec une pub" sub="directement en partie" tag="En partie" tagBg="#7CE0B5" />
 
           <Label>Recharger</Label>
           <View style={{ flexDirection: 'row', gap: 8, alignItems: 'stretch', paddingTop: 6 }}>
@@ -52,7 +53,7 @@ export default function Boutique() {
             <Pressable accessibilityRole="button" accessibilityLabel="300 braises pour 1,99 €, le plus choisi" onPress={buy} style={{ flex: 1 }}>
               <LinearGradient colors={['#FFC24A', '#FF7A2E', '#F04E24']} locations={[0, 0.55, 1]} start={{ x: 0.3, y: 0 }} end={{ x: 0.7, y: 1 }} style={{ flex: 1, padding: 3, borderRadius: 23 }}>
                 <LinearGradient colors={['#FFF8EE', '#FFEBD3']} style={{ flex: 1, borderRadius: 20, boxShadow: 'inset 0 -5px 0 #FFD9AE', paddingTop: 18, paddingHorizontal: 4, paddingBottom: 13, alignItems: 'center', gap: 4 }}>
-                  <Coin size={50} />
+                  <BobCoin size={50} delay={300} />
                   <T size={26} weight={700} color={ink} style={{ lineHeight: 26 }}>300</T>
                   <T size={12} weight={600} color="#B4541E">braises</T>
                   <View style={{ marginTop: 4, paddingVertical: 5, paddingHorizontal: 12, borderRadius: 12, backgroundColor: '#F04E24' }}><T size={15} weight={700} color="#FFFFFF">1,99 €</T></View>
@@ -95,12 +96,40 @@ function Pack({ n, price, note, onPress }: { n: number; price: string; note?: st
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={`${n} braises pour ${price}`} onPress={onPress} style={{ flex: 1 }}>
       <Bubble {...WHITE_CARD} style={{ flex: 1, paddingTop: 10, paddingHorizontal: 4, paddingBottom: 13, alignItems: 'center', gap: 4 }}>
-        <Coin size={44} />
+        <BobCoin size={44} delay={n === 100 ? 0 : 600} />
         <T size={24} weight={700} color={ink} style={{ lineHeight: 24 }}>{n}</T>
         <T size={12} weight={600} color={SOFT}>braises</T>
         <View style={{ marginTop: 4, paddingVertical: 4, paddingHorizontal: 10, borderRadius: 12, backgroundColor: '#5BD67A' }}><T size={14} weight={700} color={ink}>{price}</T></View>
         <T size={11} weight={700} color="#C2410C">{note ?? ' '}</T>
       </Bubble>
     </Pressable>
+  );
+}
+
+/** Pièce de braise qui flotte et se balance doucement (packs « Recharger »), décalée d'un pack à l'autre. */
+function BobCoin({ size, delay }: { size: number; delay: number }) {
+  const [v] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    let loop: Animated.CompositeAnimation | null = null;
+    AccessibilityInfo.isReduceMotionEnabled().then(r => {
+      if (r) return;
+      loop = Animated.loop(Animated.sequence([
+        Animated.delay(delay),
+        Animated.timing(v, { toValue: 1, duration: 900, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        Animated.timing(v, { toValue: 0, duration: 900, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        Animated.delay(900 - delay),
+      ]));
+      loop.start();
+    });
+    return () => loop?.stop();
+  }, [v, delay]);
+  return (
+    <Animated.View style={{ transform: [
+      { translateY: v.interpolate({ inputRange: [0, 1], outputRange: [0, -5] }) },
+      { rotate: v.interpolate({ inputRange: [0, 0.5, 1], outputRange: ['-6deg', '0deg', '6deg'] }) },
+      { scale: v.interpolate({ inputRange: [0, 1], outputRange: [1, 1.06] }) },
+    ] }}>
+      <Coin size={size} />
+    </Animated.View>
   );
 }
