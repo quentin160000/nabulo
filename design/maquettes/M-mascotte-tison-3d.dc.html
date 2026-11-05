@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Nabulo 3D · face, tour complet, chargement</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0}
+.tl-fill{width:8%;animation:tlfill 3.2s ease-in-out infinite}
+@keyframes tlfill{0%{width:8%}80%{width:100%}100%{width:100%}}
+@media (prefers-reduced-motion: reduce){.tl-fill{animation:none;width:62%}}</style>
+</helmet>
+<div style="width: 1430px; height: 1076px; box-sizing: border-box; padding: 36px 40px; display: flex; flex-direction: column; gap: 22px; background: linear-gradient(180deg, #4B33B8, #6E4FE6); font-family: 'Fredoka', system-ui, sans-serif; color: #2B2150">
+<div><div style="font-size: 40px; font-weight: 700; color: #FFFFFF; text-shadow: 0 3px 0 #2B2150">Nabulo en pâte à modeler · 3D</div><div style="font-size: 17px; font-weight: 500; color: #FFFFFF">rendus du modèle 3D : de face, en rotation, et sur l’écran de chargement</div></div>
+<div style="display: flex; gap: 40px; align-items: flex-start"><div style="display: flex; flex-direction: column; gap: 14px; align-items: center"><div style="font-size: 20px; font-weight: 700; color: #FFFFFF; text-shadow: 0 2px 0 #2B2150">Nabulo 3D · de face</div><div style="width: 440px; height: 852px; box-sizing: border-box; padding: 24px; border-radius: 32px; background: #FFFFFF; display: flex; flex-direction: column; gap: 16px"><div style="flex-grow: 1; border-radius: 24px; background: #FFF6E0; display: flex; align-items: center; justify-content: center"><img src="/_blob/f9555558eb865b522558683b342f5b5c" alt="Nabulo en pâte à modeler, de face" style="width: 380px; height: 380px; display: block"></div><div style="font-size: 15px; font-weight: 500; color: #6B6290; line-height: 1.4">Image fixe tirée du modèle en pâte (640 px, fond transparent). Pour l’icône, les bulles de dialogue et les écrans de résultat.</div></div></div><div style="display: flex; flex-direction: column; gap: 14px; align-items: center"><div style="font-size: 20px; font-weight: 700; color: #FFFFFF; text-shadow: 0 2px 0 #2B2150">Nabulo 3D · tour complet</div><div style="width: 440px; height: 852px; box-sizing: border-box; padding: 24px; border-radius: 32px; background: #FFFFFF; display: flex; flex-direction: column; gap: 16px"><div style="flex-grow: 1; border-radius: 24px; background: #FFF6E0; display: flex; align-items: center; justify-content: center"><img src="/_blob/6c41d1d081765acae849cfd3c885f0f5" alt="Nabulo qui tourne sur lui-même" style="width: 380px; height: 380px; display: block"></div><div style="font-size: 15px; font-weight: 500; color: #6B6290; line-height: 1.4">Animation en boucle : 48 images, un tour en 2,4 s, fond transparent (WebP animé, 320 px). Lue comme une simple image, sans code.</div></div></div><div style="display: flex; flex-direction: column; gap: 14px; align-items: center"><div style="font-size: 20px; font-weight: 700; color: #FFFFFF; text-shadow: 0 2px 0 #2B2150">Écran de chargement</div><div style="position: relative; width: 390px; height: 852px; border-radius: 44px; overflow: hidden; border: 4px solid #2B2150; background: linear-gradient(180deg, #4B33B8 0%, #6E4FE6 55%, #9A7BFF 100%); box-sizing: border-box"><div style="position: absolute; left: 0; right: 0; top: 0; height: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 26px; box-sizing: border-box; font-size: 15px; font-weight: 700; color: #FFFFFF; text-shadow: 0 2px 0 #2B2150"><span>9:41</span><span>●●● ▮</span></div><div style="position: absolute; left: 16px; right: 16px; top: 48px; bottom: 24px; display: flex; flex-direction: column; gap: 10px"><div style="flex-grow: 1"></div><div style="display: flex; flex-direction: column; align-items: center; gap: 8px"><img src="/_blob/6c41d1d081765acae849cfd3c885f0f5" alt="Nabulo qui tourne sur lui-même" style="width: 280px; height: 280px; display: block"><div style="font-size: 46px; font-weight: 700; letter-spacing: 0.5px; color: #FFFFFF; text-shadow: 0 2px 0 #2B2150">Nabulo</div><div style="font-size: 16px; font-weight: 600; color: #FFFFFF">le jeu des mots chauds et froids</div></div><div style="flex-grow: 1"></div><div style="display: flex; flex-direction: column; align-items: center; gap: 10px"><div style="width: 240px; height: 26px; box-sizing: border-box; border-radius: 13px; border: 4px solid #2B2150; background: #FFFFFF; overflow: hidden"><div class="tl-fill" style="height: 100%; background: linear-gradient(90deg, #5B8DEF, #9AD8F5 35%, #FFC23D 68%, #FF5A36)"></div></div><div style="font-size: 15px; font-weight: 600; color: #FFFFFF">Chargement des mots…</div></div><div style="height: 30px"></div></div></div></div></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1430,"height":1076}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

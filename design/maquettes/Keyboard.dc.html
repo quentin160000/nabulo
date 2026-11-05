@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Clavier AZERTY</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+button{cursor:pointer}
+button:active{transform:translateY(2px);filter:brightness(0.94)}
+</style>
+</helmet>
+<div style="width: 390px; height: {{height}}; box-sizing: border-box; padding: {{pad}}; display: flex; flex-direction: column; gap: {{rowGap}}; background: {{bg}}; font-family: {{font}}">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="4">
+<div style="display: flex; gap: {{keyGap}}; padding: {{r.pad}}">
+<sc-for list="{{r.keys}}" as="k" hint-placeholder-count="10">
+<button onClick="{{k.press}}" aria-label="{{k.aria}}" style="flex: {{k.flex}} 1 0; min-width: 0; height: {{k.h}}; padding: 0; border-radius: {{k.radius}}; border: {{k.border}}; background: {{k.bg}}; box-shadow: {{k.shadow}}; font-family: inherit; font-size: {{k.fs}}; font-weight: {{k.fw}}; color: {{k.color}}">{{k.label}}</button>
+</sc-for>
+</div>
+</sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"variant":{"editor":"enum","options":["systeme","jeu"],"default":"systeme"},"ink":{"editor":"color","default":"#2B2150"},"panel":{"editor":"color","default":"#F4F1FF"},"accent":{"editor":"color","default":"#FFD45C"},"bg":{"editor":"color","default":"#5A3FB8"},"onKey":{"editor":null},"$preview":{"width":390,"height":286}}'>
+class Component extends DCLogic {
+renderVals() {
+const sys = (this.props.variant ?? 'systeme') === 'systeme';
+const ink = this.props.ink ?? '#2B2150';
+const panel = this.props.panel ?? '#F4F1FF';
+const accent = this.props.accent ?? '#FFD45C';
+const send = (k) => () => { if (this.props.onKey) this.props.onKey(k); };
+const aria = { '⌫': 'Effacer', '⇧': 'Majuscule', 'espace': 'Espace', 'Entrée': 'Valider le mot', '123': 'Chiffres' };
+const mk = (label, o) => Object.assign({
+label: label,
+aria: aria[label] || label,
+flex: '1',
+h: sys ? '44px' : '46px',
+radius: sys ? '6px' : '11px',
+border: sys ? 'none' : '2.5px solid ' + ink,
+bg: sys ? '#FFFFFF' : panel,
+shadow: sys ? '0 1px 0 #8E8AA0' : '0 3px 0 ' + ink,
+fs: sys ? '21px' : '19px',
+fw: sys ? '400' : '600',
+color: sys ? '#1C1B22' : ink,
+press: send(label)
+}, o || {});
+const row1 = 'AZERTYUIOP'.split('');
+const row2 = 'QSDFGHJKLM'.split('');
+const row3 = 'WXCVBN'.split('');
+let rows;
+if (sys) {
+const special = { bg: '#ACA8BB', flex: '1.45', fs: '18px' };
+rows = [
+{ pad: '0', keys: row1.map((l) => mk(l)) },
+{ pad: '0', keys: row2.map((l) => mk(l)) },
+{ pad: '0', keys: [mk('⇧', special)].concat(row3.map((l) => mk(l)), [mk("'"), mk('⌫', special)]) },
+{ pad: '0', keys: [mk('123', Object.assign({}, special, { fs: '16px' })), mk('espace', { flex: '5', fs: '16px' }), mk('Entrée', Object.assign({}, special, { flex: '2', fs: '16px' }))] }
+];
+} else {
+const small = { h: '38px', fs: '17px', bg: '#FFFFFF' };
+rows = [
+{ pad: '0 22px', keys: ['É', 'È', 'Ê', 'À', 'Ç', 'Ù', '-'].map((l) => mk(l, small)) },
+{ pad: '0', keys: row1.map((l) => mk(l)) },
+{ pad: '0', keys: row2.map((l) => mk(l)) },
+{ pad: '0', keys: [mk('⌫', { flex: '1.6', fs: '20px' })].concat(row3.map((l) => mk(l)), [mk('Entrée', { flex: '2.4', bg: accent, fs: '16px', fw: '700' })]) }
+];
+}
+return {
+rows: rows,
+height: sys ? '286px' : '232px',
+pad: sys ? '8px 4px 26px' : '10px 6px 14px',
+rowGap: sys ? '11px' : '7px',
+keyGap: sys ? '6px' : '5px',
+bg: sys ? '#D3D1DC' : (this.props.bg ?? '#5A3FB8'),
+font: sys ? 'system-ui, -apple-system, sans-serif' : "'Fredoka', system-ui, sans-serif"
+};
+}
+}
+</script>
+</body>
+</html>

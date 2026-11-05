@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Jauges avec leur socle</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="width: 1160px; height: 520px; box-sizing: border-box; padding: 28px 32px; display: flex; flex-direction: column; gap: 16px; background: {{bg}}; font-family: 'Fredoka', system-ui, sans-serif; color: #2B2150">
+
+<div style="display: flex; align-items: center; gap: 20px">
+<h1 style="margin: 0; flex-grow: 1; font-size: 30px; font-weight: 700; color: #FFFFFF; text-shadow: 0 3px 0 #2B2150">Jauges complètes avec leur socle</h1>
+<div style="display: flex; align-items: center; gap: 10px; background: linear-gradient(to bottom right, #F4F1FF 50%, color-mix(in srgb, #F4F1FF 95%, #3A2A7A) 50%); border: 3px solid color-mix(in srgb, #F4F1FF 55%, white); border-radius: 18px; padding: 6px 14px; box-shadow: inset 0 -5px 0 color-mix(in srgb, #F4F1FF 84%, #3A2A7A)">
+<label for="t" style="font-size: 15px; font-weight: 600">Température</label>
+<input id="t" type="range" min="-30" max="100" step="1" value="{{t}}" onChange="{{onT}}" style="width: 220px; accent-color: {{tColor}}">
+<span style="width: 52px; text-align: right; font-size: 18px; font-weight: 700">{{tLabel}}</span>
+</div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 12px; flex-grow: 1">
+<sc-for list="{{cols}}" as="c" hint-placeholder-count="7">
+<div style="box-sizing: border-box; border-radius: 20px; padding: 12px 8px; display: flex; flex-direction: column; align-items: center; gap: 10px; {{c.style}}">
+<div style="text-align: center; color: #FFFFFF; line-height: 1.2"><div style="font-size: 15px; font-weight: 700">{{c.name}}</div><div style="font-size: 12px; opacity: 0.85">{{c.range}}</div></div>
+<div role="img" aria-label="{{c.aria}}" style="position: relative; width: 72px; flex-grow: 1">
+<div style="position: absolute; top: 0; bottom: 18px; left: 25px; width: 22px; box-sizing: border-box; border-radius: 11px 11px 0 0; border: 3px solid transparent; border-bottom: none; background: linear-gradient(180deg, #FF5A36, #FFC23D 32%, #9AD8F5 65%, #5B8DEF)"></div>
+<div style="position: absolute; left: 0; bottom: 0; display: flex"><dc-import name="Socle" famille="feu1" t="{{c.t}}" size="72" hint-size="72px,72px"></dc-import></div>
+<div style="position: absolute; left: 10px; top: {{c.top}}; width: 52px; height: 26px; margin-top: -13px; box-sizing: border-box; border-radius: 13px; background: #FFFFFF; border: 3px solid transparent; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #2B2150">{{c.label}}</div>
+</div></div>
+</sc-for>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"temperature":{"editor":"range","min":-30,"max":100,"step":1,"default":47,"unit":"°C","section":"Aperçu"},"teinteViolet":{"editor":"range","min":0,"max":360,"step":1,"default":256,"unit":"°","section":"Couleurs"},"$preview":{"width":1160,"height":520}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { t: null };
+}
+renderVals() {
+const t = this.state.t !== null ? this.state.t : (this.props.temperature ?? 47);
+const lvl = t < -10 ? 0 : t < 5 ? 1 : t < 20 ? 2 : t < 40 ? 3 : t < 60 ? 4 : t < 85 ? 5 : 6;
+const hV = this.props.teinteViolet ?? 256;
+const on = 'background: hsl(' + hV + ', 50%, 40%); border: 3px solid rgba(255,255,255,0.55); box-shadow: inset 0 -6px 0 rgba(20,10,60,0.22); opacity: 1';
+const off = 'background: rgba(255,255,255,0.12); border: 3px solid transparent; opacity: 0.6';
+const temps = [-20.4, -3.2, 12.3, 30.6, 50.1, 72.8, 95.4];
+const words = ['banquise', 'océan', 'nuage', 'soleil', 'cheminée', 'four', 'lave'];
+const dots = ['#5B8DEF', '#9DBDF0', '#C9DDF8', '#5FC3EE', '#FF9A3C', '#FF5A36', '#E8432A'];
+const names = ['Très froid', 'Froid', 'Frais', 'Tiède', 'Chaud', 'Brûlant', 'Très chaud'];
+const ranges = ['sous −10°', '−10 à 5°', '5 à 20°', '20 à 40°', '40 à 60°', '60 à 85°', '85° et plus'];
+const cols = temps.map((v, i) => {
+const p = Math.max(0, Math.min(1, (v + 30) / 130));
+return {
+t: v,
+name: names[i],
+range: ranges[i],
+label: Math.round(v) + '°',
+word: words[i],
+tempTxt: v.toFixed(1).replace('.', ',') + ' °C',
+dot: dots[i],
+aria: 'Jauge à ' + Math.round(v) + ' degrés pour le mot ' + words[i],
+top: 'calc(14px + ' + (1 - p).toFixed(3) + ' * (100% - 74px))',
+style: i === lvl ? on : off
+};
+});
+return {
+bg: 'hsl(' + hV + ', 66%, 56%)',
+t: t,
+tLabel: Math.round(t) + '°',
+tColor: t >= 60 ? '#FF5A36' : t >= 20 ? '#FFC23D' : '#5B8DEF',
+cols: cols,
+onT: (e) => this.setState({ t: Number(e.target.value) })
+};
+}
+}
+</script>
+</body>
+</html>

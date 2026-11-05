@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Le relais</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+button{cursor:pointer;font-family:inherit}
+.vscroll{scrollbar-width:none}
+.vscroll::-webkit-scrollbar{display:none}
+.caret{display:inline-block;width:3px;height:24px;margin-left:2px;vertical-align:middle;background:currentColor;border-radius:2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+@media (prefers-reduced-motion: reduce){.caret{animation:none}}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; display: flex; flex-direction: column; background: {{bg}}; font-family: 'Fredoka', system-ui, sans-serif; color: {{ink}}; overflow: hidden">
+<div style="flex-grow: 1; min-height: 0; box-sizing: border-box; padding: 14px 16px 10px; display: flex; flex-direction: column; gap: 10px">
+<header style="display: flex; align-items: center; gap: 10px"><button aria-label="Retour" style="width: 44px; height: 44px; flex-shrink: 0; border-radius: 14px; border: 0; background: {{panel}}; display: flex; align-items: center; justify-content: center; padding: 0; color: {{ink}}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></button><h1 style="margin: 0; flex-grow: 1; min-width: 0; font-size: 23px; font-weight: 700; color: #FFFFFF; text-shadow: 0 2px 0 {{ink}}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Le relais</h1><div style="height: 38px; box-sizing: border-box; padding: 0 12px; border-radius: 19px; border: 3px solid color-mix(in srgb, {{panel}} 55%, white); background: linear-gradient(to bottom right, {{panel}} 50%, color-mix(in srgb, {{panel}} 95%, #3A2A7A) 50%); box-shadow: inset 0 -5px 0 color-mix(in srgb, {{panel}} 84%, #3A2A7A); display: flex; align-items: center; gap: 6px; font-size: 16px; font-weight: 700; white-space: nowrap">♥ ♥ ♡</div></header>
+<div style="flex-grow: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; align-items: center; justify-content: space-between; color: #FFFFFF; font-size: 14px; font-weight: 600"><span>Minimum 30° avec le mot précédent</span><span style="padding: 2px 10px; border-radius: 10px; background: #FFD45C; color: {{ink}}; font-weight: 700; white-space: nowrap">{{turn}}</span></div>
+<div class="vscroll" style="flex-grow: 1; min-height: 0; overflow-y: auto; box-sizing: border-box; border-radius: 22px; background: {{bgDeep}}; padding: 12px; display: flex; flex-direction: column; gap: 6px">
+<sc-for list="{{chain}}" as="c" hint-placeholder-count="5">
+<div style="display: flex; justify-content: {{c.side}}">
+<div style="max-width: 78%; display: flex; flex-direction: column; align-items: {{c.align}}; gap: 2px">
+<span style="font-size: 11px; font-weight: 700; color: #FFFFFF; opacity: 0.85">{{c.who}}</span>
+<span style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 16px; border: 3px solid color-mix(in srgb, {{c.bg}} 55%, white); background: linear-gradient(to bottom right, {{c.bg}} 50%, color-mix(in srgb, {{c.bg}} 95%, #3A2A7A) 50%); font-size: 19px; font-weight: 700; box-shadow: inset 0 -5px 0 color-mix(in srgb, {{c.bg}} 84%, #3A2A7A)">{{c.w}}<span style="font-size: 12px; font-weight: 700; opacity: {{c.op}}">{{c.t}}</span></span>
+</div></div>
+</sc-for>
+</div>
+<div role="status" style="min-height: 40px; box-sizing: border-box; border-radius: 14px; padding: 6px 12px; display: flex; align-items: center; justify-content: center; text-align: center; background: {{fbBg}}; font-size: 15px; font-weight: 700; color: {{fbCol}}">{{fb}}</div>
+</div>
+<div style="display: flex; gap: 8px">
+<div role="textbox" aria-label="Mot proche du dernier" style="flex-grow: 1; min-width: 0; height: 52px; box-sizing: border-box; padding: 0 14px; border-radius: 17px; border: 2px solid #D9D1F2; background: #FFFFFF; box-shadow: inset 0 -6px 0 color-mix(in srgb, #FFFFFF 84%, #3A2A7A); display: flex; align-items: center; font-size: 21px; font-weight: 500; overflow: hidden; white-space: nowrap">
+<sc-if value="{{empty}}" hint-placeholder-val="{{ true }}"><span style="color: #7C7399">Mot proche du dernier</span></sc-if>
+<span>{{word}}</span><span class="caret"></span>
+</div>
+<button onClick="{{submit}}" style="height: 52px; padding: 0 14px; border-radius: 17px; border: 2px solid color-mix(in srgb, {{accent}} 55%, white); background: linear-gradient(to bottom right, {{accent}} 50%, color-mix(in srgb, {{accent}} 95%, #3A2A7A) 50%); box-shadow: inset 0 -6px 0 color-mix(in srgb, {{accent}} 84%, #3A2A7A); font-size: 17px; font-weight: 700; color: {{ink}}">Jouer</button>
+</div>
+</div>
+<dc-import name="Keyboard" variant="systeme" on-key="{{onKey}}" hint-size="390px,286px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"teinteViolet":{"editor":"range","min":0,"max":360,"step":1,"default":256,"unit":"°","section":"Couleurs"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = Object.assign({ word: '' }, { chain: [{ w: 'nuage', p: 0, t: null }, { w: 'pluie', p: 1, t: 66 }, { w: 'flaque', p: 0, t: 52 }, { w: 'bottes', p: 1, t: 41 }, { w: 'chaussette', p: 0, t: 47 }, { w: 'pied', p: 1, t: 55 }], broken: false });
+}
+tempFor(w) {
+let h = 7;
+for (let i = 0; i < w.length; i++) h = (h * 31 + w.charCodeAt(i)) % 9973;
+return Math.round(((h / 9973) * 120 - 28) * 10) / 10;
+}
+col(t) { return t >= 100 ? '#FFD23F' : t >= 60 ? '#FF5A36' : t >= 40 ? '#FF9A3C' : t >= 20 ? '#7CCDEF' : t >= 0 ? '#A9C6F2' : '#5B8DEF'; }
+fmt(t) { return Math.round(t) + '°'; }
+press(k) {
+const w = this.state.word;
+if (k === '⌫') { this.setState({ word: w.slice(0, -1) }); return; }
+if (k === 'Entrée') { this.submit(); return; }
+if (k === '⇧' || k === '123' || k === 'espace' || w.length >= 16) return;
+this.setState({ word: w + k.toLowerCase() });
+}
+submit() {
+const w = this.state.word.trim();
+if (!w) return;
+if (this.state.broken) { this.setState({ word: '', broken: false, chain: [{ w: 'nuage', p: 0, t: null }] }); return; }
+const ch = this.state.chain;
+const prev = ch[ch.length - 1].w;
+const t = Math.abs(this.tempFor(prev + w)) % 75 + 12;
+const mine = { w: w, p: 0, t: t };
+if (t < 30) { this.setState({ word: '', chain: ch.concat([mine]), broken: true }); return; }
+const reply = ['orteil', 'marche', 'chemin', 'balade', 'forêt', 'arbre'][ch.length % 6];
+this.setState({ word: '', chain: ch.concat([mine, { w: reply, p: 1, t: 40 + (ch.length * 7) % 30 }]) });
+}
+
+renderVals() {
+const hV = this.props.teinteViolet ?? 256;
+const s = this.state;
+const ink = 'hsl(' + hV + ', 45%, 16%)';
+const ch = s.chain;
+const last = ch[ch.length - 1];
+return Object.assign({
+bg: 'hsl(' + hV + ', 66%, 56%)',
+bgDeep: 'hsl(' + hV + ', 66%, 42%)',
+panel: 'hsl(' + hV + ', 66%, 96%)',
+ink: ink,
+inkSoft: 'hsl(' + hV + ', 28%, 34%)',
+accent: '#FFD45C',
+word: s.word,
+empty: s.word === '',
+submit: () => this.submit(),
+onKey: (k) => this.press(k)
+}, {
+chain: ch.map((c) => ({ w: c.w, who: c.p === 0 ? 'Kiwi_33' : 'Lynx', side: c.p === 0 ? 'flex-start' : 'flex-end', align: c.p === 0 ? 'flex-start' : 'flex-end',
+bg: c.t !== null && c.t < 30 ? '#B9B3C9' : c.p === 0 ? '#FF86C8' : '#7FE0B4', t: c.t === null ? 'départ' : this.fmt(c.t), op: 0.8 })),
+turn: s.broken ? 'Fin' : 'À toi · 10 s',
+fb: s.broken ? 'Chaîne cassée : « ' + last.w + ' » n’est qu’à ' + this.fmt(last.t) + ' · Lynx gagne la manche' : 'Trouve un mot proche de « ' + last.w + ' »',
+fbBg: s.broken ? '#FFD0C2' : 'rgba(255,255,255,0.14)',
+fbCol: s.broken ? ink : '#FFFFFF' 
+});
+}
+}
+</script>
+</body>
+</html>

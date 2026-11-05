@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Contre la montre</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+button{cursor:pointer;font-family:inherit}
+.vscroll{scrollbar-width:none}
+.vscroll::-webkit-scrollbar{display:none}
+.caret{display:inline-block;width:3px;height:24px;margin-left:2px;vertical-align:middle;background:currentColor;border-radius:2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+@media (prefers-reduced-motion: reduce){.caret{animation:none}}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; display: flex; flex-direction: column; background: {{bg}}; font-family: 'Fredoka', system-ui, sans-serif; color: {{ink}}; overflow: hidden">
+<div style="flex-grow: 1; min-height: 0; box-sizing: border-box; padding: 14px 16px 10px; display: flex; flex-direction: column; gap: 10px">
+<header style="display: flex; align-items: center; gap: 10px"><button aria-label="Retour" style="width: 44px; height: 44px; flex-shrink: 0; border-radius: 14px; border: 0; background: {{panel}}; display: flex; align-items: center; justify-content: center; padding: 0; color: {{ink}}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></button><h1 style="margin: 0; flex-grow: 1; min-width: 0; font-size: 23px; font-weight: 700; color: #FFFFFF; text-shadow: 0 2px 0 {{ink}}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Contre-la-montre</h1><div style="height: 38px; box-sizing: border-box; padding: 0 12px; border-radius: 19px; border: 3px solid color-mix(in srgb, {{panel}} 55%, white); background: linear-gradient(to bottom right, {{panel}} 50%, color-mix(in srgb, {{panel}} 95%, #3A2A7A) 50%); box-shadow: inset 0 -5px 0 color-mix(in srgb, {{panel}} 84%, #3A2A7A); display: flex; align-items: center; gap: 6px; font-size: 16px; font-weight: 700; white-space: nowrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="13" r="8" fill="#FFD45C"></circle><path d="M12 9v4l2.5 2M9.5 2.5h5"></path></svg>0:42</div></header>
+<div style="flex-grow: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; gap: 10px">
+<div style="box-sizing: border-box; border-radius: 20px; border: 3px solid color-mix(in srgb, {{panel}} 55%, white); background: linear-gradient(to bottom right, {{panel}} 50%, color-mix(in srgb, {{panel}} 95%, #3A2A7A) 50%); box-shadow: inset 0 -6px 0 color-mix(in srgb, {{panel}} 84%, #3A2A7A); padding: 10px 12px; flex-grow: 1"><div style="font-size: 13px; font-weight: 600; color: {{inkSoft}}">Mot cible</div><div style="font-size: 28px; font-weight: 700; line-height: 1.1">cuisine</div></div>
+<div style="width: 110px; box-sizing: border-box; border-radius: 20px; border: 3px solid transparent; background: #FFD45C; display: flex; flex-direction: column; align-items: center; justify-content: center"><span style="font-size: 13px; font-weight: 600">trouvés</span><span style="font-size: 34px; font-weight: 700; line-height: 1">{{score}}</span></div>
+</div>
+<div style="color: #FFFFFF; font-size: 15px; font-weight: 600">Propose un max de mots à <b>50° ou plus</b> avant la fin</div>
+<div class="vscroll" style="flex-grow: 1; min-height: 0; overflow-y: auto; box-sizing: border-box; border-radius: 20px; background: {{bgDeep}}; padding: 10px; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 8px">
+<sc-for list="{{found}}" as="f" hint-placeholder-count="8">
+<span style="height: 34px; box-sizing: border-box; padding: 0 10px; border-radius: 17px; border: 2.5px solid color-mix(in srgb, {{f.bg}} 55%, white); background: linear-gradient(to bottom right, {{f.bg}} 50%, color-mix(in srgb, {{f.bg}} 95%, #3A2A7A) 50%); display: flex; align-items: center; gap: 6px; font-size: 16px; font-weight: 700; text-decoration: {{f.td}}; opacity: {{f.op}}; box-shadow: inset 0 -5px 0 color-mix(in srgb, {{f.bg}} 84%, #3A2A7A)">{{f.w}}<span style="font-size: 13px">{{f.t}}</span></span>
+</sc-for>
+</div>
+</div>
+<div style="display: flex; gap: 8px">
+<div role="textbox" aria-label="Un mot proche" style="flex-grow: 1; min-width: 0; height: 52px; box-sizing: border-box; padding: 0 14px; border-radius: 17px; border: 2px solid #D9D1F2; background: #FFFFFF; box-shadow: inset 0 -6px 0 color-mix(in srgb, #FFFFFF 84%, #3A2A7A); display: flex; align-items: center; font-size: 21px; font-weight: 500; overflow: hidden; white-space: nowrap">
+<sc-if value="{{empty}}" hint-placeholder-val="{{ true }}"><span style="color: #7C7399">Un mot proche</span></sc-if>
+<span>{{word}}</span><span class="caret"></span>
+</div>
+<button onClick="{{submit}}" style="height: 52px; padding: 0 14px; border-radius: 17px; border: 2px solid color-mix(in srgb, {{accent}} 55%, white); background: linear-gradient(to bottom right, {{accent}} 50%, color-mix(in srgb, {{accent}} 95%, #3A2A7A) 50%); box-shadow: inset 0 -6px 0 color-mix(in srgb, {{accent}} 84%, #3A2A7A); font-size: 17px; font-weight: 700; color: {{ink}}">Envoyer</button>
+</div>
+</div>
+<dc-import name="Keyboard" variant="systeme" on-key="{{onKey}}" hint-size="390px,286px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"teinteViolet":{"editor":"range","min":0,"max":360,"step":1,"default":256,"unit":"°","section":"Couleurs"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = Object.assign({ word: '' }, { found: [{ w: 'four', t: 78 }, { w: 'assiette', t: 66 }, { w: 'chaise', t: 31 }, { w: 'recette', t: 72 }, { w: 'frigo', t: 69 }, { w: 'jardin', t: 22 }, { w: 'casserole', t: 81 }, { w: 'repas', t: 63 }] });
+}
+tempFor(w) {
+let h = 7;
+for (let i = 0; i < w.length; i++) h = (h * 31 + w.charCodeAt(i)) % 9973;
+return Math.round(((h / 9973) * 120 - 28) * 10) / 10;
+}
+col(t) { return t >= 100 ? '#FFD23F' : t >= 60 ? '#FF5A36' : t >= 40 ? '#FF9A3C' : t >= 20 ? '#7CCDEF' : t >= 0 ? '#A9C6F2' : '#5B8DEF'; }
+fmt(t) { return Math.round(t) + '°'; }
+press(k) {
+const w = this.state.word;
+if (k === '⌫') { this.setState({ word: w.slice(0, -1) }); return; }
+if (k === 'Entrée') { this.submit(); return; }
+if (k === '⇧' || k === '123' || k === 'espace' || w.length >= 16) return;
+this.setState({ word: w + k.toLowerCase() });
+}
+submit() {
+const w = this.state.word.trim();
+if (!w) return;
+const t = this.tempFor('cuisine' + w) + 8;
+this.setState({ word: '', found: [{ w: w, t: t }].concat(this.state.found) });
+}
+
+renderVals() {
+const hV = this.props.teinteViolet ?? 256;
+const s = this.state;
+const ink = 'hsl(' + hV + ', 45%, 16%)';
+
+return Object.assign({
+bg: 'hsl(' + hV + ', 66%, 56%)',
+bgDeep: 'hsl(' + hV + ', 66%, 42%)',
+panel: 'hsl(' + hV + ', 66%, 96%)',
+ink: ink,
+inkSoft: 'hsl(' + hV + ', 28%, 34%)',
+accent: '#FFD45C',
+word: s.word,
+empty: s.word === '',
+submit: () => this.submit(),
+onKey: (k) => this.press(k)
+}, {
+found: s.found.map((f) => ({ w: f.w, t: this.fmt(f.t), bg: f.t >= 50 ? this.col(f.t) : '#E7E2F3', td: f.t >= 50 ? 'none' : 'line-through', op: f.t >= 50 ? 1 : 0.6 })),
+score: s.found.filter((f) => f.t >= 50).length
+});
+}
+}
+</script>
+</body>
+</html>

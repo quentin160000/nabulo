@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Duel</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+button{cursor:pointer;font-family:inherit}
+.caret{display:inline-block;width:3px;height:24px;margin-left:2px;vertical-align:middle;background:currentColor;border-radius:2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.dots span{display:inline-block;width:5px;height:5px;margin:0 1px;border-radius:3px;background:currentColor;animation:dot 1.2s ease-in-out infinite}
+.dots span:nth-child(2){animation-delay:.2s}.dots span:nth-child(3){animation-delay:.4s}
+@keyframes dot{0%,80%,100%{opacity:.25}40%{opacity:1}}
+@media (prefers-reduced-motion: reduce){.caret,.dots span{animation:none}}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; display: flex; flex-direction: column; background: {{bg}}; font-family: 'Fredoka', system-ui, sans-serif; color: {{ink}}; overflow: hidden">
+<div style="flex-grow: 1; min-height: 0; box-sizing: border-box; padding: 14px 16px 10px; display: flex; flex-direction: column; gap: 12px">
+
+<header style="display: flex; align-items: center; gap: 10px">
+<button aria-label="Quitter le duel" style="width: 44px; height: 44px; flex-shrink: 0; border-radius: 14px; border: 0; background: {{panel}}; display: flex; align-items: center; justify-content: center; padding: 0; color: {{ink}}">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg>
+</button>
+<h1 style="margin: 0; flex-grow: 1; font-size: 26px; font-weight: 700; color: #FFFFFF; text-shadow: 0 2px 0 {{ink}}">Duel</h1>
+<div aria-label="Temps restant" style="height: 40px; box-sizing: border-box; padding: 0 12px 0 8px; border-radius: 20px; border: 3px solid color-mix(in srgb, {{panel}} 55%, white); background: linear-gradient(to bottom right, {{panel}} 50%, color-mix(in srgb, {{panel}} 95%, #3A2A7A) 50%); box-shadow: inset 0 -5px 0 color-mix(in srgb, {{panel}} 84%, #3A2A7A); display: flex; align-items: center; gap: 6px; font-size: 19px; font-weight: 700">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="13" r="8" fill="#FFD45C"></circle><path d="M12 9v4l2.5 2M9.5 2.5h5"></path></svg>
+1:24
+</div>
+</header>
+<div style="box-sizing: border-box; border-radius: 22px; padding: 6px 8px 8px; background: linear-gradient(to bottom right, {{bgDeep}} 50%, color-mix(in srgb, {{bgDeep}} 95%, #3A2A7A) 50%); border: 3px solid color-mix(in srgb, {{bgDeep}} 55%, white); box-shadow: inset 0 -6px 0 color-mix(in srgb, {{bgDeep}} 84%, #3A2A7A)"><dc-import name="DuelJauge" me="{{me}}" opp="{{opp}}" pseudo1="Kiwi_33" pseudo2="Lynx" hint-size="336px,120px"></dc-import>
+</div>
+<div style="flex-grow: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: 8px"><div style="display: flex; justify-content: space-between; align-items: baseline; color: #FFFFFF"><span style="font-size: 17px; font-weight: 700; text-shadow: 0 2px 0 {{ink}}">Quel mot relie ces 4 mots ?</span><span style="font-size: 13px; font-weight: 600; opacity: 0.85">mot n° {{round}}</span></div><div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px"><sc-for list="{{clues}}" as="c" hint-placeholder-count="4"><div style="height: 62px; box-sizing: border-box; border-radius: 18px; border: 3px solid color-mix(in srgb, {{c.bg}} 55%, white); background: linear-gradient(to bottom right, {{c.bg}} 50%, color-mix(in srgb, {{c.bg}} 95%, #3A2A7A) 50%); box-shadow: inset 0 -6px 0 color-mix(in srgb, {{c.bg}} 84%, #3A2A7A); display: flex; align-items: center; justify-content: center; padding: 0 6px; font-size: 21px; font-weight: 700; text-align: center">{{c.word}}</div></sc-for></div><div role="status" style="min-height: 34px; box-sizing: border-box; border-radius: 12px; padding: 4px 10px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 15px; font-weight: 700; line-height: 1.2; background: {{fbBg}}; color: {{fbColor}}">{{feedback}}</div></div>
+<div style="display: flex; gap: 8px">
+<div role="textbox" aria-label="Ta réponse" style="flex-grow: 1; min-width: 0; height: 52px; box-sizing: border-box; padding: 0 14px; border-radius: 17px; border: 2px solid #D9D1F2; background: #FFFFFF; box-shadow: inset 0 -6px 0 color-mix(in srgb, #FFFFFF 84%, #3A2A7A); display: flex; align-items: center; font-size: 21px; font-weight: 500; overflow: hidden; white-space: nowrap">
+<sc-if value="{{empty}}" hint-placeholder-val="{{ true }}"><span style="color: #7C7399">Ta réponse</span></sc-if>
+<span>{{word}}</span><span class="caret"></span>
+</div>
+<button onClick="{{pass}}" style="height: 52px; padding: 0 12px; border-radius: 17px; border: 2px solid color-mix(in srgb, {{panel}} 55%, white); background: linear-gradient(to bottom right, {{panel}} 50%, color-mix(in srgb, {{panel}} 95%, #3A2A7A) 50%); box-shadow: inset 0 -6px 0 color-mix(in srgb, {{panel}} 84%, #3A2A7A); display: flex; align-items: center; gap: 4px; font-size: 17px; font-weight: 700; color: {{ink}}">Passer<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5l7 7-7 7M13 5l7 7-7 7"></path></svg></button>
+<button onClick="{{submit}}" aria-label="Valider" style="width: 56px; height: 52px; flex-shrink: 0; padding: 0; border-radius: 17px; border: 2px solid color-mix(in srgb, {{accent}} 55%, white); background: linear-gradient(to bottom right, {{accent}} 50%, color-mix(in srgb, {{accent}} 95%, #3A2A7A) 50%); box-shadow: inset 0 -6px 0 color-mix(in srgb, {{accent}} 84%, #3A2A7A); display: flex; align-items: center; justify-content: center; color: {{ink}}"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></button>
+</div>
+
+</div>
+<dc-import name="Keyboard" variant="systeme" on-key="{{onKey}}" hint-size="390px,286px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"teinteViolet":{"editor":"range","min":0,"max":360,"step":1,"default":256,"unit":"°","section":"Couleurs"},"saturation":{"editor":"range","min":20,"max":95,"step":1,"default":66,"unit":"%","section":"Couleurs"},"luminosite":{"editor":"range","min":35,"max":70,"step":1,"default":56,"unit":"%","section":"Couleurs"},"accent":{"editor":"color","options":["#FFD45C","#FF9A3C","#7CE0B5","#FFFFFF"],"default":"#FFD45C","section":"Couleurs"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.rounds = [
+{ clues: ['flamme', 'braise', 'bûche', 'cheminée'], answer: 'feu' },
+{ clues: ['neige', 'glaçon', 'hiver', 'givre'], answer: 'froid' },
+{ clues: ['vague', 'sable', 'plage', 'sel'], answer: 'mer' },
+{ clues: ['abeille', 'ruche', 'sucre', 'tartine'], answer: 'miel' },
+{ clues: ['lune', 'étoile', 'sommeil', 'rêve'], answer: 'nuit' }
+];
+this.state = { i: 0, round: 4, word: '', me: 2, opp: 2, fb: 'start' };
+this.target = 3;
+}
+norm(s) { return s.normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase(); }
+next(fb, gain) {
+if (this.state.me >= this.target || this.state.opp >= this.target) { this.setState({ i: 0, round: 1, word: '', me: 0, opp: 0, fb: 'start' }); return; }
+this.setState({ i: (this.state.i + 1) % this.rounds.length, round: this.state.round + 1, word: '', me: this.state.me + gain, fb: fb, opp: Math.min(this.target, Math.random() < 0.35 ? this.state.opp + 1 : this.state.opp) });
+}
+submit() {
+const w = this.state.word.trim();
+if (!w) return;
+const r = this.rounds[this.state.i];
+if (this.norm(w) === this.norm(r.answer)) { this.next('ok:' + r.answer, 1); return; }
+this.setState({ word: '', fb: 'ko:' + w });
+}
+pass() { this.next('pass:' + this.rounds[this.state.i].answer, 0); }
+press(k) {
+const w = this.state.word;
+if (k === '⌫') { this.setState({ word: w.slice(0, -1) }); return; }
+if (k === 'Entrée') { this.submit(); return; }
+if (k === '⇧' || k === '123' || k === 'espace' || w.length >= 16) return;
+this.setState({ word: w + k.toLowerCase() });
+}
+renderVals() {
+const hV = this.props.teinteViolet ?? 256;
+const sat = this.props.saturation ?? 66;
+const lum = this.props.luminosite ?? 56;
+const tiles = ['#FFE3C2', '#FFD0C2', '#FFF1C9', '#E6DCFF'];
+const r = this.rounds[this.state.i];
+const fb = this.state.fb;
+const kind = fb.split(':')[0];
+const val = fb.slice(kind.length + 1);
+const texts = { start: 'Trouve le mot avant ton adversaire !', ok: 'Trouvé ! C’était « ' + val + ' » · +1', ko: '« ' + val + ' », ce n’est pas ça', pass: 'Passé · c’était « ' + val + ' »' };
+const bgs = { start: 'rgba(255,255,255,0.14)', ok: '#7CE0B5', ko: '#FFD0C2', pass: 'rgba(255,255,255,0.14)' };
+const me = this.state.me, opp = this.state.opp;
+return {
+bg: 'hsl(' + hV + ', ' + sat + '%, ' + lum + '%)',
+bgDeep: 'hsl(' + hV + ', ' + sat + '%, ' + Math.max(20, lum - 14) + '%)',
+panel: 'hsl(' + hV + ', ' + Math.min(sat, 80) + '%, 96%)',
+ink: 'hsl(' + hV + ', 45%, 16%)',
+inkSoft: 'hsl(' + hV + ', 28%, 34%)',
+accent: this.props.accent ?? '#FFD45C',
+clues: r.clues.map((w, i) => ({ word: w, bg: tiles[i] })),
+round: this.state.round,
+me: me,
+opp: opp,
+meBlocks: Array.from({ length: this.target }, (_, i) => ({ on: i < me, bg: i < me ? ['#FFC23D', '#FF9A3C', '#FF7240', '#FF5A36', '#E8432A'][Math.round(i * 4 / Math.max(1, this.target - 1))] : 'rgba(255,255,255,0.12)', border: i < me ? '3px solid rgba(255,255,255,0.6)' : '3px dashed rgba(255,255,255,0.35)', shadow: i < me ? 'inset 0 -4px 0 rgba(0,0,0,0.12)' : 'none' })),
+oppBlocks: Array.from({ length: this.target }, (_, i) => ({ on: i < opp, bg: i < opp ? ['#C9DDF8', '#9DBDF0', '#86B9F2', '#6FA2F0', '#5B8DEF'][Math.round(i * 4 / Math.max(1, this.target - 1))] : 'rgba(255,255,255,0.12)', border: i < opp ? '3px solid rgba(255,255,255,0.6)' : '3px dashed rgba(255,255,255,0.35)', shadow: i < opp ? 'inset 0 -4px 0 rgba(0,0,0,0.12)' : 'none' })),
+meT: 22 + me * 16,
+oppT: 18 - opp * 9,
+meMood: me >= this.target ? 'trouve' : me > opp ? 'brulant' : me === opp ? 'chaud' : 'tiede',
+oppMood: opp >= this.target ? 'glacial' : opp > me ? 'glacial' : 'froid',
+ropePos: Math.max(8, Math.min(92, 50 + (me - opp) * 9)) + '%',
+myMood: me > opp ? 'brulant' : me === opp ? 'tiede' : 'froid',
+feedback: me >= this.target ? 'Tu gagnes le duel ! Passer pour rejouer' : opp >= this.target ? 'Ton adversaire gagne… Passer pour rejouer' : texts[kind],
+fbBg: me >= this.target ? '#FFD23F' : opp >= this.target ? '#C9DDF8' : bgs[kind],
+fbColor: me >= this.target || opp >= this.target || kind === 'ok' || kind === 'ko' ? 'hsl(' + hV + ', 45%, 16%)' : '#FFFFFF',
+word: this.state.word,
+empty: this.state.word === '',
+submit: () => this.submit(),
+pass: () => this.pass(),
+onKey: (k) => this.press(k)
+};
+}
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Socle texturé, feu 1</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&amp;display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div style="width: 1160px; height: 420px; box-sizing: border-box; padding: 28px 32px; display: flex; flex-direction: column; gap: 16px; background: {{bg}}; font-family: 'Fredoka', system-ui, sans-serif; color: #2B2150">
+
+<div style="display: flex; align-items: center; gap: 20px">
+<h1 style="margin: 0; flex-grow: 1; font-size: 30px; font-weight: 700; color: #FFFFFF; text-shadow: 0 3px 0 #2B2150">Socle final : neige texturée et feu 1, animés</h1>
+<div style="display: flex; align-items: center; gap: 10px; background: #F4F1FF; border: 3px solid #2B2150; border-radius: 18px; padding: 6px 14px">
+<label for="t" style="font-size: 15px; font-weight: 600">Température</label>
+<input id="t" type="range" min="-30" max="100" step="1" value="{{t}}" onChange="{{onT}}" style="width: 220px; accent-color: {{tColor}}">
+<span style="width: 52px; text-align: right; font-size: 18px; font-weight: 700">{{tLabel}}</span>
+</div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 12px; align-items: center">
+<div style="text-align: center; color: #FFFFFF; line-height: 1.2"><div style="font-size: 15px; font-weight: 700">Très froid</div><div style="font-size: 12px; opacity: 0.85">sous −10° · neige et vent</div></div>
+<div style="text-align: center; color: #FFFFFF; line-height: 1.2"><div style="font-size: 15px; font-weight: 700">Froid</div><div style="font-size: 12px; opacity: 0.85">−10 à 5° · neige</div></div>
+<div style="text-align: center; color: #FFFFFF; line-height: 1.2"><div style="font-size: 15px; font-weight: 700">Frais</div><div style="font-size: 12px; opacity: 0.85">5 à 20° · flocons</div></div>
+<div style="text-align: center; color: #FFFFFF; line-height: 1.2"><div style="font-size: 15px; font-weight: 700">Tiède</div><div style="font-size: 12px; opacity: 0.85">20 à 40° · goutte</div></div>
+<div style="text-align: center; color: #FFFFFF; line-height: 1.2"><div style="font-size: 15px; font-weight: 700">Chaud</div><div style="font-size: 12px; opacity: 0.85">40 à 60° · fumée</div></div>
+<div style="text-align: center; color: #FFFFFF; line-height: 1.2"><div style="font-size: 15px; font-weight: 700">Brûlant</div><div style="font-size: 12px; opacity: 0.85">60 à 85° · fumée, braises</div></div>
+<div style="text-align: center; color: #FFFFFF; line-height: 1.2"><div style="font-size: 15px; font-weight: 700">Très chaud</div><div style="font-size: 12px; opacity: 0.85">85° et plus · tout</div></div>
+
+<div style="height: 220px; box-sizing: border-box; border-radius: 20px; display: flex; align-items: center; justify-content: center; {{c0}}"><dc-import name="Socle" famille="feu1" t="-20" size="140" hint-size="140px,140px"></dc-import></div>
+<div style="height: 220px; box-sizing: border-box; border-radius: 20px; display: flex; align-items: center; justify-content: center; {{c1}}"><dc-import name="Socle" famille="feu1" t="-3" size="140" hint-size="140px,140px"></dc-import></div>
+<div style="height: 220px; box-sizing: border-box; border-radius: 20px; display: flex; align-items: center; justify-content: center; {{c2}}"><dc-import name="Socle" famille="feu1" t="12" size="140" hint-size="140px,140px"></dc-import></div>
+<div style="height: 220px; box-sizing: border-box; border-radius: 20px; display: flex; align-items: center; justify-content: center; {{c3}}"><dc-import name="Socle" famille="feu1" t="30" size="140" hint-size="140px,140px"></dc-import></div>
+<div style="height: 220px; box-sizing: border-box; border-radius: 20px; display: flex; align-items: center; justify-content: center; {{c4}}"><dc-import name="Socle" famille="feu1" t="50" size="140" hint-size="140px,140px"></dc-import></div>
+<div style="height: 220px; box-sizing: border-box; border-radius: 20px; display: flex; align-items: center; justify-content: center; {{c5}}"><dc-import name="Socle" famille="feu1" t="72" size="140" hint-size="140px,140px"></dc-import></div>
+<div style="height: 220px; box-sizing: border-box; border-radius: 20px; display: flex; align-items: center; justify-content: center; {{c6}}"><dc-import name="Socle" famille="feu1" t="95" size="140" hint-size="140px,140px"></dc-import></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"temperature":{"editor":"range","min":-30,"max":100,"step":1,"default":47,"unit":"°C","section":"Aperçu"},"teinteViolet":{"editor":"range","min":0,"max":360,"step":1,"default":256,"unit":"°","section":"Couleurs"},"$preview":{"width":1160,"height":420}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { t: null };
+}
+renderVals() {
+const t = this.state.t !== null ? this.state.t : (this.props.temperature ?? 47);
+const lvl = t < -10 ? 0 : t < 5 ? 1 : t < 20 ? 2 : t < 40 ? 3 : t < 60 ? 4 : t < 85 ? 5 : 6;
+const hV = this.props.teinteViolet ?? 256;
+const on = 'background: hsl(' + hV + ', 50%, 40%); border: 3px solid #2B2150; box-shadow: 0 4px 0 #2B2150; opacity: 1';
+const off = 'background: rgba(255,255,255,0.12); border: 3px solid transparent; opacity: 0.6';
+const vals = {
+bg: 'hsl(' + hV + ', 66%, 56%)',
+t: t,
+tLabel: Math.round(t) + '°',
+tColor: t >= 60 ? '#FF5A36' : t >= 20 ? '#FFC23D' : '#5B8DEF',
+onT: (e) => this.setState({ t: Number(e.target.value) })
+};
+for (let i = 0; i < 7; i++) vals['c' + i] = i === lvl ? on : off;
+return vals;
+}
+}
+</script>
+</body>
+</html>

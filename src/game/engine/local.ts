@@ -9,7 +9,7 @@ import { dayNumberFrom, type GuessResult, type Lang, type TemperatureEngine } fr
 export type DevData = { lang: Lang; words: string[]; secrets: Record<string, string> };
 
 const B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-function decodeBase64(s: string): Uint8Array {
+export function decodeBase64(s: string): Uint8Array {
   const clean = s.replace(/=+$/, '');
   const out = new Uint8Array(Math.floor(clean.length * 3 / 4));
   let buf = 0, bits = 0, o = 0;

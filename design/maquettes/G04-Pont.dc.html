@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Lier</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+button{cursor:pointer;font-family:inherit}
+.vscroll{scrollbar-width:none}
+.vscroll::-webkit-scrollbar{display:none}
+.caret{display:inline-block;width:3px;height:24px;margin-left:2px;vertical-align:middle;background:currentColor;border-radius:2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+@media (prefers-reduced-motion: reduce){.caret{animation:none}}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; display: flex; flex-direction: column; background: {{bg}}; font-family: 'Fredoka', system-ui, sans-serif; color: {{ink}}; overflow: hidden">
+<div style="flex-grow: 1; min-height: 0; box-sizing: border-box; padding: 14px 16px 10px; display: flex; flex-direction: column; gap: 10px">
+<header style="display: flex; align-items: center; gap: 10px"><button aria-label="Retour" style="width: 44px; height: 44px; flex-shrink: 0; border-radius: 14px; border: 0; background: {{panel}}; display: flex; align-items: center; justify-content: center; padding: 0; color: {{ink}}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></button><h1 style="margin: 0; flex-grow: 1; min-width: 0; font-size: 23px; font-weight: 700; color: #FFFFFF; text-shadow: 0 2px 0 {{ink}}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Lier</h1><div style="height: 38px; box-sizing: border-box; padding: 0 12px; border-radius: 19px; border: 3px solid color-mix(in srgb, {{panel}} 55%, white); background: linear-gradient(to bottom right, {{panel}} 50%, color-mix(in srgb, {{panel}} 95%, #3A2A7A) 50%); box-shadow: inset 0 -5px 0 color-mix(in srgb, {{panel}} 84%, #3A2A7A); display: flex; align-items: center; gap: 6px; font-size: 16px; font-weight: 700; white-space: nowrap">Record 4</div></header>
+<div style="flex-grow: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; align-items: center; justify-content: space-between; color: #FFFFFF; font-size: 15px; font-weight: 600">
+<span>Relie les deux mots, pas à pas</span><span>{{steps}} étapes</span></div>
+<div class="vscroll" style="flex-grow: 1; min-height: 0; overflow-y: auto; box-sizing: border-box; border-radius: 22px; background: {{bgDeep}}; padding: 12px; display: flex; flex-direction: column; align-items: center">
+<sc-for list="{{chain}}" as="c" hint-placeholder-count="3">
+<sc-if value="{{c.link}}" hint-placeholder-val="{{ true }}"><div style="display: flex; align-items: center; gap: 8px; height: 30px"><span style="width: 4px; height: 30px; border-radius: 2px; background: {{c.lc}}"></span><span style="font-size: 13px; font-weight: 700; color: #FFFFFF">{{c.lt}}</span></div></sc-if>
+<div style="min-width: 150px; box-sizing: border-box; padding: 6px 16px; border-radius: 16px; border: 3px solid color-mix(in srgb, {{c.bg}} 55%, white); background: linear-gradient(to bottom right, {{c.bg}} 50%, color-mix(in srgb, {{c.bg}} 95%, #3A2A7A) 50%); box-shadow: inset 0 -5px 0 color-mix(in srgb, {{c.bg}} 84%, #3A2A7A); text-align: center; font-size: 20px; font-weight: 700">{{c.word}}</div>
+</sc-for>
+<div style="display: flex; align-items: center; gap: 8px; height: 34px"><span style="width: 4px; height: 34px; border-radius: 2px; background: repeating-linear-gradient(180deg, #FFFFFF 0 5px, transparent 5px 10px)"></span><span style="font-size: 13px; font-weight: 700; color: #FFFFFF">encore {{gap}}</span></div>
+<div style="min-width: 170px; box-sizing: border-box; padding: 8px 16px; border-radius: 16px; border: 3px dashed #FFD45C; background: rgba(255, 212, 92, 0.18); text-align: center; color: #FFFFFF; font-size: 21px; font-weight: 700">ordinateur</div>
+</div>
+<div role="status" style="min-height: 30px; text-align: center; font-size: 14px; font-weight: 600; color: #FFFFFF">{{fb}}</div>
+</div>
+<div style="display: flex; gap: 8px">
+<div role="textbox" aria-label="Mot suivant" style="flex-grow: 1; min-width: 0; height: 52px; box-sizing: border-box; padding: 0 14px; border-radius: 17px; border: 2px solid #D9D1F2; background: #FFFFFF; box-shadow: inset 0 -6px 0 color-mix(in srgb, #FFFFFF 84%, #3A2A7A); display: flex; align-items: center; font-size: 21px; font-weight: 500; overflow: hidden; white-space: nowrap">
+<sc-if value="{{empty}}" hint-placeholder-val="{{ true }}"><span style="color: #7C7399">Mot suivant</span></sc-if>
+<span>{{word}}</span><span class="caret"></span>
+</div>
+<button onClick="{{submit}}" style="height: 52px; padding: 0 14px; border-radius: 17px; border: 2px solid color-mix(in srgb, {{accent}} 55%, white); background: linear-gradient(to bottom right, {{accent}} 50%, color-mix(in srgb, {{accent}} 95%, #3A2A7A) 50%); box-shadow: inset 0 -6px 0 color-mix(in srgb, {{accent}} 84%, #3A2A7A); font-size: 17px; font-weight: 700; color: {{ink}}">Ajouter</button>
+</div>
+</div>
+<dc-import name="Keyboard" variant="systeme" on-key="{{onKey}}" hint-size="390px,286px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"teinteViolet":{"editor":"range","min":0,"max":360,"step":1,"default":256,"unit":"°","section":"Couleurs"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = Object.assign({ word: '' }, { chain: [{ w: 'plage', t: null }, { w: 'soleil', t: 64 }, { w: 'écran', t: 41 }], fb: 'Chaque mot doit être à 40° ou plus du précédent' });
+}
+tempFor(w) {
+let h = 7;
+for (let i = 0; i < w.length; i++) h = (h * 31 + w.charCodeAt(i)) % 9973;
+return Math.round(((h / 9973) * 120 - 28) * 10) / 10;
+}
+col(t) { return t >= 100 ? '#FFD23F' : t >= 60 ? '#FF5A36' : t >= 40 ? '#FF9A3C' : t >= 20 ? '#7CCDEF' : t >= 0 ? '#A9C6F2' : '#5B8DEF'; }
+fmt(t) { return Math.round(t) + '°'; }
+press(k) {
+const w = this.state.word;
+if (k === '⌫') { this.setState({ word: w.slice(0, -1) }); return; }
+if (k === 'Entrée') { this.submit(); return; }
+if (k === '⇧' || k === '123' || k === 'espace' || w.length >= 16) return;
+this.setState({ word: w + k.toLowerCase() });
+}
+submit() {
+const w = this.state.word.trim();
+if (!w) return;
+const prev = this.state.chain[this.state.chain.length - 1].w;
+const t = Math.abs(this.tempFor(prev + w)) % 70 + 25;
+if (t < 40) { this.setState({ word: '', fb: '« ' + w + ' » est trop loin de « ' + prev + ' » (' + this.fmt(t) + ')' }); return; }
+this.setState({ word: '', chain: this.state.chain.concat([{ w: w, t: t }]), fb: '« ' + w + ' » est à ' + this.fmt(t) + ' de « ' + prev + ' »' });
+}
+
+renderVals() {
+const hV = this.props.teinteViolet ?? 256;
+const s = this.state;
+const ink = 'hsl(' + hV + ', 45%, 16%)';
+const ch = s.chain;
+return Object.assign({
+bg: 'hsl(' + hV + ', 66%, 56%)',
+bgDeep: 'hsl(' + hV + ', 66%, 42%)',
+panel: 'hsl(' + hV + ', 66%, 96%)',
+ink: ink,
+inkSoft: 'hsl(' + hV + ', 28%, 34%)',
+accent: '#FFD45C',
+word: s.word,
+empty: s.word === '',
+submit: () => this.submit(),
+onKey: (k) => this.press(k)
+}, {
+chain: ch.map((c, i) => ({ word: c.w, link: i > 0, lt: c.t === null ? '' : this.fmt(c.t), lc: c.t === null ? '#FFFFFF' : this.col(c.t), bg: i === 0 ? '#FFD45C' : 'hsl(' + hV + ', 66%, 96%)' })),
+steps: ch.length - 1,
+gap: Math.max(0, 71 - (ch.length - 3) * 9) + '° jusqu’à l’arrivée',
+fb: s.fb
+});
+}
+}
+</script>
+</body>
+</html>

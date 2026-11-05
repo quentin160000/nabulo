@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Humeurs de la mascotte</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#2B2150}a:hover{color:#000}
+</style>
+</helmet>
+<div style="width: 1100px; height: 620px; box-sizing: border-box; padding: 36px 40px; display: flex; flex-direction: column; gap: 24px; background: {{bg}}; font-family: 'Fredoka', system-ui, sans-serif; color: {{ink}}">
+<h1 style="margin: 0; font-size: 34px; font-weight: 700; color: #FFFFFF; text-shadow: 0 3px 0 {{ink}}">Six humeurs selon la température</h1>
+<div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; flex-grow: 1">
+
+<div style="background: linear-gradient(to bottom right, {{panel}} 50%, color-mix(in srgb, {{panel}} 95%, #3A2A7A) 50%); border: 4px solid color-mix(in srgb, {{panel}} 55%, white); border-radius: 26px; box-shadow: inset 0 -8px 0 color-mix(in srgb, {{panel}} 84%, #3A2A7A); padding: 16px 10px; display: flex; flex-direction: column; align-items: center; gap: 8px">
+<dc-import name="Mascot" mood="glacial" size="{{s}}" hint-size="140px,140px"></dc-import>
+<div style="font-size: 24px; font-weight: 700">Glacial</div>
+<div style="padding: 3px 12px; border-radius: 12px; border: 2px solid transparent; background: {{cold}}; font-size: 15px; font-weight: 600">sous 0 °C</div>
+<p style="margin: 4px 0 0; font-size: 14px; line-height: 1.35; text-align: center; color: {{inkSoft}}">Glaçon qui grelotte, stalactites, yeux plissés.</p>
+</div>
+
+<div style="background: linear-gradient(to bottom right, {{panel}} 50%, color-mix(in srgb, {{panel}} 95%, #3A2A7A) 50%); border: 4px solid color-mix(in srgb, {{panel}} 55%, white); border-radius: 26px; box-shadow: inset 0 -8px 0 color-mix(in srgb, {{panel}} 84%, #3A2A7A); padding: 16px 10px; display: flex; flex-direction: column; align-items: center; gap: 8px">
+<dc-import name="Mascot" mood="froid" size="{{s}}" hint-size="140px,140px"></dc-import>
+<div style="font-size: 24px; font-weight: 700">Froid</div>
+<div style="padding: 3px 12px; border-radius: 12px; border: 2px solid transparent; background: {{cold}}; font-size: 15px; font-weight: 600">0 à 20 °C</div>
+<p style="margin: 4px 0 0; font-size: 14px; line-height: 1.35; text-align: center; color: {{inkSoft}}">Boule de neige boudeuse avec son écharpe.</p>
+</div>
+
+<div style="background: linear-gradient(to bottom right, {{panel}} 50%, color-mix(in srgb, {{panel}} 95%, #3A2A7A) 50%); border: 4px solid color-mix(in srgb, {{panel}} 55%, white); border-radius: 26px; box-shadow: inset 0 -8px 0 color-mix(in srgb, {{panel}} 84%, #3A2A7A); padding: 16px 10px; display: flex; flex-direction: column; align-items: center; gap: 8px">
+<dc-import name="Mascot" mood="tiede" size="{{s}}" hint-size="140px,140px"></dc-import>
+<div style="font-size: 24px; font-weight: 700">Tiède</div>
+<div style="padding: 3px 12px; border-radius: 12px; border: 2px solid transparent; background: {{cold}}; font-size: 15px; font-weight: 600">20 à 40 °C</div>
+<p style="margin: 4px 0 0; font-size: 14px; line-height: 1.35; text-align: center; color: {{inkSoft}}">Goutte d’eau perplexe, petite sueur.</p>
+</div>
+
+<div style="background: linear-gradient(to bottom right, {{panel}} 50%, color-mix(in srgb, {{panel}} 95%, #3A2A7A) 50%); border: 4px solid color-mix(in srgb, {{panel}} 55%, white); border-radius: 26px; box-shadow: inset 0 -8px 0 color-mix(in srgb, {{panel}} 84%, #3A2A7A); padding: 16px 10px; display: flex; flex-direction: column; align-items: center; gap: 8px">
+<dc-import name="Mascot" mood="chaud" size="{{s}}" hint-size="140px,140px"></dc-import>
+<div style="font-size: 24px; font-weight: 700">Chaud</div>
+<div style="padding: 3px 12px; border-radius: 12px; border: 2px solid transparent; background: #FFC9A3; font-size: 15px; font-weight: 600">40 à 60 °C</div>
+<p style="margin: 4px 0 0; font-size: 14px; line-height: 1.35; text-align: center; color: {{inkSoft}}">Braise ravie, petite flamme sur la tête.</p>
+</div>
+
+<div style="background: linear-gradient(to bottom right, {{panel}} 50%, color-mix(in srgb, {{panel}} 95%, #3A2A7A) 50%); border: 4px solid color-mix(in srgb, {{panel}} 55%, white); border-radius: 26px; box-shadow: inset 0 -8px 0 color-mix(in srgb, {{panel}} 84%, #3A2A7A); padding: 16px 10px; display: flex; flex-direction: column; align-items: center; gap: 8px">
+<dc-import name="Mascot" mood="brulant" size="{{s}}" hint-size="140px,140px"></dc-import>
+<div style="font-size: 24px; font-weight: 700">Brûlant</div>
+<div style="padding: 3px 12px; border-radius: 12px; border: 2px solid transparent; background: #FFC9A3; font-size: 15px; font-weight: 600">60 à 99 °C</div>
+<p style="margin: 4px 0 0; font-size: 14px; line-height: 1.35; text-align: center; color: {{inkSoft}}">Flamme surexcitée, étincelles autour.</p>
+</div>
+
+<div style="background: linear-gradient(to bottom right, {{panel}} 50%, color-mix(in srgb, {{panel}} 95%, #3A2A7A) 50%); border: 4px solid color-mix(in srgb, {{panel}} 55%, white); border-radius: 26px; box-shadow: inset 0 -8px 0 color-mix(in srgb, {{panel}} 84%, #3A2A7A); padding: 16px 10px; display: flex; flex-direction: column; align-items: center; gap: 8px">
+<dc-import name="Mascot" mood="trouve" size="{{s}}" hint-size="140px,140px"></dc-import>
+<div style="font-size: 24px; font-weight: 700">Trouvé !</div>
+<div style="padding: 3px 12px; border-radius: 12px; border: 2px solid transparent; background: #FFD23F; font-size: 15px; font-weight: 600">100 °C</div>
+<p style="margin: 4px 0 0; font-size: 14px; line-height: 1.35; text-align: center; color: {{inkSoft}}">Soleil aux yeux étoilés, rayons qui tournent.</p>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"teinteViolet":{"editor":"range","min":0,"max":360,"step":1,"default":256,"unit":"°","section":"Couleurs"},"teinteBleu":{"editor":"range","min":0,"max":360,"step":1,"default":222,"unit":"°","section":"Couleurs"},"saturation":{"editor":"range","min":20,"max":95,"step":1,"default":66,"unit":"%","section":"Couleurs"},"luminosite":{"editor":"range","min":35,"max":70,"step":1,"default":56,"unit":"%","section":"Couleurs"},"$preview":{"width":1100,"height":620}}'>
+class Component extends DCLogic {
+renderVals() {
+const hV = this.props.teinteViolet ?? 256;
+const hB = this.props.teinteBleu ?? 222;
+const sat = this.props.saturation ?? 66;
+const lum = this.props.luminosite ?? 56;
+return {
+bg: 'hsl(' + hV + ', ' + sat + '%, ' + lum + '%)',
+panel: 'hsl(' + hV + ', ' + Math.min(sat, 80) + '%, 96%)',
+ink: 'hsl(' + hV + ', 45%, 16%)',
+inkSoft: 'hsl(' + hV + ', 28%, 34%)',
+cold: 'hsl(' + hB + ', 85%, 88%)',
+s: 140
+};
+}
+}
+</script>
+</body>
+</html>
